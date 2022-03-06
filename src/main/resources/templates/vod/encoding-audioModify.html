@@ -1,0 +1,266 @@
+<%@ include file="../inc/_header.jsp"%>
+<!-- 컨텐츠 영역 -->
+<div class="app-content content">
+<div class="content-wrapper">
+<!-- 컨텐츠:헤더-페이지명,네비게이터 -->
+<div class="content-header row">
+	<div class="content-header-left col-md-8 col-12 mb-2 breadcrumb-new">
+		<h3 class="content-header-title mb-0 d-inline-block">인코딩 관리</h3>
+		<div class="row breadcrumbs-top d-inline-block">
+			<div class="breadcrumb-wrapper col-12">
+				<ol class="breadcrumb">
+					<li class="breadcrumb-item">Home</li>
+					<li class="breadcrumb-item">인코딩 관리</li>
+					<li class="breadcrumb-item active">오디오 관리</li>
+				</ol>
+			</div>
+		</div>
+	</div>
+</div>
+<!--// 컨텐츠:헤더-페이지명,네비게이터 -->
+<!-- 컨텐츠:본문 영역 -->
+<div class="content-body">
+	<div class="row ">
+		<div class="col-sm-12">
+			<div class="card">
+				<div class="card-header no-border-bottom">
+					<h4 class="card-title">오디오 콘텐츠</h4>
+					<a class="heading-elements-toggle"><i class="ft-more-horizontal font-medium-3"></i></a>
+					<div class="heading-elements">
+						<button type="button" class="btn btn-light btn-sm " ><i class="ft-share-2"></i> URL복사</a></button>
+						<button type="button" class="btn btn-info btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true"><i class="ft-download"></i> 오디오 다운로드</button>
+						<div class="dropdown-menu">
+							<a class="dropdown-item" href="#">원본 다운로드</a>
+							<a class="dropdown-item" href="#">인코딩오디오 다운로드</a>
+							<a class="dropdown-item" href="#">전체 다운로드</a>
+						</div>
+					</div>
+				</div>
+				<div class="card-content">
+					<div class="card-body">
+						<div class="audio-player">
+							<div class="thumb">
+								<img src="/_admin/app-assets/images/sample/3.jpg" alt="" class="" width="89%"/>
+							</div>
+							<div class="player">
+								<div class="view-title border-bottom-0">
+									<!-- 제목 및 주요버튼 -->
+									<h3>Over the Horizon</h3>
+									<div class="view-title-info">
+										<span>2020.1.14</span><span>admin(최고관리자)</span>
+									</div>
+									<!--// 제목 및 주요버튼 -->
+								</div>
+								<style type="text/css">
+								<!--
+								.sample-player-bar .player-bar-bg {background: url(/_admin/app-assets/images/sample/player-bar-bg.gif) repeat-x;}
+								//-->
+								</style>
+								<table cellpadding="0" cellspacing="0" border="0" class="w-100 sample-player-bar">
+									<tr>
+										<td width="109px"><img src="/_admin/app-assets/images/sample/player-bar-left.gif" alt=""/></td>
+										<td class="player-bar-bg"><img src="/_admin/app-assets/images/sample/player-bar-bg.gif" alt=""/></td>
+										<td width="127px"><img src="/_admin/app-assets/images/sample/player-bar-right.gif" alt=""/></td>
+									</tr>
+								</table>
+							</div>
+						</div>
+
+						<!-- 정보영역 -->
+						<div class="information mt-2">
+							<ul class="nav nav-tabs nav-top-border no-hover-bg  ">
+								<li class="nav-item">
+									<a class="nav-link active" id="information-tab1" data-toggle="tab" href="#information1" aria-controls="information1" aria-expanded="true">콘텐츠기본정보</a>
+								</li>
+								<li class="nav-item">
+									<a class="nav-link" id="information-tab2" data-toggle="tab" href="#information2" aria-controls="information2" aria-expanded="true">클립정보</a>
+								</li>
+								<li class="nav-item">
+									<a class="nav-link" id="information-tab3" data-toggle="tab" href="#information3" aria-controls="information3" aria-expanded="false">미디어속성</a>
+								</li>
+							</ul>
+							<div class="tab-content mt-1">
+								<!-- 콘텐츠기본정보 탭 내용 -->
+								<div class="tab-pane active" id="information1" role="tabpanel" aria-labelledby="information-tab1" aria-expanded="true">
+									<div class="regist-form regist-form-vertical">
+										<table cellpadding="0" cellspacing="0" class="w-100" summary="" >
+											<colgroup>
+												<col width="9%"/><col width="16%"/><col width="9%"/><col width="16%"/><col width="9%"/><col width="16%"/><col width="9%"/><col width="16%"/>
+											</colgroup>
+											<tbody>
+												<tr>
+													<th scope="">카테고리</th>
+													<td colspan="3">
+														<div class="input-group">
+															<input type="text" class="form-control" title="" value="대분류1&gt;중분류1-1&gt;소분류1-1-1" name="" placeholder=""/>
+															<div class="input-group-append">
+																<button type="button" class="btn btn-outline-info" data-toggle="modal" data-target="#callCategory">카테고리검색</button>
+															</div>
+														</div>
+													</td>
+													<th>원본파일명</th>
+													<td colspan="3">Over_the_Horizon.mp3</td>
+												</tr>
+
+												<tr>
+													<th>제목</th>
+													<td colspan="3">Over the Horizon</td>
+													<th>대표이미지</th>
+													<td colspan="3">
+														<a href="#">sample_image.jpg</a>
+														<button type="button" class="btn btn-xsm btn-round btn-light ml-Half"><i class="fa fa-times font-small-2"></i></button>
+													</td>
+												</tr>
+												<tr>
+													<th>주요 영상 여부</th>
+													<td>
+														<select name="" title="" class="form-control">
+															<option value="">적용</option>
+															<option value="" selected="selected">미적용</option>
+														</select>
+													</td>
+													<th>원본 용량</th>
+													<td>5.4 MB</td>
+													<th class="text-height">인코딩 용량</th>
+													<td>6.1 MB</td>
+													<th>인코딩 일자</th>
+													<td>2020-01-23 12:03:18</td>
+												</tr>
+												<tr>
+													<th>설명</th>
+													<td colspan="7">
+														<textarea class="form-control" name="" cols="" rows="7" title="" placeholder="설명을 입력하세요"></textarea>
+													</td>
+												</tr>
+											</tbody>
+										</table>
+									</div>
+								</div>
+								<!--// 콘텐츠기본정보 탭 내용 -->
+
+
+								<!-- 클립정보 탭 내용 -->
+								<div class="tab-pane" id="information2" role="tabpanel" aria-labelledby="information-tab2" aria-expanded="true">
+									<div class="position-relative">
+										<button type="button" class="btn btn-primary btn-sm" onclick="openPopup('newClip-audio','800',450)"><i class="ft-play-circle"></i> 신규등록</button>
+										<button type="button" class="btn btn-sm btn-secondary">삭제</button>
+										<div class="position-absolute no-edge-top no-edge-right"></div>
+									</div>
+									<div class="table-responsive w-100 mt-Half thumb-list">
+										<table cellpadding="0" cellspacing="0" class="table table-design-cust text-center mb-0 " summary="" >
+											<colgroup>
+												<col width="3%"/><col width="3%"/>
+												<col width="20%"/><col width="15%"/><col width="*"/>
+
+											</colgroup>
+											<thead>
+												<tr>
+													<th>
+														<div class="form-check abc-checkbox">
+															<input type="checkbox" class="form-check-input" name="colorCheck" id="checkbox0"><label class="form-check-label" for="checkbox0"></label>
+														</div>
+													</th>
+													<th>No</th>
+													<th>제목</th>
+													<th>클립시간</th>
+													<th>설명</th>
+												</tr>
+												<tr>
+													<td>
+														<div class="form-check abc-checkbox">
+															<input type="checkbox" class="form-check-input" name="colorCheck" id="checkbox2"><label class="form-check-label" for="checkbox2"></label>
+														</div>
+													</td>
+													<td>2</td>
+													<td class="text-left"><a href="#" onclick="openPopup('modifyClip-audio','800',450)">Over the Horizon_2</a></td>
+													<td class="num-text">
+														<i class="ft-play-circle cursor-pointer font-medium-5 info"></i><br/>
+														0:08:25~0:14:16
+													</td>
+													<td class="text-left">
+														삼성전자 무선사업부 UX 디자인그룹 AUX파트에서 갤럭시 S II에 들어가는 AUI(Auditory User Interface)를 기획한 윤중삼 디자이너가 2011년에 제작한 브랜드 송. 이후에 나오는 갤럭시 시리즈 기기들에 기본적으로 들어있는 음악이다. 갤럭시 S 시리즈가 새로 나올때마다 즉 1년에 한번씩 새로 곡이 나오며 다음곡이 나올때까지 보급형 모델을 포함한 모든 갤럭시 시리즈에 적용...
+													</td>
+												</tr>
+												<tr>
+													<td>
+														<div class="form-check abc-checkbox">
+															<input type="checkbox" class="form-check-input" name="colorCheck" id="checkbox1"><label class="form-check-label" for="checkbox1"></label>
+														</div>
+													</td>
+													<td>1</td>
+													<td class="text-left"><a href="#" onclick="openPopup('modifyClip-audio','800',450)">Over the Horizon_1</a></td>
+													<td class="num-text">
+														<i class="ft-play-circle cursor-pointer font-medium-5 info"></i><br/>
+														0:00:00~0:08:25
+													</td>
+													<td class="text-left">
+														삼성전자 무선사업부 UX 디자인그룹 AUX파트에서 갤럭시 S II에 들어가는 AUI(Auditory User Interface)를 기획한 윤중삼 디자이너가 2011년에 제작한 브랜드 송. 이후에 나오는 갤럭시 시리즈 기기들에 기본적으로 들어있는 음악이다. 갤럭시 S 시리즈가 새로 나올때마다 즉 1년에 한번씩 새로 곡이 나오며 다음곡이 나올때까지 보급형 모델을 포함한 모든 갤럭시 시리즈에 적용...
+													</td>
+												</tr>
+											</thead>
+											<tbody>
+											</tbody>
+										</table>
+									</div>
+								</div>
+								<!--// 클립정보 탭 내용 -->
+
+								<!-- 미디어속성 탭 내용 -->
+								<div class="tab-pane" id="information3" role="tabpanel" aria-labelledby="information-tab3" aria-expanded="false">
+									<div class="view-form">
+										<table cellpadding="0" cellspacing="0" class="w-100" summary="" >
+											<colgroup>
+												<col width="9%"/><col width="41%"/><col width="9%"/><col width="41%"/>
+											</colgroup>
+											<tbody>
+												<tr>
+													<th scope="">오디오 비트전송률</th>
+													<td>1,152,000 bps</td>
+													<th scope="">오디오 샘플속도</th>
+													<td>48,000 Hz</td>
+												</tr>
+												<tr>
+													<th scope="">오디오 샘플크기</th>
+													<td>24 bi</td>
+													<th scope="">비디오 채널</th>
+													<td>1</td>
+												</tr>
+												<tr>
+													<th scope="">오디오 코덱</th>
+													<td>PCM/PCM</td>
+													<th scope=""></th>
+													<td></td>
+												</tr>
+											</tbody>
+										</table>
+									</div>
+								</div>
+								<!--// 미디어속성 탭 내용 -->
+							</div>			
+						</div>
+						<!--// 정보영역 -->
+
+					</div>
+				</div>
+				<!-- 버튼영역 -->
+				<div class="card-footer">
+					<div class="mr-auto float-right">
+						<button type="button" class="btn btn-info px-2" onclick="window.open('encoding-list.jsp','_self');">목록</button>
+						<button type="button" class="btn btn-success px-2" onclick="window.open('encoding-list.jsp','_self');">저장</button>
+						<button type="button" class="btn btn-secondary px-2" onclick="window.open('encoding-list.jsp','_self');">삭제</button>
+					</div>
+				</div>
+				<!--// 버튼영역 -->
+			</div>
+		</div>
+	</div>
+
+</div>
+</div>
+</div>
+
+<%@ include file="../inc/_footer.jsp"%>
+
+<!-- 팝업인크루드 -->
+<%@ include file="../popup/callCategory.jsp"%>
+<!--// 팝업인크루드 -->

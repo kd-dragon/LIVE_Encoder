@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="live">
+
+	<!--    -->
+	<select id="selectByStatusWait" parameterType="liveBroadcastVO" resultType="LiveBroadcastVO">
+	/*live.selectByStatusWait*/
+    	  SELECT 
+		  	  * 
+		  FROM (
+			SELECT A.LB_SEQ
+				 , A.LB_TITLE 
+				 , A.LB_DESC 
+				 , A.LB_STATUS
+				 , A.LC_SEQ
+				 , NVL(B.LC_URL, 'VOD') AS LC_URL
+				 , A.LB_VOD_SEQ
+				 , J.LBJ_SEQ
+				 , J.LBJ_PROCESS_ID
+				 , A.LB_PRESET_CD
+				 , A.LB_VOD_SAVE_YN
+		   <!--  , LIVE_RESERV_SEQ -->
+				 , A.LB_CATEGORY_SEQ
+				 , A.LB_CHAT_YN
+				 
+			 FROM TGLIVE_BROADCAST 		A
+		LEFT JOIN TGLIVE_CHANNEL 		B ON A.LC_SEQ = B.LC_SEQ
+			 JOIN TGLIVE_BROADCAST_JOB 	J ON A.LB_SEQ = J.LB_SEQ
+			 
+			WHERE A.LB_STATUS= '0'
+			  AND A.LB_DEL_YN = 'N'
+              AND (TRUNC((A.LB_START_DATE - SYSDATE) * 24 * 60 * 60)  &lt;=0 
+                    AND TRUNC((A.LB_END_DATE - SYSDATE) * 24 * 60 * 60) &gt;= 0)
+		  	ORDER BY A.LB_START_DATE 
+		  ) G
+          WHERE ROWNUM = 1
+	</select>
+	
+	<!-- serialNo check -->
+	<select id="selectBroadcastEnable" parameterType="String" resultType="int">
+		SELECT
+			CASE
+			WHEN (SELECT
+						COUNT(*)
+				  FROM  TGLIVE_BROADCAST
+				  WHERE LB_SERIAL_NO = #{mySerialNo}
+				  AND 	LB_STATUS = '1'
+				  ) - NVL(MIN(A.ON_AIR_CNT), 0) <![CDATA[<=]]> 0
+			THEN 1
+			ELSE 0
+			END AS RESULT
+		FROM (
+				SELECT
+						  LB_SERIAL_NO
+						, COUNT(*) AS ON_AIR_CNT
+				FROM TGLIVE_BROADCAST
+				WHERE LB_SERIAL_NO IS NOT NULL
+				AND	  LB_SERIAL_NO != #{mySerialNo}
+				AND	  LB_STATUS = '1'
+				GROUP BY LB_SERIAL_NO
+		) A
+	</select>
+	
+	<select id="selectByStatusOnAir" parameterType="liveBroadcastVO" resultType="liveBroadcastVO">
+		SELECT A.LB_SEQ
+			 , A.LB_TITLE
+			 , A.LB_DESC 
+			 , A.LB_STATUS
+			 , A.LC_SEQ
+			 , NVL(B.LC_URL, 'VOD') AS LC_URL 
+		 	 , A.LB_VOD_SEQ
+			 , J.LBJ_PROCESS_ID
+			 , A.LB_PRESET_CD
+			 , A.LB_VOD_SAVE_YN
+<!-- 			 , LIVE_RESERV_SEQ -->
+			 , A.LB_CATEGORY_SEQ
+		 FROM TGLIVE_BROADCAST 		A
+	LEFT JOIN TGLIVE_CHANNEL 		B ON A.LC_SEQ = B.LC_SEQ
+		 JOIN TGLIVE_BROADCAST_JOB 	J ON A.LB_SEQ = J.LB_SEQ
+		WHERE LB_STATUS = #{lbStatus}
+	<if test="lbSerialNo != null and lbSerialNo != ''">
+		  AND LB_SERIAL_NO = #{lbSerialNo}
+	</if>
+		  AND A.LB_DEL_YN = 'N'
+		ORDER BY LB_START_DATE
+	</select>
+	
+	<select id="selectByEndDate" parameterType="String" resultType="liveBroadcastVO">
+	/*live.selectByEndDate*/
+		SELECT A.LB_SEQ
+			 , A.LB_TITLE
+			 , A.LB_DESC 
+			 , A.LB_STATUS
+			 , A.LC_SEQ
+			 , NVL(B.LC_URL, 'VOD') AS LC_URL 
+		 	 , A.LB_VOD_SEQ
+			 , C.LBJ_PROCESS_ID
+			 , A.LB_PRESET_CD
+			 , A.LB_VOD_SAVE_YN
+<!-- 			 , LIVE_RESERV_SEQ -->
+			 , A.LB_CATEGORY_SEQ
+			 
+		 FROM TGLIVE_BROADCAST 		A
+    LEFT JOIN TGLIVE_CHANNEL 		B ON A.LC_SEQ = B.LC_SEQ
+  		 JOIN TGLIVE_BROADCAST_JOB 	C ON A.LB_SEQ = C.LB_SEQ
+		 
+		WHERE A.LB_STATUS IN ('1', '3', '4', '9')
+<!-- 		  AND A.LB_DEL_YN = 'N' -->
+		  AND A.LB_SERIAL_NO = #{value}
+		  AND TRUNC((A.LB_END_DATE - SYSDATE) * 24 * 60 * 60) &lt;= 0
+	</select>
+	
+	<select id="selectStatusBySeq" parameterType="liveBroadcastVO" resultType="String">
+	   SELECT LB_STATUS
+		 FROM TGLIVE_BROADCAST
+		WHERE LB_SEQ = #{lbSeq}
+	</select>
+	
+	<select id="selectBroadcastJobBySeq" parameterType="liveBroadcastVO" resultType="liveBroadcastJobVO">
+		SELECT LB_SEQ
+		     , LBJ_SEQ
+		     , LBJ_PROCESS_ID
+		     , LBJ_DURATION
+		     , LBJ_PAUSE_DATE
+		     , LBJ_CUR_VIEWER_CNT
+		     , LBJ_VOD_LAST_POSITION
+		     , LBJ_LOG_REG_DATE
+		     , LBJ_LOG_MSG
+		     , LBJ_LOG_DESC
+		 FROM TGLIVE_BROADCAST_JOB
+		WHERE LB_SEQ = #{lbSeq}
+	</select>
+	
+	<!-- 현재 영상시간 가져오기 -->
+	<select id="selectNowDuration" parameterType="String" resultType="String">
+		SELECT LBJ_DURATION
+		  FROM TGLIVE_BROADCAST_JOB
+		 WHERE LB_SEQ = #{value}
+	</select>
+	
+	<!-- job -> job_log move -->
+	<insert id="jobLogMove" parameterType="liveBroadcastVO">
+		INSERT
+		  INTO TGLIVE_BROADCAST_JOB_LOG (
+		       LBJ_SEQ
+		     , LBJ_PROCESS_ID
+		     , LBJ_DURATION
+		     , LBJ_PAUSE_DATE
+		     , LBJ_CUR_VIEWER_CNT
+		     , LBJ_VOD_LAST_POSITION
+		     , LBJ_LOG_REG_DATE
+		     , LBJ_LOG_MSG
+		     , LBJ_LOG_DESC
+		     , LB_SEQ
+		  ) 
+		SELECT LBJ_SEQ
+			 , #{lbjProcessId}
+			 , #{lbjDuration}
+			 , LBJ_PAUSE_DATE
+			 , ( SELECT COUNT(B.LB_SEQ) 
+		           FROM TGLIVE_VIEWER_HISTORY B 
+		          WHERE B.LB_SEQ = #{lbSeq} 
+		       )
+			 , LBJ_VOD_LAST_POSITION
+			 , LBJ_LOG_REG_DATE
+			 , NVL(#{lbjLogMsg}, LBJ_LOG_MSG )
+			 , NVL(#{lbjLogDesc}, LBJ_LOG_DESC )
+			 , LB_SEQ
+		  FROM TGLIVE_BROADCAST_JOB
+		 WHERE LBJ_SEQ = #{lbjSeq}
+	</insert>
+	
+	<!-- Status update -->
+	<update id="updateLiveBroadcast" parameterType="liveBroadcastVO">
+		UPDATE TGLIVE_BROADCAST
+		   SET LB_STATUS = #{lbStatus}
+		 WHERE LB_SEQ = #{lbSeq}
+	</update>
+	
+	<!-- ProcessId update -->
+	<update id="updateLiveBroadcastJob" parameterType="liveBroadcastVO">
+		UPDATE TGLIVE_BROADCAST_JOB
+		   SET LBJ_PROCESS_ID = #{lbjProcessId}
+		     , LBJ_DURATION = #{lbjDuration}
+		     , LBJ_DURATION_UPDATE_DATE = SYSDATE
+		     , LBJ_LOG_MSG = #{lbjLogMsg}
+		     , LBJ_LOG_DESC = #{lbjLogDesc}
+		 WHERE LBJ_SEQ = #{lbjSeq}
+		   AND #{lbSerialNo} = (SELECT LB_SERIAL_NO 
+	   							 FROM TGLIVE_BROADCAST
+	   							WHERE LB_SEQ = #{lbSeq})
+	</update>
+	
+	<update id="updateLiveSerialNo" parameterType="liveBroadcastVO">
+		UPDATE TGLIVE_BROADCAST
+		   SET LB_SERIAL_NO = #{lbSerialNo}
+		 WHERE LB_SEQ = #{lbSeq}
+	</update>
+	
+	<!-- Live end date -->
+	<update id="updateLiveEndDate" parameterType="String">
+		UPDATE TGLIVE_BROADCAST
+		SET LB_END_DATE = SYSDATE
+		WHERE LB_SEQ = #{value}
+	</update>
+	
+	<!-- after job_log move, job delete -->
+	<delete id="jobDataDelete">
+		DELETE
+		  FROM TGLIVE_BROADCAST_JOB
+		 WHERE LBJ_SEQ = #{lbjSeq}
+	</delete>
+	
+	<select id="selectByInterruptedBroadcast" parameterType="String" resultType="LiveBroadcastVO">
+		SELECT
+			  A.LB_TITLE
+			, A.LB_SEQ
+			, A.LB_STATUS
+			, A.LB_DESC 
+			, A.LB_CATEGORY_SEQ
+			, A.LB_SERIAL_NO
+			, A.LB_VOD_SAVE_YN
+			, C.LBJ_PROCESS_ID
+			, CASE WHEN TRUNC((A.LB_END_DATE - SYSDATE) * 24 * 60) <![CDATA[>]]> 1
+			  THEN 'N'
+			  ELSE 'Y' 
+			  END AS END_YN
+			, C.LBJ_DURATION
+			, C.LBJ_DURATION_UPDATE_DATE
+			, C.LBJ_SEQ
+			, NVL(B.LC_URL, 'VOD') AS LC_URL 
+		FROM TGLIVE_BROADCAST A
+		LEFT JOIN TGLIVE_CHANNEL B
+		ON A.LC_SEQ = B.LC_SEQ
+		JOIN TGLIVE_BROADCAST_JOB C
+		ON A.LB_SEQ = C.LB_SEQ
+		AND A.LB_STATUS IN ('1','4')
+		AND A.LB_DEL_YN = 'N'
+		WHERE A.LB_SERIAL_NO = #{lbSerialNo}
+		AND C.LBJ_PROCESS_ID IN (NULL, '0')
+	</select>
+	
+	<select id="selectByInterruptedOthers" parameterType="String" resultType="LiveBroadcastVO">
+		SELECT
+			  A.LB_TITLE
+			, A.LB_SEQ
+			, A.LB_STATUS
+			, A.LB_DESC 
+			, A.LB_CATEGORY_SEQ
+			, A.LB_SERIAL_NO
+			, A.LB_VOD_SAVE_YN
+			, C.LBJ_PROCESS_ID
+			, CASE WHEN TRUNC((A.LB_END_DATE - SYSDATE) * 24 * 60) <![CDATA[>]]> 1
+			  THEN 'N'
+			  ELSE 'Y' 
+			  END AS END_YN
+			, C.LBJ_DURATION
+			, C.LBJ_DURATION_UPDATE_DATE
+			, C.LBJ_SEQ
+			, NVL(B.LC_URL, 'VOD') AS LC_URL 
+			, C.LBJ_DURATION_UPDATE_DATE
+		FROM TGLIVE_BROADCAST A
+		LEFT JOIN TGLIVE_CHANNEL B
+		ON A.LC_SEQ = B.LC_SEQ
+		JOIN TGLIVE_BROADCAST_JOB C
+		ON A.LB_SEQ = C.LB_SEQ
+		AND A.LB_STATUS = '1'
+		AND A.LB_DEL_YN = 'N'
+		WHERE A.LB_SERIAL_NO != #{lbSerialNo}
+		AND TRUNC((C.LBJ_DURATION_UPDATE_DATE - SYSDATE) * 24 * 60 * 60) <![CDATA[>=]]> 20
+	</select>
+	
+	<!-- 중단 데이터 가져오기 -->
+	<select id="selectByStopStatusOnAir" parameterType="liveBroadcastVO" resultType="liveBroadcastVO">
+		SELECT A.LB_SEQ
+			 , A.LB_TITLE
+			 , A.LB_DESC 
+			 , A.LB_STATUS
+			 , A.LC_SEQ
+			 , NVL(B.LC_URL, 'VOD') AS LC_URL 
+		 	 , A.LB_VOD_SEQ
+			 , J.LBJ_PROCESS_ID
+			 , A.LB_PRESET_CD
+			 , A.LB_VOD_SAVE_YN
+<!-- 			 , LIVE_RESERV_SEQ -->
+			 , A.LB_CATEGORY_SEQ
+		 FROM TGLIVE_BROADCAST 		A
+	LEFT JOIN TGLIVE_CHANNEL 		B ON A.LC_SEQ = B.LC_SEQ
+		 JOIN TGLIVE_BROADCAST_JOB 	J ON A.LB_SEQ = J.LB_SEQ
+		WHERE LB_STATUS IN ('1','3','4')
+	<if test="lbSerialNo != null and lbSerialNo != ''">
+		  AND LB_SERIAL_NO = #{lbSerialNo}
+	</if>
+		  AND A.LB_DEL_YN = 'N'
+		ORDER BY LB_START_DATE
+	</select>
+</mapper>

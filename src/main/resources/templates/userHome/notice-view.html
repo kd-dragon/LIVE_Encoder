@@ -1,0 +1,157 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<div th:replace="inc/_header"></div>
+
+<style>
+.notice-body ul>li{list-style: disc;}
+.notice-body ol>li{list-style: decimal;}
+</style>
+
+<script type="text/javascript" th:inline="javascript">
+/*<![CDATA[*/
+	
+var token = $("meta[name='_csrf']").attr("content");
+var header = $("meta[name='_csrf_header']").attr("content");
+	
+$(document).ready(function(){
+	$(".lnb_5").addClass("open"); 
+	$(".lnb_5_2").addClass("active");
+});
+
+function goList(){
+	window.location.href = /*[[ @{/userHome/noticeList.do} ]]*/ '/userHome/noticeList.do';
+}
+
+function goModify(){
+	var f = document.theForm;
+	f.action = /*[[ @{/userHome/noticeModifyForm.do} ]]*/ '/userHome/noticeModifyForm.do';
+	f.submit();	
+}
+
+function fileDownload( path, originName, serverName){
+	var f = document.theForm;
+	
+	f.filePath.value = path;
+	f.fileName.value = originName;
+	f.fileNameServer.value = serverName;
+	
+	f.action = /*[[ @{/userHome/noticeFileDown.do} ]]*/ '/userHome/noticeFileDown.do';;
+	f.method = "post";
+	f.submit();
+}
+
+function goDelete(){
+	if(!confirm("공지사항을 삭제하시겠습니까?")){
+		return;
+	}
+	$.ajax({
+		beforeSend : function(xhr)
+		{   /*데이터를 전송하기 전에 헤더에 csrf값을 설정한다*/
+			xhr.setRequestHeader(header, token);
+		},
+		url    : /*[[ @{/userHome/noticeDelete.do} ]]*/ "/userHome/noticeDelete.do",
+		data : {
+			delNoticeSeqs : $("#noticeSeq").val()
+		},
+        dataType : 'text',
+		success: function (rtn) {
+			if (rtn) {
+				alert("공지사항이 삭제되었습니다.");
+				goList();
+			} else {
+				alert("삭제 처리중에 오류가 발생하였습니다.");
+				return;
+			}
+		},
+		error : function (e){
+			alert("시스템 문제 발생으로 관리자에게 문의해주세요.");
+			return;
+		}
+	});
+	
+}
+
+/*]]*/
+</script>	
+	
+<form id="theForm" name="theForm" method="post">
+<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+<input type="hidden" 	id="noticeSeq" 			name="noticeSeq" 		th:value="${dto.noticeVo.noticeSeq}" />
+
+<!-- 첨부파일 다운  -->
+<input type="hidden" 	id="filePath" 			name="filePath" />
+<input type="hidden" 	id="fileName" 			name="fileName" />
+<input type="hidden" 	id="fileNameServer" 	name="fileNameServer" />
+
+</form>
+
+<!-- 컨텐츠 영역 -->
+<div class="app-content content">
+<div class="content-wrapper">
+<!-- 컨텐츠:헤더-페이지명,네비게이터 -->
+<div class="content-header row">
+	<div class="content-header-left col-md-8 col-12 mb-2 breadcrumb-new">
+		<h3 class="content-header-title mb-0 d-inline-block">공지사항</h3>
+		<div class="row breadcrumbs-top d-inline-block">
+			<div class="breadcrumb-wrapper col-12">
+				<ol class="breadcrumb">
+					<li class="breadcrumb-item">Home</li>
+					<li class="breadcrumb-item active">공지사항</li>
+				</ol>
+			</div>
+		</div>
+	</div>
+</div>
+<!--// 컨텐츠:헤더-페이지명,네비게이터 -->
+<!-- 컨텐츠:본문 영역 -->
+<div class="content-body">
+	<div class="row">
+		<!-- 사용자 목록 -->
+		<div class="col-xl-12">
+			<div class="card">
+				<div class="card-header pb-2 border-bottom-blue-grey border-bottom-lighten-5">
+					<h4 class="card-title">
+						<i class="icon-volume-2 align-middle mr-Half" th:if="${#strings.equals(dto.noticeVo.mainNoticeYn, 'Y')}"></i>
+						[[ ${dto.noticeVo.noticeTitle} ]]
+						<div class="title-info" th:with = " noticeVo = ${dto.noticeVo} ">
+							<span>[[ ${dto.noticeVo.regUserName} ]]</span><span>조회수 [[ ${dto.noticeVo.viewCnt} ]]</span><span>[[ ${dto.noticeVo.regDate} ]]</span>
+						</div>
+					</h4>
+				</div>
+				<div class="card-content" >
+					<div class="card-body">
+						<div class="notice-view">
+							<div class="notice-body" th:utext = "${dto.noticeVo.noticeCtx}">
+							</div>
+							<div class="notice-file" th:unless = "${#lists.isEmpty(dto.fileList)}">
+								<b>첨부파일</b>
+								<span th:each = "item : ${dto.fileList}" >
+									<a th:onclick="javascript:fileDownload( [[${item.filePath}]] , [[${item.fileName}]], [[${item.fileNameServer}]] )">
+										<i class="ft-save"></i> 
+										[[ ${item.fileName} ]]
+									</a>
+								</span>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- 버튼영역 -->
+				<div class="card-footer">
+					<div class="mr-auto float-right">
+						<button type="button" class="btn btn-info px-2" onclick="goList()">목록</button>
+						<button type="button" class="btn btn-info px-2" onclick="goModify()">수정</button>
+						<button type="button" class="btn btn-secondary px-2" onclick="goDelete()">삭제</button>
+					</div>
+				</div>
+				<!--// 버튼영역 -->
+			</div>
+		</div>
+		<!--// 사용자 목록 -->		
+	</div>
+
+</div>
+<!--// 컨텐츠 본문 영역 -->
+</div>
+</div>
+<!--// 컨텐츠 영역 -->
+<div th:replace="inc/_footer"/>

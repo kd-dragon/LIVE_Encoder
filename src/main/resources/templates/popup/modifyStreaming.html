@@ -1,0 +1,99 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<!-- Modal : IP 수정 -->
+<div class="modal fade text-left" id="modifyIp" tabindex="-1"
+	role="dialog" aria-labelledby="modifyIpLabel" aria-hidden="true">
+	<form id="modifyForm" name="modifyForm" method="post">
+	<input type="hidden" id="modifyStreamingSeq" name="modifyStreamingSeq" th:value="${dto.streamingSeq}" />
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header bg-info">
+				<h4 class="modal-title white" id="modifyIpLabel">IP 수정</h4>
+				<button type="button" class="close" data-dismiss="modal"
+					aria-label="Close">
+					<span aria-hidden="true">×</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<ul class="list-left list-disc mb-1">
+					<li>관리자 서버에서 접속 가능한 IP대역만 가능합니다.</li>
+					<li>사전에 방화벽 정책 허용여부 확인이 필요합니다.</li>
+					<li>자주 사용하는 스트리밍 기본 포트번호는 '1935' 입니다.</li>
+				</ul>
+
+				<div class="view-form view-form-vertical">
+					<table cellpadding="0" cellspacing="0" class=" w-100" summary="">
+						<colgroup>
+							<col width="20%" />
+							<col width="80%" />
+						</colgroup>
+						<tbody>
+							<tr>
+								<th>* 서버IP</th>
+								<td><input type='text' class="form-control" title=""
+									value="" name="modifyStreamingIp"  id="modifyStreamingIp" placeholder="IP를 입력하세요." maxLength="20"/></td>
+							</tr>
+							<tr>
+								<th>* 포트번호</th>
+								<td><input type='text' class="form-control" title=""
+									value="" name="modifyStreamingPort"  id="modifyStreamingPort" placeholder="Port를 입력하세요." maxLength="5"/></td>
+							</tr>
+							<tr>
+								<th>설명</th>
+								<td><input type="text" class="form-control" title=""
+									value="" name="modifyStreamingDesc" id="modifyStreamingDesc" placeholder="설명을 입력하세요." maxLength="500"/></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-outline-success"
+					data-dismiss="modal" onclick="modify()">저장</button>
+				<button type="button" class="btn btn-outline-secondary"
+					data-dismiss="modal">취소</button>
+			</div>
+		</div>
+	</div>
+	</form>
+</div>
+<!--// Modal : IP 수정 -->
+
+<script type="text/javascript" th:inline="javascript">
+/*<![CDATA[*/
+	
+	function modify() {
+		var token = $("meta[name='_csrf']").attr("content");
+		var header = $("meta[name='_csrf_header']").attr("content");
+		
+		var jsonData = {
+				"streamingIp" : $("#modifyStreamingIp").val(),
+				"streamingPort" : $("#modifyStreamingPort").val(),
+				"streamingDesc" : $("#modifyStreamingDesc").val(),
+				"streamingSeq" : $("#modifyStreamingSeq").val()
+		};
+		
+		$.ajax({
+			beforeSend : function(xhr) {   //데이터를 전송하기 전에 헤더에 csrf값을 설정한다
+			    xhr.setRequestHeader(header, token);},
+			url : /*[[ @{/system/modifyStreaming.do} ]]*/ '/system/modifyStreaming.do',
+			data : jsonData,
+			type : "POST",
+			success : function(type) {
+				if(type == "SUCCESS")
+					alert("스트리밍 서버 정보가 수정되었습니다.");
+				else if (type == "DUPLICATION")
+					alert("이미 등록되어있는 서버IP입니다.");
+				else
+					alert("스트리밍서버 수정에 실패했습니다.");
+			},
+			error : function(e){
+				alert("시스템 오류가 발생하였습니다. 관리자에게 문의하세요.");
+			},
+			complete : function() {
+				location.reload();
+			}
+		});
+	}
+	
+/*]]*/
+</script>

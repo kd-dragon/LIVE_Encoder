@@ -1,0 +1,199 @@
+<!doctype html >
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<!-- <meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Cache-Control" content="no-cache"/> -->
+<meta charset="utf-8" http-equiv="x-ua-compatible" content="ie=edge,chrome=1" />
+		
+<title></title>
+<script>
+function getContextPath() {
+	
+	var isUseable = false;
+	var path = "";
+	if(isUseable) {
+		var hostIndex = location.href.indexOf( location.host ) + location.host.length;
+		path = location.href.substring( hostIndex, location.href.indexOf('/', hostIndex + 1) );
+	}
+	
+	return path;
+};
+</script>
+
+<!-- style -->
+<style>
+	#video-contaier {width:100%; height:100%;}
+	#html5video     {width:100%; height:100%;}
+	.indexControl   {z-index: 10;}
+	
+	.plyr__progress{ pointer-events: none; }
+</style>
+
+
+<!-- Plyr Player -->
+ <script th:src="@{/player/tgplayer/plugin/js/jquery-3.4.1.min.js}"></script>
+<script th:src="@{/player/tgplayer/plugin/js/jquery-ui.min.js}"></script>
+<!-- <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/player/plyr/plyr.css" /> -->
+<!-- <script src="${pageContext.request.contextPath}/player/plyr/plyr.js"></script>
+<script src="${pageContext.request.contextPath}/player/plyr/plyr.polyfilled.js"></script>
+<script src="${pageContext.request.contextPath}/player/plyr/hls.js"></script> -->
+
+<!-- tg player -->
+<link th:href='@{/player/tgplayer/plugin/css/tg_player.css}' rel='stylesheet'>
+<link th:href='@{/player/tgplayer/plugin/css/tg_player_init.css}' rel='stylesheet'>
+<link th:href='@{/player/tgplayer/plugin/css/marker/tg_markers.css}' rel='stylesheet'>
+<link th:href='@{/player/tgplayer/plugin/css/slider/tg_slider.css}' rel='stylesheet'>
+<link th:href='@{/player/tgplayer/plugin/css/slider/tg_cs_web.css}' rel='stylesheet'>
+<script type='text/javascript' th:src='@{/player/tgplayer/plugin/js/tg_player_IE.js}'></script>
+<script type='text/javascript' th:src='@{/player/tgplayer/plugin/js/tg_player.js}'></script>
+<script type='text/javascript' th:src='@{/player/tgplayer/plugin/js/baseblow.js}'></script>
+<script type='text/javascript' th:src='@{/player/tgplayer/license.js}'></script>
+<script type='text/javascript' th:src='@{/player/tgplayer/plugin/js/hls/tg_hls.js}'></script>
+<script type='text/javascript' th:src='@{/player/tgplayer/plugin/js/loop/tg_loop.js}'></script>
+<script type='text/javascript' th:src='@{/player/tgplayer/plugin/js/marker/tg_markers.js}'></script>
+<script type='text/javascript' th:src='@{/player/tgplayer/plugin/js/slider/tg_slider.js}'></script>
+<!-- tg player -->
+
+</head>
+
+<body oncontextmenu="return false" ondragstart="return false" style="margin:0px;" onselectstart="return false" >
+		
+		<input type="hidden" id="lcUrl" name="lcUrl" th:value="${res.lcUrl}" />
+		<input type="hidden" id="lbjDuration" name="lbjDuration" th:value="${res.lbjDuration}"/>
+		
+		<video id="player" width="100%" poster="" data-plyr-config='{"quality":{"default": 480}}' preload="none" controlsList="nodownload" controls crossorigin playsinline autoplay muted>
+		
+			<th:block th:if="${#strings.equals(res.lcUrl,'VOD')}">
+				<!-- Nginx 사용 -->
+				<source th:src="@{${res.vodStreamUrl} + ${res.lbVodPath} + ${res.lbVodName} +'/index.m3u8'}" type="video/mp4" size="480"/>
+			</th:block>
+			
+			<th:block th:unless="${#strings.equals(res.lcUrl,'VOD')}">
+				<source	th:src="@{${res.liveStreamUrl} + '/live/'+${res.lbSeq}+'/index.m3u8'}" type="video/mp4" size="480" />
+			</th:block>
+<!--            <source src="http://123.111.139.103:1935/live/hmall.stream/playlist.m3u8" type="video/mp4" size="480"/> -->
+		</video>
+		
+	
+<script type="text/javascript" th:inline="javascript">	
+/*<![CDATA[*/
+	
+var watermark = /*[[${watermarkVo}]]*/ ''; //워터마크
+var lbStatus = /*[[${res.lbStatus}]]*/ ''; //방송 상태
+
+//Player 관련 전역변수
+var player; //player
+var video = document.querySelector("#player"); //<video>
+var source = video.getElementsByTagName('source'); //<source>[]
+var sourceUrl = source[0].src; //scr url
+var first = true;
+
+var autoQualInt = 1;
+var ChangeTime = 0;
+var ChangeYn = "N";
+var isIE = /Netscape|trident|msie/i.test(navigator.userAgent) ? true: false;
+// var hls = []; var i = 0;
+
+$(function(){
+	//player 설정
+	var playerOptions = {
+			  playsinline: true
+	        , loop: { active: false }
+	        , tooltips: { controls: true, seek: true }      
+	        , captions: { active: true, update: true}
+// 	    	, speed: { selected: 1, options: [0.8, 1, 1.2, 1.4, 1.6] }
+	    	, controls: [ 'play-large', /* 'restart', */ 'play', 'progress', 'current-time', 'duration', 'mute', 'volume',/*  'settings', */ 'fullscreen']	
+	    	, invertTime : false
+	        , listeners: {
+	        	seek: function customSeekBehavior(e) {
+					var currentTime = player.currentTime;
+					var newTime = _getTargetTime(player, e);
+						player.currentTime = newTime;
+	        	}
+	        }
+	        , previewThumbnails: { enabled: false }
+	        , i18n: {
+	            qualityBadge: { 2160: '4K', 1440: 'FHD', 1080: 'FHD', 720: 'HD', 640: 'SD', 576: 'SD', 480: 'SD', 360: 'SD', 320: 'SD', 240 : 'SD' , 1 : "auto" }
+	        }
+	        , ratio:"16:9"
+	        , fullscreen : { enabled: true, fallback: true, iosNative: false, container: null }
+			
+	};
+	
+	player = new Plyr('#player', playerOptions);
+	
+	//HLS 세팅 (Stream모듈 사용시)
+	var hls = new Hls();
+	hls.loadSource(sourceUrl);
+	hls.attachMedia(video);
+	
+	
+    player.on("loadeddata", function() {
+    	
+    	player.volume = 0;	//muted
+    	player.play();	//autoplay
+    	
+    	if($("#lcUrl").val() == "VOD"){
+    		var duration = $("#lbjDuration").val();
+    		player.currentTime = Number(duration);
+    	}
+    		
+    	$("<style></style>").appendTo("head").html(" .plyr__time{ display: none; pointer-events: none; } ");
+		$("<style></style>").appendTo("head").html(" .plyr__progress{ pointer-events: none; } ");
+	      
+		// 라이브 한정 프로그레스바 보이지 않도록 처리
+		$("<style></style>").appendTo("head").html(" .plyr__progress{ display : none; } ");
+		    	
+		//워터마크 데이터가 존재하고 워터마크 사용여부가 Y인 경우에만 워터마크 출력
+		if(watermark != null && watermark.useYn == "Y") {
+			var imgUrl = watermark.imgWebPath+ "/" + watermark.imgServerFileName;
+			
+			if(watermark.position == '1') {
+				$('.plyr__video-wrapper').append("<div class='watermark'><img src='"+imgUrl+"' style='position: absolute; margin:10px;top: 0; left: 0; display: inline; z-index: 1; opacity: 0.5; width: 10vw'/></div>");
+			} else if(watermark.position == '2') {
+				$('.plyr__video-wrapper').append("<div class='watermark'><img src='"+imgUrl+"' style='position: absolute; margin:10px;top: 0; right: 0; display: inline; z-index: 1; opacity: 0.5; width: 10vw'/></div>");
+			} else if(watermark.position == '3') {
+				$('.plyr__video-wrapper').append("<div class='watermark'><img src='"+imgUrl+"' style='position: absolute; margin:10px;bottom: 0; right: 0; display: inline; z-index: 1; opacity: 0.5; width: 10vw'/></div>");
+			} else if(watermark.position == '4') {
+				$('.plyr__video-wrapper').append("<div class='watermark'><img src='"+imgUrl+"' style='position: absolute; margin:10px;bottom: 0; left: 0; display: inline; z-index: 1; opacity: 0.5; width: 10vw'/></div>");
+			}
+		}
+		
+    });
+    
+    player.on('enterfullscreen', function(){
+		$('.plyr__video-wrapper').addClass('fullscreen');
+		$('.plyr__video-wrapper').attr("style","");	
+	});
+    
+    player.on('exitfullscreen', function(){
+		$('.plyr__video-wrapper').removeClass('fullscreen');
+	});
+    
+});
+
+
+function loadHLS(source) {
+	var hls = new Hls();
+    hls.loadSource(source);
+    hls.attachMedia(video);
+}
+
+function TimeValid(st){
+	var time = st.split(":");
+	var resultTime = 0;
+	if(time.length == 2){
+		resultTime = (time[0] * 60) + (time[1] * 1);
+	}else if(time.length == 3){
+		resultTime = (time[0] * 60 * 60) + (time[1] * 60) + (time[2] * 1);
+	}
+	
+	return resultTime;
+}
+
+/*]]*/
+</script>
+	
+</body>
+</html>

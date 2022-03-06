@@ -1,0 +1,612 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="api">
+
+	<sql id="broadcastWhere">
+		<!-- 공개구분 -->
+		<if test='searchOpen eq "Y".toString() or  searchOpen eq "N".toString() '>
+			AND A.LB_OPEN_YN = #{searchOpen}
+		</if>
+		 
+		<!-- 검색어 -->
+		<if test='searchText neq null and searchText neq "" '>
+			<choose>
+				<when test=' searchType eq "title".toString() '>
+					AND A.LB_TITLE LIKE '%${searchText}%'
+				</when>
+				<when test=' searchType eq "id".toString() '>
+					AND A.LB_REG_USER_ID  LIKE '%${searchText}%'
+				</when>
+				<otherwise>
+					AND (A.LB_TITLE LIKE '%${searchText}%' OR A.LB_REG_USER_ID  LIKE '%${searchText}%')
+				</otherwise>
+			</choose>
+		</if>
+		
+		<!-- 시작날짜 -->
+		<if test=' searchStDate neq null and searchStDate neq "" '>
+			<![CDATA[ AND A.LB_START_DATE >= TO_DATE('${searchStDate}', 'YYYY-MM-DD')]]>
+		</if>
+		<!-- 종료날짜 -->
+		<if test=' searchEnDate neq null and searchEnDate neq "" '>
+			<![CDATA[ AND A.LB_START_DATE <= TO_DATE('${searchEnDate}', 'YYYY-MM-DD')]]>
+		</if>
+	</sql>
+	
+	<select id="broadcastList" resultType="appBroadcastVO" parameterType="RequestBroadcastListDTO">
+	/*api.broadcastList*/
+	SELECT * FROM
+	(
+		SELECT Z.*, ROWNUM RN
+		FROM
+		(
+			SELECT A.LB_SEQ
+			     , A.LB_TITLE
+			     , A.LB_REG_USER_ID
+			     , TO_CHAR(A.LB_REG_DATE, 'YYYY.MM.DD') AS LB_REG_DATE
+			     , A.LB_STATUS
+			     , A.LB_OPEN_YN
+			     , TO_CHAR(A.LB_START_DATE, 'YYYY.MM.DD HH24:MI') AS LB_START_DATE
+			     , TO_CHAR(A.LB_END_DATE, 'YYYY.MM.DD HH24:MI') AS LB_END_DATE
+			     , A.LB_VOD_SAVE_YN
+			     , A.LB_CHAT_YN
+			     , REPLACE(B.LBF_IMG_ENC_PATH, (SELECT REPLACE_ROOT_PATH FROM TGLIVE_CONFIG), '') LBF_IMG_ENC_PATH
+			     , B.LBF_IMG_ENC_NM
+			     , B.LBF_IMG_ORIGINAL_NM
+			     , NVL(C.LBJ_DURATION, C2.LBJ_DURATION) AS LBJ_DURATION
+			     , D.LC_SEQ
+			     , D.LC_NAME
+			     , A.LB_DESC
+		     	 , TRUNC((A.LB_END_DATE-A.LB_START_DATE)*24) || '시간 ' || TRUNC(mod((A.LB_END_DATE - A.LB_START_DATE)*24,1)*60) || '분' AS TOTAL_DURATION_FORMAT
+		     	 , TRUNC((A.LB_END_DATE-A.LB_START_DATE)*24) || ':' || TRUNC(mod((A.LB_END_DATE - A.LB_START_DATE)*24,1)*60) AS TOTAL_DURATION
+			     , (TRUNC(NVL(C.LBJ_DURATION, C2.LBJ_DURATION)/(60*60))) ||':'|| LPAD(TRUNC(MOD((NVL(C.LBJ_DURATION, C2.LBJ_DURATION)/60),60)),2,0) AS PASS_DURATION
+			     <if test=' @com.kdy.app.bean.util.ListContainCheck@contain(searchStatus, "0") neq "true".toString() 
+						and @com.kdy.app.bean.util.ListContainCheck@contain(searchStatus, "2") neq "true".toString() '> 
+				 , F.FULL_CATEGORY_NAME  
+			     </if>
+			  FROM TGLIVE_BROADCAST A
+			  JOIN TGLIVE_BROADCAST_FILE B
+			    ON A.LB_SEQ = B.LB_SEQ
+			  LEFT JOIN TGLIVE_BROADCAST_JOB C
+			    ON A.LB_SEQ = C.LB_SEQ
+			  LEFT JOIN TGLIVE_BROADCAST_JOB_LOG C2
+			    ON A.LB_SEQ = C2.LB_SEQ
+			  LEFT JOIN TGLIVE_CHANNEL D
+			    ON A.LC_SEQ = D.LC_SEQ
+			   <if test=' @com.kdy.app.bean.util.ListContainCheck@contain(searchStatus, "0") neq "true".toString() 
+						and @com.kdy.app.bean.util.ListContainCheck@contain(searchStatus, "2") neq "true".toString() '> 
+			  LEFT JOIN (				     	
+				  			SELECT CATEGORY_SEQ
+									     , CATEGORY_NAME
+									     , LEVEL lvl
+									     , UP_CATEGORY_SEQ
+									     , SUBSTR(SYS_CONNECT_BY_PATH(CATEGORY_NAME, '|'), 2) FULL_CATEGORY_NAME
+									  FROM TGLIVE_CATEGORY
+									 START WITH UP_CATEGORY_SEQ = #{rootUpCategoryCode}
+									CONNECT BY PRIOR CATEGORY_SEQ = UP_CATEGORY_SEQ
+									 ORDER BY CATEGORY_SEQ
+			  
+			  		 )F
+			  	  ON A.LB_CATEGORY_SEQ = F.CATEGORY_SEQ				
+			   </if>
+			 WHERE 1 = 1
+			       AND A.LB_DEL_YN = 'N'
+			 <if test="searchStatus != null &amp;&amp; searchStatus.size() > 0">
+			 	AND A.LB_STATUS IN (
+			 	<foreach collection="searchStatus" item="item" index="index" separator=",">
+					#{item}
+				</foreach>
+				)
+			 </if>
+			 
+			<include refid="broadcastWhere"/>
+			
+			<!-- 정렬 -->
+			<choose>
+				<when test=' @com.kdy.app.bean.util.ListContainCheck@contain(searchStatus, "0") eq "true".toString() 
+						  or @com.kdy.app.bean.util.ListContainCheck@contain(searchStatus, "2") eq "true".toString() '>
+					<choose>
+					 	<when test=" orderByType eq 'start'.toString() ">
+						 	 ORDER BY A.LB_START_DATE DESC
+						 </when>
+						 <otherwise>
+						 	 ORDER BY A.LB_REG_DATE DESC
+						 </otherwise>
+					 </choose>
+				</when>
+				<otherwise>
+					 ORDER BY A.LB_STATUS ASC, A.LB_START_DATE DESC
+				</otherwise>
+			</choose>
+		 	)Z
+		WHERE ROWNUM &lt;= (#{blockCount} * #{currentPage}) 
+	)
+	WHERE RN &gt; (#{blockCount} * #{currentPage}) - #{blockCount}
+		 
+	</select>
+	
+	<select id="broadcastListCount" resultType="int" parameterType="RequestBroadcastListDTO">
+		SELECT COUNT(*)
+		  FROM TGLIVE_BROADCAST A
+		  JOIN TGLIVE_BROADCAST_FILE B
+		    ON A.LB_SEQ = B.LB_SEQ
+		  LEFT JOIN TGLIVE_BROADCAST_JOB C
+		    ON A.LB_SEQ = C.LB_SEQ
+		  LEFT JOIN TGLIVE_BROADCAST_JOB_LOG C2
+		    ON A.LB_SEQ = C2.LB_SEQ
+		  LEFT JOIN TGLIVE_CHANNEL D
+		    ON A.LC_SEQ = D.LC_SEQ
+		  LEFT JOIN TGLIVE_CATEGORY E
+		    ON A.LB_CATEGORY_SEQ = E.CATEGORY_SEQ
+		 WHERE 1 = 1
+		 	   AND A.LB_DEL_YN = 'N'
+		 <if test="searchStatus != null &amp;&amp; searchStatus.size() > 0">
+		 	AND A.LB_STATUS IN (
+		 	<foreach collection="searchStatus" item="item" index="index" separator=",">
+				#{item}
+			</foreach>
+			)
+		 </if>
+		 <include refid="broadcastWhere"/>
+	</select>
+	
+	<select id="broadcastExcelList" resultType="appBroadcastVO" parameterType="requestBroadcastExcelDTO">
+		SELECT A.LB_TITLE
+		     , A.LB_REG_USER_ID
+		     , TO_CHAR(A.LB_REG_DATE, 'YYYY.MM.DD HH24:MI') AS LB_REG_DATE
+		     , A.LB_STATUS
+		     , A.LB_OPEN_YN
+		     , TO_CHAR(A.LB_START_DATE, 'YYYY.MM.DD HH24:MI') AS LB_START_DATE
+		     , TO_CHAR(A.LB_END_DATE, 'YYYY.MM.DD HH24:MI') AS LB_END_DATE
+		     , TRUNC((A.LB_END_DATE-A.LB_START_DATE)*24) || ':' || TRUNC(mod((A.LB_END_DATE - A.LB_START_DATE)*24,1)*60) AS TOTAL_DURATION
+		     , A.LB_VOD_SAVE_YN
+		     , A.LB_CHAT_YN
+		     , D.LC_NAME
+		  FROM TGLIVE_BROADCAST A
+		  JOIN TGLIVE_BROADCAST_FILE B
+		    ON A.LB_SEQ = B.LB_SEQ
+		  JOIN TGLIVE_BROADCAST_JOB C
+		    ON A.LB_SEQ = C.LB_SEQ
+		  LEFT JOIN TGLIVE_CHANNEL D
+		    ON A.LC_SEQ = D.LC_SEQ
+		 WHERE 1 = 1
+		 <if test="searchStatus != null &amp;&amp; searchStatus.size() > 0">
+		 	AND A.LB_STATUS IN (
+		 	<foreach collection="searchStatus" item="item" index="index" separator=",">
+				#{item}
+			</foreach>
+			)
+		 </if>
+		 <choose>
+		 	<when test="orderByType == 'start'">
+			 	 ORDER BY A.LB_START_DATE DESC
+			 </when>
+			 <otherwise>
+			 	 ORDER BY A.LB_REG_DATE DESC
+			 </otherwise>
+		 </choose>
+	</select>
+	
+	<select id="broadcastDetailAPI" resultType="responseBroadcastDetailDTO" parameterType="AppBroadcastVO">
+		SELECT * FROM
+		(
+			SELECT A.LB_SEQ
+			     , A.LB_TITLE
+			     , A.LB_CATEGORY_SEQ
+			     , NVL(A.LB_DESC, '-') LB_DESC
+			     , NVL(A.LB_REG_USER_ID, '-') LB_REG_USER_ID
+			 	 , TO_CHAR(A.LB_REG_DATE, 'YYYY.MM.DD HH24:MI') AS LB_REG_DATE
+			     , A.LB_STATUS
+			     , A.LB_OPEN_YN
+			     , A.LB_PRESET_CD
+			     , TO_CHAR(A.LB_START_DATE, 'YYYY.MM.DD HH24:MI') AS LB_START_DATE
+			     , TO_CHAR(A.LB_END_DATE, 'YYYY.MM.DD HH24:MI') AS LB_END_DATE
+			     , TRUNC((A.LB_END_DATE-A.LB_START_DATE)*24) || ':' || TRUNC(mod((A.LB_END_DATE - A.LB_START_DATE)*24,1)*60) AS TOTAL_DURATION
+			     , (TRUNC(NVL(C.LBJ_DURATION, C2.LBJ_DURATION)/(60*60))) ||':'|| LPAD(TRUNC(MOD((NVL(C.LBJ_DURATION, C2.LBJ_DURATION)/60),60)),2,0) AS PASS_DURATION
+			     , A.LB_VOD_SAVE_YN
+			     , A.LB_CHAT_YN
+			     , A.LB_VOD_DOWN_YN
+	             , NVL(F.VOD_SEQ, A.LB_VOD_SEQ) LB_VOD_SEQ
+			     
+			     , (
+				     	SELECT
+				     	 	LISTAGG(LH_TAG_NAME, '|') 
+				     	FROM TGLIVE_HASHTAG 
+				     	WHERE LB_SEQ = A.LB_SEQ
+				   ) AS LB_TAG_NAME
+			        
+			     , B.LBF_SEQ
+			     , B.LBF_ATTACH_ORIGINAL_NM
+			     , B.LBF_ATTACH_PATH
+			     , B.LBF_ATTACH_SERVER_NM
+			     , B.LBF_IMG_ENC_NM
+			     , REPLACE(B.LBF_IMG_ENC_PATH, #{replaceRootPath}, '/') LBF_IMG_ENC_PATH
+			     
+			     , NVL(C.LBJ_DURATION, C2.LBJ_DURATION) LBJ_DURATION
+			     , NVL(C.LBJ_LOG_DESC, C2.LBJ_LOG_DESC) LBJ_LOG_DESC
+			     , NVL(C.LBJ_LOG_MSG, C2.LBJ_LOG_MSG) LBJ_LOG_MSG
+			     
+			     , D.LC_SEQ
+			     , D.LC_NAME
+			     , NVL(D.LC_URL, 'VOD') LC_URL
+			     
+				 , E.FULL_CATEGORY_NAME
+				 
+	             <!-- VOD 관련 -->
+	             , G.DURATION AS LB_VOD_RUNTIME
+	             , G.ENCODING_FILE_NAME AS LB_VOD_NAME
+			     , REPLACE(G.LIVE_FILE_LOCAL_PATH, #{replaceRootPath},'/') AS LB_VOD_PATH
+	             
+			  FROM TGLIVE_BROADCAST 						A
+			  
+			  JOIN TGLIVE_BROADCAST_FILE 					B
+			    ON A.LB_SEQ = B.LB_SEQ  
+			    
+	          LEFT JOIN TGLIVE_BROADCAST_JOB 				C
+			    ON A.LB_SEQ = C.LB_SEQ
+			    
+			  LEFT JOIN TGLIVE_BROADCAST_JOB_LOG 			C2
+			    ON A.LB_SEQ = C2.LB_SEQ		
+			      
+			  LEFT JOIN TGLIVE_CHANNEL 						D
+			    ON A.LC_SEQ = D.LC_SEQ
+			    
+			  LEFT JOIN (
+				  				SELECT    CATEGORY_SEQ
+								        , CATEGORY_NAME
+								        , LEVEL lv
+								        , UP_CATEGORY_SEQ
+								        , SUBSTR(SYS_CONNECT_BY_PATH(CATEGORY_NAME, '|'), 2) FULL_CATEGORY_NAME
+								  FROM  TGLIVE_CATEGORY
+						    START WITH  UP_CATEGORY_SEQ = 1
+							CONNECT BY  PRIOR CATEGORY_SEQ = UP_CATEGORY_SEQ
+							  ORDER BY  CATEGORY_SEQ	
+		
+				  ) 										E						E
+			    ON A.LB_CATEGORY_SEQ = E.CATEGORY_SEQ
+			    
+	 	      LEFT JOIN TGLIVE_VOD						F
+		           ON A.LB_VOD_SEQ = F.VOD_SEQ
+		           OR A.LB_SEQ = F.LB_SEQ
+		           
+		    LEFT JOIN TGLIVE_VOD_FILE					G
+		    	   ON F.VOD_SEQ = G.VOD_SEQ
+				  
+			    WHERE A.LB_SEQ = #{lbSeq}
+		    
+	) Z
+	WHERE ROWNUM = 1
+	</select>
+	
+	
+	<insert id="insertBroadcastAPI" parameterType="requestBroadcastInsertDTO">
+		INSERT INTO TGLIVE_BROADCAST (
+	           LB_SEQ
+	         , LB_TITLE
+	         , LB_DESC
+	         , LB_REG_USER_ID
+		     , LB_REG_DATE
+		     , LB_STATUS
+		     , LB_OPEN_YN
+		     , LB_CHAT_YN
+		     , LB_START_DATE
+		     , LB_END_DATE
+		     <if test=' lbVodSaveYn eq "Y".toString() '>
+		     , LB_CATEGORY_SEQ
+		     </if>
+		     , LB_VOD_SEQ
+		     , LB_VOD_SAVE_YN
+		     , LB_VOD_DOWN_YN
+		     , LC_SEQ
+		     , LB_PRESET_CD
+		) VALUES (
+		       #{lbSeq}
+		     , #{lbTitle}
+		     , #{lbDesc}
+		     , #{lbRegUserId}
+		     , SYSDATE
+		     , '0'
+		     , #{lbOpenYn}
+		     , #{lbChatYn}
+		     , TO_DATE(#{lbStartDate}, 'YYYY-MM-DD HH24:MI')
+		     , TO_DATE(#{lbEndDate}, 'YYYY-MM-DD HH24:MI')
+		     <if test=' lbVodSaveYn eq "Y".toString() '>
+		     , #{lbCategorySeq}
+		     </if>
+		     <choose>
+				 <when test=" lcSeq eq 'VOD'.toString() ">
+			     , #{lbVodSeq}
+			     , 'N'
+			     , 'N'
+			     , ''
+			     , null
+				 </when>
+				 <otherwise>
+				 , null
+			     , #{lbVodSaveYn}
+			     , #{lbVodDownYn}
+				 , #{lcSeq}
+			     , #{lbPresetCd}
+				 </otherwise>
+			 </choose>
+		)
+	</insert>
+	
+	<insert id="insertBroadcastJobAPI" parameterType="requestBroadcastInsertDTO">
+		INSERT INTO TGLIVE_BROADCAST_JOB (
+	           LBJ_SEQ
+	         , LBJ_PROCESS_ID
+	         , LBJ_DURATION
+		     , LB_SEQ
+		) VALUES (
+		       TO_CHAR(SYSDATE, 'YYYYMMDD') || LPAD(SEQUENCE_LBJ_12.NEXTVAL, 12, '0')
+		     , 0
+		     , 0
+		     , #{lbSeq}
+		)
+	</insert>
+	
+	<select id="selectLbStatus" resultType="String">
+	/*api.selectLbStatus*/
+	SELECT	LB_STATUS
+	  FROM	TGLIVE_BROADCAST
+	 WHERE  LB_SEQ = '${value}'
+	</select>
+	
+	<update id="updateLbDelYn">
+	/*api.updateLbDelYn*/
+	UPDATE	TGLIVE_BROADCAST
+	   SET	LB_DEL_YN = 'Y'
+	 WHERE	LB_SEQ = '${value}'
+	</update>
+	
+	<delete id="deleteLbj">
+	/*api.deleteLbj*/
+	DELETE 
+	  FROM	TGLIVE_BROADCAST_JOB
+	 WHERE	LB_SEQ = '${value}'
+	</delete>
+	
+	<update id="updateLb">
+	
+	/*api.updateLb*/
+	UPDATE	TGLIVE_BROADCAST
+	   SET    LB_TITLE = #{lbTitle}
+			, LB_DESC = #{lbDesc}
+			, LB_START_DATE = TO_DATE(#{lbStartDate}, 'YYYY-MM-DD HH24:MI')
+			, LB_END_DATE = TO_DATE(#{lbEndDate}, 'YYYY-MM-DD HH24:MI')
+			, LB_CHAT_YN = #{lbChatYn}
+			, LB_OPEN_YN =  #{lbOpenYn}
+		<choose>
+			<when test=" lcSeq eq 'VOD'.toString() ">
+			, LB_VOD_SAVE_YN = 'N'
+			, LB_VOD_DOWN_YN = 'N'
+			, LB_PRESET_CD =  null
+			, LC_SEQ = ''
+			, LB_VOD_SEQ = #{lbVodSeq}
+			, LB_CATEGORY_SEQ = null
+			</when>
+			<otherwise>
+			, LB_VOD_SAVE_YN = #{lbVodSaveYn}
+			, LB_VOD_DOWN_YN = #{lbVodDownYn}
+			, LB_PRESET_CD =  #{lbPresetCd}
+			, LC_SEQ = #{lcSeq}
+			, LB_VOD_SEQ = null
+				<choose>
+					<when test=' lbVodSaveYn eq "Y".toString() '>
+						, LB_CATEGORY_SEQ = #{lbCategorySeq}
+					</when>
+					<otherwise>
+						, LB_CATEGORY_SEQ = null
+					</otherwise>
+				</choose>
+			</otherwise>
+		</choose>
+     WHERE  LB_SEQ = #{lbSeq}
+	</update>
+	
+	<select id="checkEncoderWorkerCnt" resultType="_int">
+	
+	/*api_live.checkEncoderWorkerCnt*/
+	<![CDATA[
+	
+	SELECT 
+	       CASE
+	    	  WHEN CNT < ( SELECT encoder_worker_cnt FROM tglive_config ) THEN 1
+	    	  ELSE 0
+	       END  as checkEncoderWorker
+	 FROM(
+	 
+			  SELECT COUNT(*) as CNT
+				FROM TGLIVE_BROADCAST
+			   WHERE LB_DEL_YN = 'N'
+					 AND LB_STATUS != '2'
+					 AND TO_DATE('${lbStartDate}', 'YYYY-MM-DD HH24:MI') < LB_END_DATE
+				     AND TO_DATE('${lbEndDate}'  , 'YYYY-MM-DD HH24:MI') > LB_START_DATE
+				]]>
+					  <if test='lbSeq neq null and lbSeq neq "" '>
+					  AND LB_SEQ != #{lbSeq}
+					  </if>
+	 )
+	       
+	</select>
+	
+	<select id="onAirStatusList" resultType="appBroadcastStatusVO" parameterType="appBroadcastListDTO">
+	SELECT LB_STATUS
+	  	 , CASE LB_STATUS 
+		   		WHEN '1' THEN 'onair'
+		   		WHEN '2' THEN 'finish'
+				WHEN '3' THEN 'pause'
+				WHEN '0' THEN 'wait'
+				WHEN '4' THEN 'restart'
+				ELSE 'error'
+		   END AS LB_STATUS_NM
+	     , COUNT(*) AS LB_STATUS_CNT
+	  FROM TGLIVE_BROADCAST
+	 WHERE LB_STATUS IN ('1','3','4','8','9') 
+	 GROUP BY LB_STATUS
+	</select>
+	
+	<!-- 사용자 라이브 목록 리스트 -->
+	<select id="getLiveStatusList" parameterType="RequestUserBroadcastListDTO" resultType="AppBroadcastVO">
+		SELECT A.LB_SEQ
+			 , A.LB_TITLE
+		     , A.LB_REG_USER_ID
+		     , TO_CHAR(A.LB_REG_DATE, 'YYYY.MM.DD HH24:MI') AS LB_REG_DATE
+		     , A.LB_STATUS
+		     , TO_CHAR(A.LB_START_DATE, 'YYYY.MM.DD HH24:MI') AS LB_START_DATE
+		     , TO_CHAR(A.LB_END_DATE, 'YYYY.MM.DD HH24:MI') AS LB_END_DATE
+		     , NVL(D.LC_NAME, 'VOD') LC_NAME
+		     , B.LBF_IMG_ENC_NM
+		     , NVL(C.LBJ_CUR_VIEWER_CNT, 0) LBJ_CUR_VIEWER_CNT
+		     , REPLACE(B.LBF_IMG_ENC_PATH, #{replaceRootPath}, '/') LBF_IMG_ENC_PATH
+		  	 , (
+			     	SELECT
+			     	 	LISTAGG(LH_TAG_NAME, '|') 
+			     	FROM TGLIVE_HASHTAG 
+			     	WHERE LB_SEQ = A.LB_SEQ
+			    ) AS LH_TAG_NAME
+		  FROM TGLIVE_BROADCAST A
+		  JOIN TGLIVE_BROADCAST_FILE B
+		    ON A.LB_SEQ = B.LB_SEQ
+		  JOIN TGLIVE_BROADCAST_JOB C
+		    ON A.LB_SEQ = C.LB_SEQ
+	 LEFT JOIN TGLIVE_CHANNEL D
+		    ON A.LC_SEQ = D.LC_SEQ
+		 WHERE 1 = 1
+	   <foreach collection="lbStatusList" item="item" separator="," open="AND A.LB_STATUS IN (" close=")">
+		   #{item}
+	   </foreach>
+ 	 	   AND A.LB_OPEN_YN = 'Y'
+ 	   <if test="searchTag != null and searchTag != ''">
+		   AND EXISTS (SELECT LB_SEQ 
+		   				 FROM TGLIVE_HASHTAG E 
+		   				WHERE E.LH_TAG_NAME = #{searchTag} 
+		   				  AND E.LB_SEQ = A.LB_SEQ
+		   			)
+ 	   </if>
+	 	 ORDER BY A.LB_START_DATE
+	</select>
+	
+	<!-- 라이브 상태 확인 (1:진행중/2:종료/3:일시정지) -->
+	<select id="liveStatusCheck" parameterType="String" resultType="String">
+		SELECT CASE WHEN COUNT(*)=0 THEN '2'
+				  	WHEN COUNT(*)=1 AND LB_STATUS='3' THEN '3'
+				  	ELSE '1'
+			   END STATUS
+		  FROM TGLIVE_BROADCAST 
+		 WHERE LB_SEQ = #{value}
+		   AND TRUNC((SYSDATE - TO_DATE(LB_END_DATE, 'yyyy-mm-dd HH24:MI:SS')) * 24 * 60 * 60) > 0
+	</select>
+	
+	<!-- 라이브 종료 -->
+	<update id="liveBroadcastStatusEnd" parameterType="String">
+		UPDATE TGLIVE_BROADCAST
+		SET   LB_END_DATE = SYSDATE
+		WHERE LB_SEQ = #{value}
+	</update>
+	
+	<!-- 라이브 채팅 파일 다운로드 관련 -->
+	<select id="getLiveInfo" parameterType="String" resultType="AppBroadcastVO">
+		SELECT 
+			  LB_SEQ
+			, LB_TITLE
+			, TO_CHAR(LB_START_DATE, 'YYYY') AS START_YEAR
+			, TO_CHAR(LB_START_DATE, 'MM') AS START_MONTH
+			, TO_CHAR(LB_START_DATE, 'DD') AS START_DAY
+			, TO_CHAR(LB_END_DATE, 'YYYY') AS END_YEAR
+			, TO_CHAR(LB_END_DATE, 'MM') AS END_MONTH
+			, TO_CHAR(LB_END_DATE, 'DD') AS END_DAY
+			, (SELECT ETC_FILE_UPLOAD_PATH FROM TGLIVE_CONFIG) AS ETC_FILE_UPLOAD_PATH
+		FROM TGLIVE_BROADCAST
+		WHERE LB_SEQ = #{lbSeq}
+	</select>	
+	
+	<!-- 라이브 일시중지 및 재시작 -->
+	<update id="livePauseAndStart" parameterType="AppBroadcastVO">
+		UPDATE TGLIVE_BROADCAST
+		SET 
+			<choose>
+				<when test="lbStatus == 1">
+					LB_STATUS = '3'
+				</when>
+				<when test="lbStatus == 3">
+					LB_STATUS = '4'
+				</when>
+				<when test="lbStatus == 4">
+					LB_STATUS = '3'
+				</when>
+			</choose>
+		WHERE LB_SEQ = #{lbSeq}
+	</update>
+	
+	<!-- 라이브, 재시작 >> 일시중지 시 Date Update -->
+	<update id="pauseDateUpdate">
+		UPDATE TGLIVE_BROADCAST_JOB
+		SET LBJ_PAUSE_DATE = SYSDATE
+		WHERE LB_SEQ = #{lbSeq}
+	</update>
+	
+	
+	<select id="broadcastListExcel" resultType="appBroadcastVO" parameterType="RequestBroadcastListDTO">
+	/*api.broadcastList*/
+		SELECT A.LB_SEQ
+		     , A.LB_TITLE
+		     , A.LB_REG_USER_ID
+		     , TO_CHAR(A.LB_REG_DATE, 'YYYY.MM.DD') AS LB_REG_DATE
+		     , A.LB_STATUS
+		     , A.LB_OPEN_YN
+		     , TO_CHAR(A.LB_START_DATE, 'YYYY.MM.DD HH24:MI') AS LB_START_DATE
+		     , TO_CHAR(A.LB_END_DATE, 'YYYY.MM.DD HH24:MI') AS LB_END_DATE
+		     , A.LB_VOD_SAVE_YN
+		     , A.LB_CHAT_YN
+		     , REPLACE(B.LBF_IMG_ENC_PATH, (SELECT REPLACE_ROOT_PATH FROM TGLIVE_CONFIG), '') LBF_IMG_ENC_PATH
+		     , B.LBF_IMG_ENC_NM
+		     , B.LBF_IMG_ORIGINAL_NM
+		     , NVL(C.LBJ_DURATION, C2.LBJ_DURATION) as LBJ_DURATION
+		     , D.LC_SEQ
+		     , D.LC_NAME
+		     , A.LB_DESC
+	     	 , TRUNC((A.LB_END_DATE-A.LB_START_DATE)*24) || '시간 ' || TRUNC(mod((A.LB_END_DATE - A.LB_START_DATE)*24,1)*60) || '분' AS TOTAL_DURATION_FORMAT
+	     	 , TRUNC((A.LB_END_DATE-A.LB_START_DATE)*24) || ':' || TRUNC(mod((A.LB_END_DATE - A.LB_START_DATE)*24,1)*60) AS TOTAL_DURATION
+		     , (TRUNC(NVL(C.LBJ_DURATION, C2.LBJ_DURATION)/(60*60))) ||':'|| LPAD(TRUNC(MOD((NVL(C.LBJ_DURATION, C2.LBJ_DURATION)/60),60)),2,0) AS PASS_DURATION
+		  FROM TGLIVE_BROADCAST A
+		  JOIN TGLIVE_BROADCAST_FILE B
+		    ON A.LB_SEQ = B.LB_SEQ
+		  LEFT JOIN TGLIVE_BROADCAST_JOB C
+		    ON A.LB_SEQ = C.LB_SEQ
+		  LEFT JOIN TGLIVE_BROADCAST_JOB_LOG C2
+		    ON A.LB_SEQ = C2.LB_SEQ
+		  LEFT JOIN TGLIVE_CHANNEL D
+		    ON A.LC_SEQ = D.LC_SEQ
+		 WHERE 1 = 1
+		       AND A.LB_DEL_YN = 'N'
+		 <if test="searchStatus != null &amp;&amp; searchStatus.size() > 0">
+		 	AND A.LB_STATUS IN (
+		 	<foreach collection="searchStatus" item="item" index="index" separator=",">
+				#{item}
+			</foreach>
+			)
+		 </if>
+		 
+		<include refid="broadcastWhere"/>
+		
+		<!-- 정렬 -->
+		<choose>
+			<when test=' @com.kdy.app.bean.util.ListContainCheck@contain(searchStatus, "0") eq "true".toString() 
+					  or @com.kdy.app.bean.util.ListContainCheck@contain(searchStatus, "2") eq "true".toString() '>
+				<choose>
+				 	<when test=" orderByType eq 'start'.toString() ">
+					 	 ORDER BY A.LB_START_DATE DESC
+					 </when>
+					 <otherwise>
+					 	 ORDER BY A.LB_REG_DATE DESC
+					 </otherwise>
+				 </choose>
+			</when>
+			<otherwise>
+				 ORDER BY A.LB_STATUS ASC, A.LB_START_DATE DESC
+			</otherwise>
+		</choose>
+	</select>
+</mapper>

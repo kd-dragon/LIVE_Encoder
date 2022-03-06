@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<!-- 변수 지정 -->
+	<springProperty name="LOG_FILE_PATH_MAIN" source="logging.file.path.main"/>
+	<springProperty name="LOG_FILE_PATH_FFMPEG" source="logging.file.path.ffmpeg"/>
+	<springProperty name="LOG_FILE_PATH_WEBAPP" source="logging.file.path.webapp"/>
+	
+	<property name="CONSOLE_LOG_PATTERN" value="[%d{yyyy-MM-dd HH:mm:ss}:%-3relative][%thread] %highlight(%-5level) %C -%msg%n"/>
+	<property name="FILE_LOG_PATTERN" value ="[%d{yyyy-MM-dd HH:mm:ss}:%-3relative][%thread] %-5level %C -%msg%n" />
+	<property name="FFMPEG_LOG_PATTERN" value ="[%d{yyyy-MM-dd HH:mm:ss}:%-4relative][%thread] %-5level -%msg%n" />
+	<property name="DBMS_LOG_PATTERN" value ="[%d{yyyy-MM-dd HH:mm:ss}:%-4relative][%thread] %-5level -%msg%n" />
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>${CONSOLE_LOG_PATTERN}</Pattern>
+        </layout>
+    </appender>
+
+	<!-- FILE Appender -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FILE_PATH_MAIN}/common.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_FILE_PATH_MAIN}/rolling/%d{yyyy-MM-dd}/common_log_%i.zip</fileNamePattern>
+            <!-- 로그 파일의 최대 용량 (KB, MB, GB) -->
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+            	<maxFileSize>500mb</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <!-- 일자별 로그 파일의 최대 생명 주기(일), 해당일 이상된 파일은 자동으로 제거 -->
+            <maxHistory>90</maxHistory>
+        </rollingPolicy>
+
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+    
+    <appender name="FFMPEG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FILE_PATH_FFMPEG}/ffmpeg.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_FILE_PATH_FFMPEG}/rolling/%d{yyyy-MM-dd}/ffmpeg_log_%i.zip</fileNamePattern>
+            <!-- 로그 파일의 최대 용량 (KB, MB, GB) -->
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+            	<maxFileSize>100mb</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <!-- 일자별 로그 파일의 최대 생명 주기(일), 해당일 이상된 파일은 자동으로 제거 -->
+            <maxHistory>90</maxHistory>
+        </rollingPolicy>
+
+        <encoder>
+            <pattern>${FFMPEG_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+    
+    <appender name="DBMS" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FILE_PATH_MAIN}/dbms.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_FILE_PATH_MAIN}/rolling/%d{yyyy-MM-dd}/dbms_log_%i.zip</fileNamePattern>
+            <!-- 로그 파일의 최대 용량 (KB, MB, GB) -->
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+            	<maxFileSize>500mb</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <!-- 일자별 로그 파일의 최대 생명 주기(일), 해당일 이상된 파일은 자동으로 제거 -->
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+
+        <encoder>
+            <pattern>${DBMS_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+    
+    <appender name="WEBAPP" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FILE_PATH_WEBAPP}/web.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_FILE_PATH_WEBAPP}/rolling/%d{yyyy-MM-dd}/web_log_%i.zip</fileNamePattern>     
+            <!-- 로그 파일의 최대 용량 (KB, MB, GB) -->
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+            	<maxFileSize>500mb</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <!-- 일자별 로그 파일의 최대 생명 주기(일), 해당일 이상된 파일은 자동으로 제거 -->
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+
+        <encoder>
+            <pattern>${DBMS_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+    
+    <logger name="org.springframework.web" level="WARN">
+		<appender-ref ref="WEBAPP"/>
+		<appender-ref ref="CONSOLE"/>
+    </logger>
+    
+    <logger name="com.zaxxer.hikari" level="INFO" additivity="false">
+		<appender-ref ref="DBMS"/>
+	</logger>
+	
+    <!-- log4jdbc 옵션 설정 --> 
+	<logger name="jdbc" level="OFF"/> 
+	<!-- 커넥션 open close 이벤트를 로그로 남긴다. --> 
+	<logger name="jdbc.connection" level="INFO" additivity="false">
+		<appender-ref ref="DBMS"/>
+	</logger> 
+	<!-- SQL문만을 로그로 남기며, PreparedStatement일 경우 관련된 argument 값으로 대체된 SQL문이 보여진다. --> 
+	<logger name="jdbc.sqlonly" level="WARN"/>
+	<!-- SQL문과 해당 SQL을 실행시키는데 수행된 시간 정보(milliseconds)를 포함한다. --> 
+	<logger name="jdbc.sqltiming" level="INFO" additivity="false">
+		<appender-ref ref="DBMS"/>
+	</logger> 
+	<!-- ResultSet을 제외한 모든 JDBC 호출 정보를 로그로 남긴다. 많은 양의 로그가 생성되므로 특별히 JDBC 문제를 추적해야 할 필요가 있는 경우를 제외하고는 사용을 권장하지 않는다. --> 
+	<logger name="jdbc.audit" level="OFF">
+		<appender-ref ref="DBMS"/>
+	</logger>
+	<!-- ResultSet을 포함한 모든 JDBC 호출 정보를 로그로 남기므로 매우 방대한 양의 로그가 생성된다. --> 
+	<logger name="jdbc.resultset" level="OFF">
+		<appender-ref ref="DBMS"/>
+	</logger>
+	<!-- SQL 결과 조회된 데이터의 table을 로그로 남긴다. --> 
+	<logger name="jdbc.resultsettable" level="INFO">
+		<appender-ref ref="DBMS"/>
+	</logger>
+	
+	<logger name="ffmpeg" level="INFO" additivity="false">
+        <appender-ref ref="FFMPEG" />
+<!--         <appender-ref ref="CONSOLE"/> -->
+    </logger>
+    
+    <!-- root레벨 설정 --> 
+	<root level="INFO"> 
+		<appender-ref ref="FILE"/> 
+		<appender-ref ref="CONSOLE"/>
+	</root>
+	
+</configuration>

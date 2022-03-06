@@ -1,0 +1,36 @@
+.plyr__control svg {
+	height: 40px;
+	width: 40px;
+}
+
+.fly .slider-circle {
+	display: none;
+}
+
+.fly .slider {
+	height: 10px;
+	background: #999;
+	border: none;
+	border-radius: 22px;
+}
+
+.fly .slider-fill {
+	height: 10px;
+	/* top: -2.5px; */
+}
+
+.fly .handle {
+	width: 10px;
+	height: 40px;
+	border: 0;
+	border-radius: 3px;
+	border-color: #999;
+	top: -1.2rem;
+}
+
+.fly .handle:active {
+	border-color: #0e76bc;
+	box-shadow: none;
+	-moz-box-shadow: none;
+	-webkit-box-shadow: none;
+}

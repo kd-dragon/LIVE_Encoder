@@ -1,0 +1,185 @@
+@charset "utf-8";
+
+/*admin_container*/
+#admin_container{margin-right:0 auto; height:100%;width:830px;overflow:auto;}
+#admin_container #left{auto;height:240%;width:230px;position:absolute ;background-color:#303843;}
+#admin_container #left a,a:visited {color:#ffffff;text-decoration:none;},a:active{color:#24ff00;text-decoration:none;}
+#admin_container #left a:hover{color:#56c7ff;}a:focus strong{color:#56c7ff;}
+#admin_container #left ul{padding:0px 0px 0px 30px ; }
+#admin_container #left h2 {border-bottom: solid 1px #272d37;padding:25px 0px 20px 0px;}
+#admin_container #left h2 : hover {color :#fffff ; }
+#admin_container #content{width:830px;padding:0px 0px 10px 0px;}
+#admin_container h3 {border: 2px #c0c0c0;margin:25px 0px 0px 0px;border-bottom: solid 2px #7da7d9;padding : 0px 0px 20px 0px}
+#admin_container #content #title{ width:1092px;height:85px;margin:15px 0px 10px 0px;}
+
+/*������ ���� ����*/
+#admin_container #content #title img{ width:85px;float:left;}
+#admin_container #content #title .title_text { width:974px;float:right; line-height:200%; margin-top:13px;}
+#admin_container #content #dataBoard_choice { width:1092px; padding:10px 0px 10px 0px;}
+
+/*���ڵ� ��� ����*/
+#admin_container #content #encoding_apply_guide{ width:1092px;margin:15px 0px 10px 0px;}
+#admin_container #content #encoding_apply_guide .a_guide01 {padding-top:40px;line-height:150%;}
+#admin_container #content #encoding_apply_guide h4{ padding:0px 0px 10px 0px;line-height:100%;}
+#admin_container #content #encoding_apply_guide .a_guide01 .a_g04 { background-color:#dfdfdf; margin-top:13px;padding:0px 0px 0px 20px; line-height:68px;}
+#admin_container #content #encoding_apply_guide .a_guide01 .a_g04 .text03 { text-align:center;}
+#admin_container #content #encoding_apply_guide .a_guide01 .a_g04 label {padding:0px 0px 0px 0px;}
+#admin_container #content #encoding_apply_guide .a_guide01 .a_g04 span{padding:0px 20px 0px 20px;}
+#admin_container #content #encoding_apply_guide .a_guide02 { padding-top:40px;line-height:150%;}
+#admin_container #content #encoding_apply_guide h4{ padding:0px 0px 10px 0px;line-height:100%;}
+#admin_container #content #encoding_apply_guide .a_guide02 .a_g04 { background-color:#dfdfdf; margin-top:13px;padding:0px 0px 0px 20px; line-height:68px;}
+#admin_container #content #encoding_apply_guide .a_guide02 .a_g04 .text03 { text-align:center;}
+#admin_container #content #encoding_apply_guide .a_guide02 .a_g04 label {padding:0px 0px 0px 0px;}
+#admin_container #content #encoding_apply_guide .a_guide02 .a_g04 span{padding:0px 0px 0px 20px;}
+#admin_container #content #encoding_apply_guide .a_guide03 { padding-top:40px;line-height:150%;}
+#admin_container #content #encoding_apply_guide h4{ padding:0px 0px 10px 0px;line-height:100%;}
+#admin_container #content #encoding_apply_guide .a_guide03 .a_g04 { background-color:#dfdfdf; margin-top:13px;padding:0px 0px 0px 20px; line-height:68px;}
+#admin_container #content #encoding_apply_guide .a_guide03 .a_g04 .text03 { text-align:center;}
+#admin_container #content #encoding_apply_guide .a_guide03 .a_g04 span{padding:20px 20px 0px 20px;}
+#admin_container #content #encoding_apply_guide .a_guide04 { padding-top:10px;line-height:150%;}
+#admin_container #content #encoding_apply_guide h4{ padding:0px 0px 10px 0px;line-height:100%;}
+#admin_container #content #encoding_apply_guide .a_guide04 .a_g03 { background-color:#dfdfdf; margin-top:13px;padding:0px 0px 0px 20px; line-height:68px;}
+#admin_container #content #encoding_apply_guide .a_guide04 .a_g03 .text03 { text-align:center;}
+#admin_container #content #encoding_apply_guide .a_guide04 .a_g03 span{padding:0px 20px 0px 20px;}
+#admin_container #content #encoding_apply_guide .a_guide04 { padding-top:10px;line-height:150%;}
+#admin_container #content #encoding_apply_guide h4{ padding:0px 0px 10px 0px;line-height:100%;}
+#admin_container #content #encoding_apply_guide .a_guide04 .a_g04 { background-color:#dfdfdf; margin-top:13px;padding:0px 0px 0px 20px; line-height:68px;}
+#admin_container #content #encoding_apply_guide .a_guide04 .a_g04 .text03 { text-align:center;}
+#admin_container #content #encoding_apply_guide .a_guide04 .a_g04 span{padding:0px 20px 0px 0px;}
+
+/*�̵�� ���� ����*/
+#admin_container #content #media_apply_guide{ width:1092px;margin:15px 0px 10px 0px;}
+#admin_container #content #media_apply_guide .a_guide01 { padding-top:40px;line-height:150%;}
+#admin_container #content #media_apply_guide h4{ padding:0px 0px 10px 0px;line-height:100%;}
+#admin_container #content #media_apply_guide .a_guide01 .a_g01 { background-color:#dfdfdf; margin-top:13px;padding:0px 0px 0px 20px; line-height:68px;}
+#admin_container #content #media_apply_guide .a_guide02 { padding-top:40px; line-height:150%;}
+#admin_container #content #media_apply_guide h4{ padding:0px 0px 10px 0px;line-height:100%;}
+#admin_container #content #media_apply_guide .a_guide02 .a_g02 { background-color:#dfdfdf; margin-top:13px;padding:0px 0px 0px 20px; line-height:68px;}
+#admin_container #content #media_apply_guide .a_guide03 { padding-top:40px;line-height:150%;}
+#admin_container #content #media_apply_guide h4{ padding:0px 0px 10px 0px;line-height:100%;}
+#admin_container #content #media_apply_guide .a_guide03 .a_g02 { background-color:#dfdfdf; margin-top:13px;padding:0px 0px 0px 20px; line-height:68px;}
+#admin_container #content #media_apply_guide .a_guide04 { padding-top:40px;line-height:150%;}
+#admin_container #content #media_apply_guide h4{ padding:0px 0px 10px 0px;line-height:100%;}
+#admin_container #content #media_apply_guide .a_guide04 .a_g02 { background-color:#dfdfdf; margin-top:13px;padding:0px 0px 0px 20px; line-height:68px;}
+#admin_container #content #media_apply_guide .a_guide05 { padding-top:40px;line-height:150%; }
+#admin_container #content #media_apply_guide h4{ padding:0px 0px 10px 0px;line-height:100%;}
+#admin_container #content #media_apply_guide .a_guide05 .a_g01 { background-color:#dfdfdf; margin-top:13px;padding:0px 0px 0px 20px; line-height:68px;fent-color:#8f8f8f;}
+#admin_container #content #media_apply_guide .a_guide05 .select01 {fent-color:#8f8f8f;}
+#admin_container #content #dataBoard_choice_right { width:1092px; text-align:right;padding:0px 0px 10px 0px;} 
+#admin_container #content #dataBoard_choice_left1 { width:1092px; text-align:left;padding:0px 0px 10px 10px;} 
+
+/*������ ���� ����*/
+#admin_container #content .preset_left { width:320px;float:left;}
+#admin_container #content .preset_right {width:600px;float:right;}
+
+
+/* table ************************************************************************************************************************/
+/* ���ڵ����� Ÿ��Ʋ table ����*/
+#admin_container #content  #system_table {width:1000px;padding:0px 0px 0px 30px ;}
+#admin_container #content .dataBoard01 {width:1092px;border-top: solid 1px #d3d7dd;border-bottom: solid 1px #d3d7dd;}
+#admin_container #content .dataBoard01 { table-layout:fixed;word-break:break-all;}
+#admin_container #content .dataBoard01 tr{background-color:#ffffff;text-align:center;letter-spacing:-1px;line-height:30px;}
+#admin_container #content .dataBoard01 td{padding:10px 0px 10px 6px;}
+#admin_container #content #dataBoard_choice {width:1092px; float:right;text-align:left;padding:0px 0px 10px 0px;}
+#admin_container #content table {margin:0px 0px 20px 0px;}
+
+/*���ڵ����� ����Ʈ table����*/
+#admin_container #content .dataBoard02 {width:800px;border-bottom: solid 1px #d3d7dd;}
+#admin_container #content .dataBoard02 {word-break:break-all;}
+#admin_container #content .dataBoard02 tr{ text-align:center;border-bottom: solid 1px #d3d7dd;letter-spacing:-1px;line-height:22px;}
+#admin_container #content .dataBoard02 td{ padding:10px 0px 10px 0px;}
+.tt01{background-color:#ffffff;border-bottom: solid 1px #d3d7dd;}
+.tt02{background-color:#ffffff;border-bottom: solid 1px #d3d7dd;}
+.tt03{background-color:#ffffff;border-bottom: solid 1px #d3d7dd;}
+.tt04{background-color:#ffffff;border-bottom: solid 1px #d3d7dd;}
+.tt05{background-color:#ffffff;border-bottom: solid 1px #d3d7dd;}
+.tt06{background-color:#ffffff;border-bottom: solid 1px #d3d7dd;}
+.tt07{background-color:#ffffff;border-bottom: solid 1px #d3d7dd;}
+.tt08{background-color:#ffffff;border-bottom: solid 1px #d3d7dd;}
+.tt09{background-color:#ffffff;border-bottom: solid 1px #d3d7dd;}
+#admin_container #content .dataBoard02 input { margin-top:10px;}
+#admin_container #content #dataBoard_choice {width:1092px; float:right;text-align:left;padding:0px 0px 10px 0px;}
+
+/*�̵��ҽ� ����Ʈ table ����*/
+#admin_container #content .dataBoard03 {width:1092px;text-align:center;border-bottom: solid 1px #d3d7dd;}
+#admin_container #content .dataBoard03 { table-layout:fixed;word-break:break-all;}
+#admin_container #content .dataBoard03 tr{ background-color:#f7f7f7;border-bottom: solid 1px #d3d7dd;letter-spacing:-1px;line-height:22px;}
+#admin_container #content .dataBoard03 td{ padding:10px 5px 10px 5px;}
+.tt01{background-color:#ffffff;border-bottom: solid 1px #d3d7dd;}
+.tt02{background-color:#ffffff;border-bottom: solid 1px #d3d7dd;}
+.tt03{background-color:#ffffff;border-bottom: solid 1px #d3d7dd;}
+.tt04{background-color:#ffffff;border-bottom: solid 1px #d3d7dd;}
+.tt05{background-color:#ffffff;border-bottom: solid 1px #d3d7dd;}
+.tt06{background-color:#ffffff;border-bottom: solid 1px #d3d7dd;}
+
+/*�̵��ҽ� ����Ʈ table ����*/
+#admin_container #content .dataBoard04  {width:1092px;text-align:center;border-bottom: solid 1px #d3d7dd;margin:0px 0px 35px 0px;}
+#admin_container #content .dataBoard04 { table-layout:fixed;word-break:break-all;}
+#admin_container #content .dataBoard04 tr{ background-color:#f7f7f7;padding:10px 0px 10px 0px;border-bottom: solid 1px #d3d7dd;letter-spacing:-1px;line-height:22px;}
+#admin_container #content .dataBoard04 td{padding:10px 5px 10px 5px;}
+
+/*������ ���� table ����*/
+#admin_container #content .dataBoard05 { width:320px;table-layout:fixed;word-break:break-all;}
+#admin_container #content .dataBoard05 .tt001{ text-align:center;background-color:#ffffff; border-top: solid 1px #d3d7dd;border-bottom: solid 1px #d3d7dd; letter-spacing:-1px;line-height:22px;padding:10px 0px 10px 0px;}
+#admin_container #content .dataBoard05 .tt002 { border-bottom: solid 1px #d3d7dd; padding:10px 0px 10px 20px;}
+
+#admin_container #content .dataBoard06  {width:595px;text-align:center;margin:0px 0px 0px 0px;letter-spacing:-1px;line-height:44px;}
+#admin_container #content .dataBoard06 { table-layout:fixed;word-break:break-all;}
+#admin_container #content .dataBoard06 .p_tt001 { background-color:#ffffff;padding:10px 0px 10px 0px;letter-spacing:-1px;line-height:22px;border-top: solid 1px #d3d7dd;border-bottom: solid 1px #d3d7dd;}
+#admin_container #content .dataBoard06 .p_tt002 { width:10%; padding:10px 0px 10px 0px; letter-spacing:-1px;line-height:44px;}
+#admin_container #content .dataBoard06 .p_tt003 { width:60%;text-align:right;padding:10px 0px 10px 0px; letter-spacing:-1px;line-height:44px;}
+#admin_container #content .dataBoard06 .p_tt004 { text-align:right;padding:10px 0px 10px 0px; letter-spacing:-1px;line-height:44px;}
+#p_dataBoard_choice {width:600px; text-align:right;padding:0px 0px 10px 0px;}
+/*#admin_container #content .dataBoard06 .p_tt001 { text-align:center;background-color:#ffffff;letter-spacing:-1px;line-height:44px;
+border-top: solid 1px #d3d7dd;border-bottom: solid 1px #d3d7dd;}
+#admin_container #content .dataBoard06 .p_tt001 { padding:10px 0px 10px 0px; letter-spacing:-1px;line-height:44px;border: solid 1px red;}
+#admin_container #content .dataBoard06 .p_tt002 { padding:10px 0px 10px 0px; letter-spacing:-1px;line-height:44px;border: solid 1px red;}
+#admin_container #content .dataBoard06 .p_tt001 { background-color:#ffffff;padding:10px 0px 10px 0px;letter-spacing:-1px;line-height:22px;border-top: solid 1px #d3d7dd;border-bottom: solid 1px #d3d7dd;}
+#admin_container #content .dataBoard06 .p_tt002 { letter-spacing:-1px;line-height:44px;}*/
+
+/* 동영상 만들기 리스트_타이틀table 시작*/
+#admin_container #content  #system_table {width:1000px;padding:0px 0px 0px 30px ;}
+#admin_container #content .list_dataBoard01 {width:1092px;border-top: solid 1px #d3d7dd;border-bottom: solid 1px #d3d7dd;}
+#admin_container #content .list_dataBoard01 { table-layout:fixrd;word-break:break-all;}
+#admin_container #content .list_dataBoard01 tr{background-color:#ffffff;text-align:center;letter-spacing:-1px;line-height:30px;}
+#admin_container #content .list_dataBoard01 td{padding:10px 0px 10px 6px;}
+#admin_container #content #dataBoard_choice { float:right;text-align:left;}
+#admin_container #content #dataBoard_choice p .count_text {float:left;padding:0px 20px 0px 0px ;}
+
+/*동영상 만들기 리스트 시작*/
+#admin_container #content .movie_creation_list {width:1092px;float:left; height:auto;border-top:solid 1px #d3d7dd;border-bottom: solid 1px #d3d7dd;padding:10px 0px 10px 0px;}
+#admin_container #content .movie_creation_list .creation_box { float:left;width:220px;padding:10px 5px 0px 5px;}
+#admin_container #content .movie_creation_list .creation_box .date_text {padding:0px 0px 0px 5px;}
+#admin_container #content .movie_creation_list .creation_box .selection_button {letter-spacing:3px;}
+
+/* navigation_paging */
+#admin_container #navigation_paging {padding:10px 0px 0px 0px;}
+#admin_container #navigation_paging .paging { margin:20px 0px 0px 0px;border-top: solid 1px #d3d7dd; padding:10px 0px 0px 0px;}
+#admin_container #navigation_paging .paging a { background-color:#ffffff;color: #000000; }
+#admin_container #navigation_paging .paging :hover { background: #ebebeb; color: #56c7ff; }
+#admin_container #navigation_paging .paging {text-align:right; }
+#admin_container #navigation_paging .paging .first { background-color:#ffffff;border-radius:6px;text-align:center;  border: solid 1px #d3d7dd; margin:20px 10px 0px 0px;padding: 5px 18px 5px 10px;background:url(/images/new/ic_arrow_left1.png) left center no-repeat; }
+#admin_container #navigation_paging .paging .first:hover {background-color:#d3d7dd;}
+#admin_container #navigation_paging .paging .prev { background-color:#ffffff;border-radius:6px;text-align:center;  border: solid 1px #d3d7dd;margin:10px 10px 0px 0px;padding: 5px 16px 5px 12px;background:url(/images/new/ic_arrow_left2.png) left center no-repeat; }
+#admin_container #navigation_paging .paging .prev:hover {background-color:#d3d7dd;}
+#admin_container #navigation_paging .paging .number { background-color:#ffffff;border-radius:6px;border: solid 1px #d3d7dd;line-height:10px;margin:10px 5px 0px 0px;padding: 5px 13px 5px 9px; height:30px;width:40px;border: solid 1px #d3d7dd; }
+#admin_container #navigation_paging .paging .number { background-color:#ffffff;border-radius:6px;border: solid 1px #d3d7dd;line-height:10px;margin:10px 5px 0px 0px;padding: 5px 10px 5px 10px; height:30px;width:40px;border: solid 1px #d3d7dd;}
+#admin_container #navigation_paging .paging .next { background-color:#ffffff;border-radius:6px;text-align:center;  border: solid 1px #d3d7dd;margin:10px 10px 0px 0px;padding: 5px 14px 5px 13px;background:url(/images/new/ic_arrow_right1.png) left center no-repeat; }
+#admin_container #navigation_paging .paging .next:hover {background-color:#d3d7dd;}
+#admin_container #navigation_paging .paging .end { background-color:#ffffff;border-radius:6px;text-align:center;  border: solid 1px #d3d7dd;margin:10px 0px 0px 0px;padding: 5px 14px 5px 13px;background:url(/images/new/ic_arrow_right2.png) left center no-repeat; }
+#admin_container #navigation_paging .paging .end:hover {background-color:#d3d7dd;}
+
+/*모니터링 설정 시작*/
+#admin_container #content #monitoring_information h5 {line-height: 50px;}
+
+/* 모니터링 table 시작*/
+#admin_container #content #monitoring_information table {margin:0px 0px 20px 0px;}
+#admin_container #content #monitoring_information .dataBoard07  {width:1092px;text-align:center;border-bottom: solid 1px #d3d7dd;}
+#admin_container #content .dataBoard07 { table-layout:fixrd;word-break:break-all;}
+#admin_container #content .dataBoard07 tr{ padding:10px 0px 10px 0px;border-bottom: solid 1px #d3d7dd;letter-spacing:-1px;line-height:22px;}
+#admin_container #content .dataBoard07 td{padding:10px 5px 10px 5px;}
+#admin_container #content .dataBoard07 .m_tt01 { background-color:#ffffff;}
+#admin_container #content .dataBoard07 .m_tt02 { background-color:#f7f7f7;text-align:right;}
+#admin_container #content .dataBoard07 .m_tt03 { background-color:#f7f7f7;text-align:left;}
+#admin_container #content .dataBoard07 .m_tt04 { background-color:#f7f7f7;}
+#admin_container #content .dataBoard07 .m_tt05 { background-color:#f7f7f7;text-align:left;}

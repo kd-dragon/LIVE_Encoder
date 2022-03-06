@@ -1,0 +1,685 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<div th:replace="inc/_header"></div>
+
+<script type="text/javascript" th:inline="javascript">
+/*<![CDATA[*/
+$(document).ready(function(){
+	$(document).ready(function(){$(".lnb_1").addClass("open"); $(".lnb_1_1").addClass("open").addClass("active");});
+	
+	//사용자 데이터로 셋팅
+	$("#lbPresetCd").val( /*[[ ${vo.lbPresetCd} ]]*/).prop("selected", true);				//preset
+	
+	if(/*[[ ${vo.lcSeq != null} ]]*/''){
+		$("#lcSeq").val(/*[[ ${vo.lcSeq} ]]*/).prop("selected", true);					    //채널
+		channelChange(/*[[ ${vo.lcSeq} ]]*/);
+	}else{
+		$("#lcSeq").val('VOD').prop("selected", true);	
+		channelChange("VOD");
+	}
+	
+	$("#lbStartDate").val(/*[[ ${vo.lbStartDate} ]]*/);
+	$("#lbEndDate").val(/*[[ ${vo.lbEndDate} ]]*/);					   //방송종료 시간
+	
+	if(/*[[ ${#strings.equals(vo.lbChatYn, "Y")} ]]*/''){									   //채팅 사용 여부
+		$("input:radio[name='lbChatYn']:radio[value='Y']").prop('checked', true); 
+		chatUseCheck();
+	}else{
+		$("input:radio[name='lbChatYn']:radio[value='N']").prop('checked', true); 
+		chatUnUseCheck();
+	}
+	
+	if(/*[[ ${#strings.equals(vo.lbOpenYn, "Y")} ]]*/''){									   //공개 여부
+		$("input:radio[name='lbOpenYn']:radio[value='Y']").prop('checked', true); 
+	}else{
+		$("input:radio[name='lbOpenYn']:radio[value='N']").prop('checked', true); 
+	}
+	
+	if(/*[[ ${#strings.equals(vo.lbVodSaveYn, "Y")} ]]*/''){								   //VOD저장 여부
+		$("input:radio[name='lbVodSaveYn']:radio[value='Y']").prop('checked', true);
+		$('.option-save').removeClass('d-none');
+	}else{
+		$("input:radio[name='lbVodSaveYn']:radio[value='N']").prop('checked', true); 
+		$('.option-save').addClass('d-none');
+	}
+	
+	
+	if(/*[[ ${#strings.equals(vo.lbVodDownYn, "O")} ]]*/''){							  //다운로드 사용 여부
+		$("input:radio[name='lbVodDownYn']:radio[value='O']").prop('checked', true); 
+	}else{
+		$("input:radio[name='lbVodDownYn']:radio[value='F']").prop('checked', true); 
+	}
+	
+	if(/*[[ ${#strings.equals(vo.lbChatAnnym, "Y")} ]]*/'') {
+		$("input:radio[name='radio-annym']:radio[value='Y']").prop('checked', true);
+	} else {
+		$("input:radio[name='radio-annym']:radio[value='N']").prop('checked', true);
+	}
+
+	//태그 추가 (쉼표,엔터 눌렀을 때)
+// 	$("#tagText").keypress(function(e){
+// 		if(e.keyCode === 13 || e.keyCode === 44) {
+// 			e.preventDefault();
+// 			checkTag(this);
+// 		}
+// 	});
+	
+	$('.del-file').click(function(){
+		var msg = "첨부된 파일";
+		
+		if(this.id == "btnRemoveThumbnail"){ msg = "썸네일" }
+		
+		if(!confirm(msg+'을 삭제하시겠습니까?')){return;}
+		
+		if(this.id == "btnRemoveFile"){
+			$("#removeFileFlag").val("Y");
+		}else if(this.id == "btnRemoveThumbnail"){ 
+			$("#removeThumbnailFlag").val("Y");
+		}
+		
+		$(this).closest('.upload-file-box').find('.upload-asis').addClass('d-none');
+		$(this).closest('.upload-file-box').find('.add-file').removeClass('d-none');
+		
+	});
+	
+// 	$("#fullCategoryName").click( function() {
+// 		$("#btn-category").click();
+// 	});
+	
+	setLoginCategory();
+});
+
+
+//태그 유효성 체크
+// function checkTag(obj){
+// 	var isDuplicated = false;
+// 	var keyword = $(obj).val().trim();
+
+// 	// 공백 검사
+// 	if(keyword == '') {
+// 		$("#tagText").val("");
+// 		return;
+// 	}
+	
+// 	// 중복 키워드 검사
+// 	if($("span[name=tempTagName]").length != 0){
+// 		$("span[name=tempTagName]").each(function(i){
+// 			if($(this).text() == keyword) {
+// 				isDuplicated = true;
+// 				return;
+// 			}
+// 		});
+// 	}
+// 	if(isDuplicated) {
+// 		$("#tagText").val("");
+// 		return;
+// 	}
+// 	// 태그 화면 추가
+// 	addTag(keyword);
+// }
+
+// 태그 화면 임시 추가
+// function addTag(keyword){
+// 	var tagHtml = new Array();
+// 	tagHtml.push("<div class=\"tag tag-view m-0\">");
+// 	tagHtml.push("<span name=\"tempTagName\">" + keyword + "</span>");
+// 	tagHtml.push("<button type=\"button\" class=\"btn btn-xsm btn-round btn-light ml-Half\" onclick=\"removeTag(this);\">");
+// 	tagHtml.push("<i class=\"fa fa-times font-small-2\"></i>");
+// 	tagHtml.push("</button></div>");
+
+// 	$("#tag-append-area").before(tagHtml.join('\n'));
+// 	$("#tagText").val("");
+// }
+
+// 태그 제거
+// function removeTag(obj){
+// 	$(obj).parent().remove();
+// }
+
+function validateRegistForm(){
+	
+	//제목 공백 체크
+	if($("#lbTitle").val().trim() == "") {
+		$("#lbTitle").focus();
+		alert("제목을 입력해주세요");
+		return false;
+	}
+
+	//썸네일 체크
+	if($("#removeThumbnailFlag").val() == "Y" && $("#thumbnail").val() == ""){
+		alert("썸네일을 등록해주세요");
+		return false;
+	}
+	
+	//라이브 채널 선택 체크
+	if($("#lcSeq").val() == ""){
+		alert("방송 채널을 선택해주세요");
+		$("#selChannel")[0].focus();
+		return false;
+	}
+	
+	//VOD로 LIVE 방송시
+	if($("#lcSeq").val() == "VOD"){
+		if($("#lbVodSeq").val() == null || $("#lbVodSeq").val() == ""){
+			alert("방송할 VOD를 불러와주세요.");
+			return false;
+		}
+		
+		//방송시간 설정 (영상runtime + 1분 = LIVE 종료시간)
+		var endDate = new Date($("#lbStartDate").val());
+		endDate.setSeconds(endDate.getSeconds() + parseFloat($("#runTime").val()) + 60); 
+		$("#lbEndDate").val(dateFomatToString(endDate));
+		
+	} else {
+		
+		//프리셋 설정 체크
+		if($("#lbPresetCd").val() == ""){
+			alert("프리셋을 설정해주세요.");
+			$("#selPreset")[0].focus();
+			return false;
+		}
+		
+		var startDate = new Date($("#lbStartDate").val());
+		var endDate = new Date($("#lbEndDate").val());
+		if(endDate.getTime() <= startDate.getTime()){
+			alert("방송 종료 시간을 방송 시작 시간보다 크게 설정해 주세요.");
+			return false;
+		}
+	}
+	
+	
+	if($('input:radio[id=vodSave]').is(':checked')){
+		if($("#lbCategorySeq").val() == ""){
+			alert("VOD 저장 후 분류될 카테고리를 선택해 주세요.");
+			return false;
+		}
+	}
+	
+	return true;
+}
+
+function goModify(){
+	
+	//방송일정이 '상시'일경우 startDate null로 설정
+	if($("#dateAlways").is(":checked")){
+		$("#lbStartDate").val("");
+		$("#lbEndDate").val("");
+	}
+	
+	if(!validateRegistForm()){
+		return;
+	}
+	
+	if($("#chatAnnym").is(":checked")) {
+		$("#lbChatAnnym").val("Y");
+	} else if($("#chatUnAnnym").is(":checked")) {
+		$("#lbChatAnnym").val("N");
+	}
+	
+	//태그 배열 생성
+// 	if($("span[name=tempTagName]").length != 0){
+// 		$("span[name=tempTagName]").each(function(i){
+// 			var input = document.createElement('input');
+// 			input.setAttribute("type","hidden");
+// 			input.setAttribute("name","lhTagNames");
+// 			input.setAttribute("value", $(this).text());
+// 			$("#liveForm").append(input);
+// 		});
+// 	}
+	
+	var formData = new FormData($("#liveForm")[0]);
+
+	$.ajax({
+		url    : /*[[ @{/live/modifyBroadcast.do} ]]*/ '',
+		data : formData,
+        type : 'POST',
+        enctype: "multipart/form-data", 
+        processData: false,
+        contentType: false,
+		success: function (rtn) {
+			alert(rtn.rsltDesc);
+			
+			if (rtn.rslt) {
+				goWaitDetail();
+			}
+		},
+		error : function (e){
+			alert("등록 처리중에 오류가 발생하였습니다. \n 파일 최대 업로드 크기는 20MB입니다.");
+			
+		}
+	});
+}
+
+function goWaitDetail(){
+	var f = document.liveForm;
+	
+	f.action = /*[[ @{/live/viewBroadcastWait.do} ]]*/ '';
+	f.submit();
+}
+
+function channelChange(type){
+	
+	if(type == "VOD"){
+		//$("#lbCategorySeq").val("");
+		//$("#fullCategoryName").val("");
+		
+		$("#vodSaveWhetherForm").hide();
+		$("#vodUnsave").click();
+		$("#channelVodForm").css("display","flex");
+		$(".input-group-between").css("visibility","hidden");
+		$("#lbEndDate").css("visibility","hidden");
+		$("#vodComent").css("visibility","visible");
+		$("#lbEndDate").after('<small class="small success" id="dateComent">※ 시작 날짜를 선택해주세요. (종료 시간은 VOD 시간에 따라 자동 설정됩니다.)</small>');
+		$("#trPreset").hide();
+		
+		
+		
+	} else {
+		$("#lbVodSeq").val("");
+		$("#channelVodNm").val("");
+		
+		$("#vodSaveWhetherForm").show();
+		$("#vodSave").click();
+		$("#channelVodForm").css("display","none");
+		$("#lbVodSeq").val("");
+		$("#channelVodNm").val("");
+		$(".input-group-between").css("visibility","visible");
+		$("#lbEndDate").css("visibility","visible");
+		$("#vodComent").css("visibility","hidden");
+		$("#dateComent").remove();
+		$("#trPreset").show();
+		
+	}
+}
+
+
+//VOD 불러오기 팝업
+function openGetVodPopup(){
+	window.open(/*[[ @{/live/callVodListPopup.do} ]]*/ "/live/callVodListPopup.do", "callVodList-popup", "width=1488, height=490, scrollbars=yes");
+}
+
+//날짜 포맷 변경 (Date to String(yyyy-mm-dd hh:mi))
+function dateFomatToString(date){
+	var year = date.getFullYear();
+	var month = ('0' + (date.getMonth() + 1)).slice(-2);
+	var day = ('0' + date.getDate()).slice(-2);
+	var hours = ('0' + date.getHours()).slice(-2); 
+	var minutes = ('0' + date.getMinutes()).slice(-2);
+	var seconds = ('0' + date.getSeconds()).slice(-2); 
+	
+	return year+'-'+month+'-'+day+" "+hours+':'+minutes;
+}
+
+//내 부서 카테고리 자동 선택
+function setLoginCategory(){
+	/*
+	$(".cate-group").children().each(function(idx) {
+		if($(this).find("span").attr("seq") == $("#lbCategorySeq").val()){
+			$("#fullCategoryName").val($(this).find("span").attr("fullcategoryname"));
+		}
+	});
+	*/
+	$("#selCategory").children().each(function(idx) {
+		if($(this).val() == $("#lbCategorySeq").val()){
+			$(this).val($("#lbCategorySeq").val()).attr("selected", "selected");
+		}
+	});
+}
+
+
+function categoryChange(seq) {
+	$("#categorySeq").val(seq);
+}
+
+function chatUseCheck() {
+	$("#chatAnnymForm").show();
+	$("#chatAnnym").click();
+}
+
+function chatUnUseCheck() {
+	$("#chatAnnymForm").hide();
+	$("#chatUnAnnym").click();
+}
+
+function dateUseCheck() {
+	$("#broadcastDate").show();
+	$("#dateSetting").click();
+	document.getElementById("broadcastDate").style.display = "";
+}
+
+function dateUnuseCheck() {
+	$("#broadcastDate").hide();
+	$("#dateAlways").click();
+	//$("#lbStartDate").val("")
+}
+
+
+//목록 몰아가기
+function goList() {
+	window.location.href = /*[[ @{/live/liveWaitList.do} ]]*/ '/live/liveWaitList.do';
+}
+/*]]*/
+</script>
+<!-- 컨텐츠 영역 -->
+<div class="app-content content">
+<div class="content-wrapper">
+<!-- 컨텐츠:헤더-페이지명,네비게이터 -->
+<div class="content-header row">
+	<div class="content-header-left col-md-8 col-12 mb-2 breadcrumb-new">
+		<h3 class="content-header-title mb-0 d-inline-block">라이브방송관리</h3>
+		<div class="row breadcrumbs-top d-inline-block">
+			<div class="breadcrumb-wrapper col-12">
+				<ol class="breadcrumb">
+					<li class="breadcrumb-item">홈</li>
+					<li class="breadcrumb-item">라이브방송관리</li>
+					<li class="breadcrumb-item active">라이브방송관리</li>
+				</ol>
+			</div>
+		</div>
+	</div>
+</div>
+<!--// 컨텐츠:헤더-페이지명,네비게이터 -->
+<!-- 컨텐츠:본문 영역 -->
+
+<form id="liveForm" name="liveForm" method="post">
+	<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+	
+	<input type="hidden" 		id="removeFileFlag"				name="removeFileFlag" >
+	<input type="hidden" 		id="removeThumbnailFlag"		name="removeThumbnailFlag" >
+	<input type="hidden" 		id="lbCategorySeq" 				name="lbCategorySeq" 			th:value="${vo.lbCategorySeq}">
+	<input type="hidden" 		id="lbSeq" 						name="lbSeq" 					th:value="${vo.lbSeq}">	
+	<input type="hidden" 		id="lbfAttachOriginalNm" 		name="lbfAttachOriginalNm" 		th:value="${vo.lbfAttachOriginalNm}">	
+	<input type="hidden"		id="lbVodSeq"   				name="lbVodSeq"					th:value="${vo.lbVodSeq}">
+	<input type="hidden"		id="lbChatAnnym"				name="lbChatAnnym"/>
+	
+	<!-- VOD 선택시 종료시간 계산용 -->
+	<input type="hidden"		id="runTime" 					th:value="${vo.lbVodRuntime}"/>
+	
+	<div class="content-body">
+		<div class="row ">
+			<!-- 라이브 방송 등록 영역 -->
+			<div class="col-sm-12">
+				<div class="card">
+					<div class="card-header">
+						<h4 class="card-title">라이브 방송 수정</h4>
+					</div>				
+					<div class="card-content">
+						<div class="card-body">
+							<!-- regist-form -->
+							<div class="regist-form">
+								<table cellpadding="0" cellspacing="0" class="w-100 regist-form-vertical" summary="" >
+									<colgroup>
+										<col width="16%"/><col width="25%"/><col width="15%"><col width="44%">
+									</colgroup>
+									<tbody>
+										<tr>
+											<th>제목</th>
+											<td colspan="3"><input type="text" class="form-control" title="" th:value="${vo.lbTitle}" name="lbTitle" id="lbTitle" placeholder="제목을 입력하세요"/></td>
+										</tr>
+										<tr>
+											<th>썸네일</th>
+											<td class="upload-file-box" colspan="3">
+												<div class="upload-asis">
+													<div class="img-box">
+														<span class="badge badge-success">대표이미지</span>
+														<span class="file-ctrl"><a href="#" class="badge badge-pill badge-secondary del-file" id="btnRemoveThumbnail"><i class="ft-x white"></i></a></span>
+														<div class="img-cover"><img th:src="@{${vo.lbfImgEncPath}+'/'+${vo.lbfImgEncNm}}" class="thumb"></div>
+													</div>
+												</div>
+												<div class="d-none add-file">
+													<input type="file" class="w-100" name="thumbnail" id="thumbnail">
+												</div>
+												<small class="small success">※ 썸네일 이미지는 16:9 비율로 1280px * 720px 이상의 이미지가 가장 적절합니다.</small>
+											</td>
+										</tr>
+										<tr>
+											<th>채널</th>
+											<td >
+												<select class="form-control" name="lcSeq" id="lcSeq" onchange="channelChange(this.value)">
+													<option value="" selected="selected">채널선택</option>
+													<option value="VOD">VOD</option>
+													<th:block th:unless="${#lists.isEmpty(dto.channelList)}">
+														<option th:each="item : ${dto.channelList}" th:value="${item.lcSeq}" th:text="${item.lcName}"></option>
+													</th:block>
+												</select>
+											</td>
+											<td colspan="2">
+												<div class="input-group" id="channelVodForm" style="display:none">
+													<input type="text" class="form-control" title="" name="channelVodNm" id="channelVodNm" onclick="openGetVodPopup();" th:value="${vo.vodTitle}" readonly>
+													<div class="input-group-append">
+														<button type="button" class="btn btn-info" onclick="openGetVodPopup();">VOD 불러오기</button>
+													</div>
+												</div>
+										   </td>
+										</tr>
+										
+<!-- 										<tr id ="trPreset"> -->
+<!-- 											<th>프리셋 설정</th> -->
+<!-- 											<td colspan="3"> -->
+<!-- 												<select class="form-control col-sm-2" name="lbPresetCd" id="lbPresetCd"> -->
+<!-- 													<option value="">선택하세요.</option> -->
+<!-- 													<option value="high">고화질(100명이내)</option> -->
+<!-- 													<option value="mid">중화질(500명이내)</option> -->
+<!-- 													<option value="low">저화질(1000명이내)</option> -->
+<!-- 												</select> -->
+<!-- 											</td> -->
+<!-- 										</tr> -->
+										
+										<tr>
+											<th>방송일정</th>
+											<td colspan="3">
+												<div class="d-flex align-items-center" >
+													<div class="form-check abc-radio abc-radio-info d-inline">
+														<input type="radio" class="form-radio-input"
+															name="radio-date" id="dateAlways" value="dateUnuse"  /> <label
+															class="form-check-label" for="dateUnuse" onclick="dateUnuseCheck()">상시</label>
+													</div>
+													<div class="d-inline-flex align-items-center">
+														<div class="form-check abc-radio abc-radio-info d-inline ml-Half">
+															<input type="radio" class="form-radio-input"
+																name="radio-date" id="dateSetting" value="dateUse" checked> <label
+																class="form-check-label" for="dateUse" onclick="dateUseCheck()">일정 지정</label>
+														</div>
+														<div class="input-group col-sm-8" id="broadcastDate">
+															<div class="input-group-prepend">
+																<span class="input-group-text"> <span
+																	class="fa fa-calendar-o"></span>
+																</span>
+															</div>
+															<input type='text' class="form-control singledate"
+																id="lbStartDate" name="lbStartDate" />
+															<div class="input-group-between">
+																<span class="input-group-text clear-style">~</span>
+															</div>
+															<div class="input-group-between round-prepend">
+																<span class="input-group-text round-prepend"> <span
+																	class="fa fa-calendar-o"></span>
+																</span>
+															</div>
+															<input type='text' class="form-control singledate"
+																id="lbEndDate" name="lbEndDate" />
+														</div>
+													</div>
+												</div>
+											</td>
+										</tr>
+										<tr>
+											<th class="text-height">채팅사용여부</th>
+											<td colspan="3">
+												<div class="form-check abc-radio abc-radio-info d-inline">
+													<input type="radio" class="form-radio-input" name="lbChatYn" id="chatUse" value="Y"/>
+													<label class="form-check-label" for="chatUse" onclick="chatUseCheck();">사용</label>
+												</div>
+												<div class="form-check abc-radio abc-radio-info d-inline ml-Half">
+													<input type="radio" class="form-radio-input" name="lbChatYn" id="chatUnuse" value="N">
+													<label class="form-check-label" for="chatUnuse" onclick="chatUnUseCheck();">사용안함</label>
+												</div>
+											</td>
+										</tr>
+										<tr id="chatAnnymForm">
+											<th class="text-height">채팅익명여부</th>
+											<td colspan="3">
+												<div class="form-check abc-radio abc-radio-info d-inline">
+													<input type="radio" class="form-radio-input"
+														name="radio-annym" id="chatAnnym" value="Y"> <label
+														class="form-check-label" for="chatAnnym">적용</label>
+												</div>
+												<div
+													class="form-check abc-radio abc-radio-info d-inline ml-Half">
+													<input type="radio" class="form-radio-input"
+														name="radio-annym" id="chatUnAnnym" value="N"> <label
+														class="form-check-label" for="chatUnAnnym">미적용</label>
+												</div>
+											</td>
+										</tr>
+										<tr>
+											<th class="text-height">공개여부</th>
+											<td colspan="3">
+												<div class="form-check abc-radio abc-radio-info d-inline">
+													<input type="radio" class="form-radio-input" name=lbOpenYn id="publicChk" value="Y"/>
+													<label class="form-check-label" for="publicChk">공개</label>
+												</div>
+												<div class="form-check abc-radio abc-radio-info d-inline ml-Half">
+													<input type="radio" class="form-radio-input" name="lbOpenYn" id="privateChk" value="N">
+													<label class="form-check-label" for="privateChk">비공개</label>
+												</div>
+											</td>
+										</tr>
+										<tr id="vodSaveWhetherForm">
+											<th class="text-height">VOD 저장여부</th>
+											<td class="py-Half" colspan="3">
+												<div class="form-check abc-radio abc-radio-info d-inline">
+													<input type="radio" class="form-radio-input" name="lbVodSaveYn" id="vodSave" value="Y"/>
+													<label class="form-check-label" for="vodSave">저장</label>
+												</div>
+												<div class="form-check abc-radio abc-radio-info d-inline ml-Half">
+													<input type="radio" class="form-radio-input" name="lbVodSaveYn" id="vodUnsave" value="N">
+													<label class="form-check-label" for="vodUnsave">저장 안함</label>
+												</div>
+											</td>
+										</tr>
+										<th:block th:if="${#strings.equals(loginVO.authSeq,'20210000000000000000')}">
+										<tr class="option-save">
+											<th>카테고리</th>
+											<!-- <td colspan="3">
+												<div class="input-group">
+													<input type="text" class="form-control" th:value="${#strings.replace(vo.fullCategoryName, '|', ' > ')}" name="fullCategoryName" id="fullCategoryName" readonly="readonly">
+													<div class="input-group-append">
+														<button type="button" class="btn btn-outline-info" data-toggle="modal" data-target="#callCategory" id="btn-category">카테고리선택</button>
+													</div>
+												</div>
+												<small class="success">※ VOD저장 후 분류될 카테고리를 선택합니다.</small>
+											</td> -->
+											<td><select name="selCategory" title="" class="form-control" id="selCategory"
+												onchange="categoryChange(this.value)">
+													<option value="" selected="selected">카테고리선택</option>
+													<option th:each="val : ${categoryList}"
+														th:value="${val.categorySeq}" th:text="${val.categoryName}"></option>
+											</select></td>
+										</tr>
+										</th:block>
+										<tr class="option-save">
+											<th>다운로드 사용여부</th>
+											<td class="py-Half" colspan="3">
+												<div class="form-check abc-radio abc-radio-info d-inline">
+													<input type="radio" class="form-radio-input" name="lbVodDownYn" id="down-f" value="F"/>
+													<label class="form-check-label" for="down-f">다운로드 불가</label>
+												</div>
+												<div class="form-check abc-radio abc-radio-info d-inline ml-Half">
+													<input type="radio" class="form-radio-input" name="lbVodDownYn" id="down-o" value="O">
+													<label class="form-check-label" for="down-o">원본 다운로드</label>
+												</div>
+<!-- 												
+												<div class="form-check abc-radio abc-radio-info d-inline">
+													<input type="radio" class="form-radio-input" name="lbVodDownYn" id="radioD-1" value=""/>
+													<label class="form-check-label" for="radioD-1">인코딩 다운로드</label>
+												</div>
+												<div class="form-check abc-radio abc-radio-info d-inline ml-Half">
+													<input type="radio" class="form-radio-input" name="lbVodDownYn" id="radioD-2" value="">
+													<label class="form-check-label" for="radioD-2">원본, 인코딩 다운로드</label>
+												</div>
+												 -->
+												<small class="d-block success mt-Half">※ VOD 저장 후 다운로드 권한을 결정합니다.</small>
+											</td>
+										</tr>
+<!-- 										<tr> -->
+<!-- 											<th>설문조사 링크</th> -->
+<!-- 											<td colspan="3"><input type="text" class="form-control" title="" th:value="${vo.lbSurveyLink == null} ? '' : ${vo.lbSurveyLink}" name="lbSurveyLink" id="lbSurveyLink" placeholder="설문조사 링크를 입력해주세요."/></td> -->
+<!-- 										</tr> -->
+<!-- 										<tr> -->
+<!-- 											<th>설문조사 팝업 사이즈</th> -->
+<!-- 											<td colspan="2"><input type="text" class="form-control" title="" th:value="${vo.lbSurveyWidth == null} ? '' : ${vo.lbSurveyWidth}" id="lbSurveyWidth" -->
+<!-- 												name="lbSurveyWidth" placeholder="너비값을 입력하세요." maxlength="4" /> -->
+<!-- 												<small class="d-block success mt-Half">※ 팝업 호출시 팝업창 너비를 설정합니다.</small> -->
+<!-- 											<td colspan="2"><input type="text" class="form-control" title="" th:value="${vo.lbSurveyHeight == null} ? '' : ${vo.lbSurveyHeight}" id="lbSurveyHeight" -->
+<!-- 											name="lbSurveyHeight" placeholder="높이값을 입력하세요." maxlength="4" /> -->
+<!-- 											<small class="d-block success mt-Half">※ 팝업 호출시 팝업창 높이를 설정합니다.</small> -->
+<!-- 										</tr> -->
+<!-- 										<tr> -->
+<!-- 											<th>태그</th> -->
+<!-- 											<td class="textarea-tag" colspan="3"> -->
+<!-- 												<div class="tag-wrap"> -->
+<!-- 													<th:block th:unless="${vo.lhTagName == null}"> -->
+<!-- 														<div class="tag tag-view m-0" th:each="item : ${#strings.arraySplit(vo.lhTagName,'|')}"> -->
+<!-- 															<span name="tempTagName" th:text="${item}"></span> -->
+<!-- 															<button type="button" class="btn btn-xsm btn-round btn-light ml-Half" onclick="removeTag(this);"> -->
+<!-- 															<i class="fa fa-times font-small-2"></i> -->
+<!-- 															</button> -->
+<!-- 														</div> -->
+<!-- 													</th:block> -->
+<!-- 													<div class="tag-input-wrap" id="tag-append-area"> -->
+<!-- 														<input type="text" class="tag-input" title="" value="" name="tagText" id="tagText"/> -->
+<!-- 													</div> -->
+<!-- 												</div> -->
+<!-- 												<span class="small success">※ 쉼표 및 enter키로 태그입력/ x 버튼과 delete키로 삭제합니다.</span> -->
+<!-- 											</td> -->
+<!-- 										</tr> -->
+										<tr>
+											<th>설명</th>
+											<td colspan="3"><textarea name="lbDesc" id="lbDesc" cols="" rows="7" title="" class="form-control" placeholder="라이브 방송 관련 설명을 입력하세요" th:text="${vo.lbDesc == null} ? '' : ${vo.lbDesc}"></textarea></td>
+										</tr>
+										<tr>
+											<th class="text-height">첨부파일</th>
+											<td class="upload-file-box" colspan="3">
+												<th:block th:if="${vo.lbfAttachOriginalNm == null}">
+													<div class="add-file">
+														<input type="file" class="w-100 pt-0" title="" value="" name="attach" id="attach"/>
+													</div>
+												</th:block>
+												<th:block th:unless="${vo.lbfAttachOriginalNm == null}">
+													<div class="upload-asis file">
+														<div class="file-name w-auto"><i class="ft-save info"></i> <a href="#" th:text="${vo.lbfAttachOriginalNm}"></a></div>
+														<div class="file-ctrl mx-Half"><button type="button" class="btn btn-xsm btn-round btn-light del-file" id="btnRemoveFile"><i class="fa fa-times font-small-2"></i></button></div>
+													</div>
+													<div class="d-none add-file">
+														<input type="file" class="w-100 pt-0" title="" value="" name="attach" id="attach"/>
+													</div>
+												</th:block>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div> <!--// regist-form -->
+						</div>
+					</div>
+					<!-- 버튼영역 -->
+					<div class="card-footer">
+						<div class="mr-auto float-right">
+							<button type="button" class="btn btn-success px-2" onclick="goModify()">수정</button>
+							<button type="button" class="btn btn-secondary px-2" onclick="goList()">취소</button>
+						</div>
+					</div>
+					<!--// 버튼영역 -->
+				</div>
+			</div>
+			<!--// 라이브 방송 등록 영역 -->
+		</div>
+	</div>
+</form>
+<!--// 컨텐츠 본문 영역 -->
+</div>
+</div>
+<!--// 컨텐츠 영역 -->
+<div th:replace="inc/_footer"></div>
+<!-- 팝업인크루드 -->
+<div th:replace="popup/callCategory"></div>
+<!--// 팝업인크루드 -->

@@ -1,0 +1,1 @@
+﻿var tg_player_ComponentRoot = "/player/";

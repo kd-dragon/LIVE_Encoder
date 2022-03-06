@@ -1,0 +1,1336 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<div th:replace="inc/_header"></div>
+
+<script th:src="@{/assets/js/banword_search.js}" language="javascript" type="text/javascript"></script>
+<script type="text/javascript" th:inline="javascript">
+/*<![CDATA[*/
+var token = $("meta[name='_csrf']").attr("content");
+var header = $("meta[name='_csrf_header']").attr("content");
+var time = /*[[ ${vo.lbjDuration} ]]*/
+
+$(document).ready(function(){
+	$(".lnb_1").addClass("open"); 
+	$(".lnb_1_1").addClass("open").addClass("active");
+	
+	//메시지 글자수 200자 제한
+	$("#textMessage, #textMessage2").on("keyup", function() {
+		if($(this).val().length > 200) {
+			alert("글자수는 200자까지 입력할 수 있습니다.");
+			$(this).val($(this).val().substring(0, 200));
+		}
+	});
+	
+	getRecEnable();
+	
+// 	iframeSubmit();
+// 	resizeFrame();
+	lbStatusCheck();
+	
+	timer = setInterval(function(){
+		time++;
+		var min = Math.floor(time/60);
+		var hour = Math.floor(min/60);
+		var sec = time%60;
+		var min = min%60;
+
+		var th = hour;
+		var tm = min;
+		var ts = sec;
+		if(th<10){
+		th = "0" + hour;
+		}
+		if(tm < 10){
+		tm = "0" + min;
+		}
+		if(ts < 10){
+		ts = "0" + sec;
+		}
+
+		document.getElementById("curDuration").innerHTML = th + ":" + tm + ":" + ts;
+		
+		//5초마다 한번씩
+		if(time % 5 == 0){
+			liveStatusCheck();
+		}
+		
+	}, 1000);
+	
+});
+
+//라이브 방송 실시간 체크 (5초마다)
+function liveStatusCheck(){
+	//라이브 상태 확인
+	$.ajax({
+		url : /*[[ @{/live/liveStatusCheck.do}]]*/ '/live/liveStatusCheck.do',
+		type : "post",
+		data : {"lbSeq" : $("#lbSeq").val()},
+		beforeSend: function(xhr) {
+			xhr.setRequestHeader(header, token);
+		},
+		success: function (status){
+			if(status == "2"){
+				alert("라이브가 종료되었습니다.");
+				goList();
+			} else if(status == "3"){
+				alert("라이브가 중지되었습니다.");
+				goPause();
+			}
+		},
+		error: function (e){
+			alert("네트워크 연결 오류! 관리자에게 문의하여 주세요.");
+			goList();
+		}
+	});
+		
+}
+
+
+//라이브 방송 상태 체크
+function lbStatusCheck(){
+	
+	if($("#lbStatus").val() == "1"){
+		$(".livePause").removeClass("hidden");
+		$(".liveRestart").addClass("hidden");
+		
+	} else if($("#lbStatus").val() == "3"){
+		$(".livePause").addClass("hidden");
+		$(".liveRestart").removeClass("hidden");
+		
+	}
+
+}
+
+function downloadAttachFile(){
+	var f = document.liveForm;
+	f.action =  /*[[ @{/live/downloadAttachFile.do} ]]*/ '/live/downloadAttachFile.do';
+	f.method = "POST";
+	f.submit();
+}
+
+function goList(){
+	location.href=/*[[ @{/live/liveOnAirList.do} ]]*/ '/live/liveOnAirList.do';
+}
+
+function goPause(){
+	var f = document.liveForm;
+	
+	f.lbStatus.value = '3';
+	f.action = /*[[ @{/live/viewBroadcastPause.do} ]]*/ '/live/viewBroadcastPause.do';
+	f.submit();
+}
+
+//일시중지 취소
+function cancelPause() {
+	player.play();
+}
+
+//일시정지
+function livePause() {
+	var status = $("#lbStatus").val();
+	
+	if(status == 1 || status == 4) {
+		try {
+			player.pause();
+		} catch (e) {
+// 			console.log("[FAIL] Player Pause Request \n" + e);
+		}
+	}
+	var jsonData = {
+			"lbSeq" : $("#lbSeq").val(),
+			"lbStatus" : status,
+			"lbjDuration" : time
+	};
+
+	$.ajax({
+		beforeSend : function(xhr) {
+			xhr.setRequestHeader(header, token);
+		},
+		url : /*[[ @{/live/livePauseAndStart.do}]]*/ '/live/livePauseAndStart.do',
+		type : "POST",
+		data : JSON.stringify(jsonData),
+		contentType : 'application/json',
+		dataType : 'text',
+		success : function(rtn) {
+			if(rtn == "SUCCESS") {
+				alert("라이브 방송을 일시중지 했습니다.");
+				
+				var f = document.liveForm;
+				
+				f.action = /*[[ @{/live/viewBroadcastPause.do}]]*/ '/live/viewBroadcastPause.do';
+				f.submit();
+			} else {
+				alert("방송 일시중지에 실패했습니다. 다시 시도해주세요.");
+				cancelPause();
+			}
+		},
+		error : function(e) {
+			alert("시스템상 문제가 발생하였습니다. 관리자에게 문의하세요.");
+			cancelPause();
+		}
+	});
+}
+
+
+//라이브 종료
+function liveEnd() {
+	$.ajax({
+		beforeSend : function(xhr) {
+			xhr.setRequestHeader(header, token);
+		},
+		url : /*[[ @{/live/liveBroadcastStatusEnd.do} ]]*/ '/live/liveBroadcastStatusEnd.do',
+		data: {"lbSeq" : $("#lbSeq").val()},
+        dataType : 'text',
+        type: 'POST',
+		success: function (rtn) {
+			if (rtn == "SUCCESS") {
+				alert("라이브 방송이 종료되었습니다.");
+				goList();
+				
+			} else {
+				alert("라이브 방송을 종료하는데 실패하였습니다.");
+			}
+		},
+		error : function (e){
+			alert("시스템상 문제가 발생하였습니다. 관리자에게 문의하세요");
+		}
+	});
+}
+
+//페이지 로딩시에 채팅 모듈 연결
+ window.onload = function() {
+	var liveStatus = $("#lbStatus").val();
+	
+	connect();
+	
+	//채팅 모듈 사용하지 않는 경우
+// 	if($("#chatYn").val() == "Y" && (liveStatus == "1" || liveStatus == "4")) {
+// 		connect();
+// 	} else {
+// 		noChatConnect();
+// 	}
+}
+
+//브라우저 종료시에 채팅방 나가기 적용
+ window.addEventListener("pagehide", function(e) {
+	var msg = {type : "LEAVE", sessionId : sessionId, userType : userType};
+
+	disconnect(msg);
+	
+	//채팅 모듈 사용하지 않는 경우
+	// 	//채팅 사용하는 경우
+// 	if($("#chatYn").val() == 'Y') {
+// 		disconnect(msg);
+// 	//채팅 사용 안 하는 경우
+// 	} else {
+// 		noChatDisconnect(msg);
+// 	}
+});
+
+
+//날짜 형식
+function nowDate() {
+	var date = new Date();
+	var month = date.getMonth() + 1;
+	var day = date.getDate();
+	var hour = date.getHours();
+	var minute = date.getMinutes();
+	var seconds = date.getSeconds();
+	
+	month = String(month);
+	day = String(day);
+	hour = String(hour);
+	minute = String(minute);
+	seconds = String(seconds);
+		
+	if(month.length == 1) {
+		month = "0" + month;
+	}
+	
+	if(day.length == 1) {
+		day = "0" + day;
+	}
+	
+	if(hour.length == 1) {
+		hour = "0" + hour;
+	}
+	
+	if(minute.length == 1) {
+		minute = "0" + minute;
+	}
+	
+	if(seconds.length == 1) {
+		seconds = "0" + seconds;
+	}
+	return date.getFullYear() + "-" + month + "-" + day + " " + hour + ":" + minute + ":" + seconds;
+}
+
+var userId = "";
+var userName = "";
+var stomp = null;
+var socket;
+var sessionIdList = [];
+var sessionId = "";
+var num = 0;
+var userCnt = "";
+
+var childNode = "";
+var userType;
+//navigator > platform > PC
+var checkDevice = "win16|win32|win64|macintel|mac|";
+
+//sockjs 연결 (채팅 모듈 사용)
+function connect(event) {
+	userId = $("#chatId").val();
+	userName = $("#chatName").val();
+	
+	//userType 0 : PC, 1 : Mobile
+	if(navigator.platform) {
+		if(checkDevice.indexOf(navigator.platform.toLowerCase()) < 0) {
+			userType = 1;
+		} else {
+			userType = 0;
+		}
+	}
+	
+	if(userId != null || userId != "") {
+		
+		var chatUrl = /*[[ ${chatUrl} ]]*/ '';
+		//로컬
+		socket = new SockJS('http://' + chatUrl + '/websocket');
+		//socket = new SockJS('http://121.140.160.42:9482/websocket');
+		//235
+// 		socket = new SockJS('http://222.122.31.235:9090/websocket');
+		//120
+// 		socket = new SockJS("http://192.168.0.120:9090/websocket");
+		stomp = Stomp.over(socket);
+		//개발자 모드 콘솔 숨기기
+		stomp.debug = null;
+		stomp.connect({}, onConnected, onError);
+	} else {
+	
+		var node = '<div class="no-data">';
+			node += '<i class="ft-video-off"></i>';
+			node += '라이브 채팅이 일시적으로 중단 되었습니다.';
+			node += '</div>';
+			
+		$('#chatWrap, #fullChatList').html(node);
+	}
+}
+
+//채팅 모듈 사용하지 않는 경우
+function noChatConnect(event) {
+	userId = $("#chatId").val();
+	userName = $("#chatName").val();
+	if(userId != null || userId != "") {
+		//로컬
+		socket = new SockJS("http://192.168.0.14:8090/liveNoChat");
+		//235
+// 		socket = new SockJS("http://222.122.31.235:8090/liveNoChat");
+		//120
+// 		socket = new SockJS("http://192.168.0.120:8090/liveNoChat");
+		stomp = Stomp.over(socket);
+		//개발자 모드 콘솔 숨기기
+		stomp.debug = null;
+		stomp.connect({}, noChatConnected, noChatError);
+	}
+}
+
+//connect가 정상적인 경우 실행 (채팅 모듈 사용)
+function onConnected() {
+	var lbSeq = $("#lbSeq").val();
+	stomp.subscribe('/broker/'+lbSeq, onMessageReceived);
+	stomp.send('/app/chat.init/'+lbSeq, {}, JSON.stringify({userId : userId, type : 'INIT', lbSeq : lbSeq, userName : userName}));
+	setTimeout(function(){
+		stomp.send('/app/chat.join/'+lbSeq, {}, JSON.stringify({userId : userId, type : 'JOIN', lbSeq : lbSeq, userName : userName, userType : userType}));
+	}, 1000);
+}
+
+//noChatConnect가 정상적인 경우 (채팅 모듈 미사용)
+function noChatConnected() {
+	var lbSeq = $("#lbSeq").val();
+	stomp.subscribe("/noChat/"+lbSeq, noChatfunc);
+	stomp.send("/no/live.connect/"+lbSeq, {}, JSON.stringify({userId : userId, type : "JOIN", lbSeq : lbSeq, userName : userName}));
+}
+
+//connect 실패 (채팅 모듈 사용)
+function onError(error) {
+
+	var node = '<div class="no-data">';
+		node += '<i class="ft-video-off"></i>';
+		node += '라이브 채팅이 일시적으로 중단 되었습니다.';
+		node += '</div>';
+		
+		$('#chatWrap, #fullChatList').html(node);
+}
+
+//채팅 사용 안 하는 경우 에러 (채팅 모듈 미사용)
+function noChatError(error) {
+// 	console.log("채팅 인원 카운팅 실패 !!!");
+}
+
+//채팅 끄기 (채팅 모듈 사용)
+function roomOut() {
+	var msg = { type : "LEAVE", sessionId : sessionId, userType : userType };
+	disconnect(msg);
+}
+
+//연결 종료 (채팅 모듈 사용)
+function disconnect(event) {
+	var lbSeq = $("#lbSeq").val();
+	if(stomp) {
+		var sendMsg = {
+			userId : userId,
+			type : event.type,
+			sessionId : event.sessionId,
+			lbSeq : lbSeq,
+			userName : userName,
+			userType : event.userType
+		};
+	}
+	stomp.send('/app/chat.leave/'+ lbSeq, {}, JSON.stringify(sendMsg));
+}
+
+//noChat 연결 종료 (채팅 모듈 미사용)
+function noChatDisconnect(event) {
+	var lbSeq = $("#lbSeq").val();
+	if(stomp) {
+		var sendMsg = {
+				userId : userId,
+				type : event.type,
+				sessionId : event.sessionId,
+				lbSeq : lbSeq,
+				userName : userName
+		};
+	}
+	stomp.send("/no/live.disconnect/"+lbSeq, {}, JSON.stringify(sendMsg));
+}
+
+//메시지 전송 전 체크
+//type : fullscreen / default
+function sendChk(event, type) {
+	
+	event.stopPropagation();
+	
+	var msg;
+	var txtMsg = "";
+	var notifyYn = "N";
+	
+	if(type == 'fullscreen') {
+		txtMsg = $("#textMessage2").val();
+	} else {
+		txtMsg = $("#textMessage").val();
+	}
+	
+	if(txtMsg == null || $.trim(txtMsg) == "") {
+		return;
+	} else if (wordchk1(txtMsg)) {
+		alert("채팅 내용에 금칙어가 포함되어 있습니다.");
+		return false;
+	} else {
+		msg = txtMsg;
+		if($("#checkBox").prop("checked")) {
+			notifyYn = "Y";
+		}
+	}
+	var sendMsg = { type : "SEND", content : msg, sessionId : sessionId, notifyYn : notifyYn, userType : userType};
+	$("#checkBox").prop("checked", false);
+	send(sendMsg);
+}
+
+//메시지 전송 (채팅 모듈 사용)
+function send(event) {
+	var lbSeq = $("#lbSeq").val();
+	var lbTitle = $("#lbTitle").val();
+	num++;
+	
+	//userType 0 : PC, 1 : Mobile
+	if(navigator.platform) {
+		if(checkDevice.indexOf(navigator.platform.toLowerCase()) < 0) {
+			userType = 1;
+		} else {
+			userType = 0;
+		}
+	}
+	
+	
+	if(stomp) {
+		var sendMsg = {
+			userId : userId,
+			content : event.content,
+			type : event.type,
+			sessionId : event.sessionId,
+			messageId : sessionId + "-" + num,
+			lbSeq : lbSeq,
+			date : nowDate(),
+			lbTitle : lbTitle,
+			userName : userName,
+			notifyYn : event.notifyYn,
+			adminChk : "Y",
+			userType : userType
+		};
+		stomp.send('/app/chat.send/'+lbSeq, {}, JSON.stringify(sendMsg));
+		
+		$("#textMessage, #textMessage2").val("");
+		$("#textMessage, #textMessage2").focus();
+	}
+}
+
+//메시지 삭제
+function msgDelete(content, messageId) {
+	var lbSeq = $("#lbSeq").val();
+	if(stomp) {
+		var sendMsg = {
+			content : content,
+			messageId : messageId,
+			lbSeq : lbSeq,
+			type : 'DELETE'
+		};
+		stomp.send('/app/chat.delete/'+lbSeq, {}, JSON.stringify(sendMsg));
+	}
+}
+
+//채팅 사용 안 하는 경우
+function noChatfunc(payload) {
+	var msg = JSON.parse(payload.body);
+	
+	if(sessionId == "") {
+		sessionId = msg.sessionId;
+	}
+	
+	if(sessionIdList.length == 0) {
+		sessionIdList.push(msg.sessionId);
+	}
+	
+	//입장
+	if(msg.type === "JOIN") {
+		if(msg.connectStatus === "SUCCESS") {
+			if(userId == msg.userId && !sessionIdList.includes(msg.sessionId)) {
+				sessionIdList.push(msg.sessionId);
+			} 
+			
+			userCnt = msg.liveUserCnt;
+			$("#liveUsers").html(userCnt);
+		}
+		
+	//퇴장
+	} else if(msg.type === "LEAVE") {
+		if(msg.connectStatus === "SUCCESS") {
+			if((userId == msg.userId && sessionId != msg.sessionId)) {
+				sessionIdList.pop(msg.sessionId);
+			} else if(userId == msg.userId) {
+				sessionId  = "";
+				sessionIdList.pop(msg.sessionId);
+				stomp.noChatDisconnect();
+// 				console.log("no Chat disconnected!!!");
+				
+			}
+			userCnt = msg.liveUserCnt;
+			$("#liveUsers").html(userCnt);
+		}
+	}
+}
+
+//type에 따라 실행되는 함수
+function onMessageReceived(payload) {
+	var msg = JSON.parse(payload.body);
+	
+	if(sessionId == "") {
+		sessionId = msg.sessionId;
+	}
+	
+	if(sessionIdList.length == 0) {
+		sessionIdList.push(msg.sessionId);
+	}
+	
+	//채팅 사용하는 경우 (채팅 연결)
+	if(msg.type === 'JOIN') {
+		if(msg.status === 'SUCCESS') {
+			$("#chatWrap").css("display", "block");
+			$("#textMessage").attr("disabled", false);
+			$("#textMessage").attr("readonly", false);
+			
+			var html ="";
+			childNode = "";
+			
+// 			if(userId == msg.userId && !sessionIdList.includes(msg.sessionId)) {
+// 				//입장
+// 				html += "<div class=\"chat-box\">";
+// 				html += "<div class=\"chat-writer-info\"><b class=\"writer\">" + msg.userName + "("+msg.userId+")</b><small>&nbsp;&nbsp;"+nowDate()+"</small>";
+// 				html += "</div>";
+// 				html += "<div class=\"chat-box-text\">"+ msg.userName + "("+msg.userId+")님이 채팅방에 입장하였습니다.</div>";
+// 				html += "</div>";
+				
+// 				childNode += '<li>';
+// 				childNode += '<span class="writer-info">';
+// 				childNode += '	<i class="name">' + msg.userName + '(' + msg.userId + ')</i>';
+// 				childNode += '	<i>' + nowDate() + '</i>';
+// 				childNode += '	<p>' + msg.userId +' 님이 채팅방에 입장하였습니다.</p>';
+// 				childNode += '</li>';
+					
+// 				sessionIdList.push(msg.sessionId);
+				
+// 			} else if(userId == msg.userId) {
+// 				html += "<div class=\"chat-box adm\">";
+// 				html += "<div class=\"chat-writer-info\"><b class=\"writer\">"+ msg.userName + "("+msg.userId+")</b><small>&nbsp;&nbsp;"+nowDate();+"</small>";
+// 				html += "</div>";
+// 				html += "<div class=\"chat-box-text\">채팅방에 입장하였습니다.</div>";
+// 				html += "</div>";
+				
+// 				// 전체 화면
+// 				childNode += '<li class="mine">';
+// 				childNode += '<span class="writer-info">';
+// 				childNode += '	<i class="name">' + msg.userName + '(' + msg.userId + ')</i>';
+// 				childNode += '	<i>' + nowDate() + '</i>';
+// 				childNode += '	<p>채팅방에 입장하였습니다.</p>';
+// 				childNode += '</li>';
+				
+// 			} else {
+// 				html += "<div class=\"chat-box\">";
+// 				html += "<div class=\"chat-writer-info\"><b class=\"writer\">"+ msg.userName + "("+ msg.userId+")</b><small>&nbsp;&nbsp;"+nowDate()+"</small>";
+// 				html += "</div>";
+// 				html += "<div class=\"chat-box-text\">"+ msg.userName + "("+msg.userId+")님이 채팅방에 입장하였습니다.</div>";
+// 				html += "</div>";
+				
+// 				// 전체 화면 채팅 쌓기 
+// 				childNode += '<li>';
+// 				childNode += '<span class="writer-info">';
+// 				childNode += '	<i class="name">' + msg.userName + '(' + msg.userId + ')</i>';
+// 				childNode += '	<i>' + nowDate() + '</i>';
+// 				childNode += '	<p>' + msg.userName + '(' + msg.userId +') 님이 채팅방에 입장하였습니다.</p>';
+// 				childNode += '</li>';
+// 			}
+			
+// 			$("#chatWrap").append(html);
+// 			$("#fullChatWrap").append(childNode);
+			
+		} else {
+			alert("채팅방 로딩에 오류가 발생하였습니다.");
+		}
+		
+		userCnt = msg.roomUserCnt;
+		$("#totalUser, #totalUser2, #liveUsers").html(userCnt);
+	
+	//채팅 사용하는 경우(채팅 나가기)
+	} else if(msg.type === 'LEAVE') {
+		if(msg.status === 'SUCCESS') {
+			var html = "";
+			childNode = "";
+			
+// 			if((userId == msg.userId && sessionId != msg.sessionId)) {
+// 				sessionIdList.pop(msg.sessionId);
+				
+// 				//채팅 쌓기
+// 				html += "<div class=\"chat-box\">";
+// 				html += "<div class=\"chat-writer-info\"><b class=\"writer\">"+ msg.userName + "("+ msg.userId+")</b><small>&nbsp;&nbsp;"+nowDate()+"</small>";
+// 				html += "</div>";
+// 				html += "<div class=\"chat-box-text\">"+ msg.userName + "("+msg.userId+") 님이 채팅방을 나갔습니다.</div>";
+// 				html += "</div>";
+				
+// 				// 전체 화면 채팅 쌓기 
+// 				childNode += '<li>';
+// 				childNode += '<span class="writer-info">';
+// 				childNode += '	<i class="name">' + msg.userName + '(' + msg.userId + ')</i>';
+// 				childNode += '	<i>' + nowDate() + '</i>';
+// 				childNode += '	<p>' + msg.userName + '(' + msg.userId +') 님이 채팅방을 나갔습니다.</p>';
+// 				childNode += '</li>';
+				
+// 				//채팅 append
+// 				$("#chatWrap").append(html);
+// 				//전체 화면 채팅 append
+// 				$("#fullChatWrap").append(childNode);
+				
+// 			} else if(userId == msg.userId) {
+// 				$("#textMessage").attr("disabled", true);
+// 				$("#textMessage").attr("readonly", true);
+// 				sessionId  = "";
+// 				sessionIdList.pop(msg.sessionId);
+// 				stomp.disconnect();
+// // 				console.log("disconnected!!!");
+				
+// 			} else {
+// 				html += "<div class=\"chat-box\">";
+// 				html += "<div class=\"chat-writer-info\"><b class=\"writer\">"+msg.userName + '(' + msg.userId+")</b><small>&nbsp;&nbsp;"+nowDate()+"</small>";
+// 				html += "</div>";
+// 				html += "<div class=\"chat-box-text\">"+ msg.userName + "("+msg.userId+") 님이 채팅방을 나갔습니다.</div>";
+// 				html += "</div>";
+				
+// 				// 전체 화면 채팅 쌓기 
+// 				childNode += '<li>';
+// 				childNode += '<span class="writer-info">';
+// 				childNode += '	<i class="name">' + msg.userName + '(' + msg.userId + ')</i>';
+// 				childNode += '	<i>' + nowDate() + '</i>';
+// 				childNode += '	<p>' + msg.userName + '(' + msg.userId +') 님이 채팅방을 나갔습니다.</p>';
+// 				childNode += '</li>';
+				
+// 				$("#chatWrap").append(html);
+// 				$("#fullChatWrap").append(childNode);
+				
+// 			}
+		} else { 
+			alert("다시 시도해주시기 바랍니다.");
+		}
+		
+		userCnt = msg.roomUserCnt;
+		$("#totalUser, #totalUser2, #liveUsers").html(userCnt);
+		
+	//채팅 사용하는 경우(메시지 전송)
+	} else if(msg.type === 'SEND') {
+		if(msg.status === 'SUCCESS') {
+			var html = "";
+			childNode = '';
+			
+			var messageId = msg.messageId;
+			if(userId == msg.userId) {
+				if( sessionId != msg.sessionId){
+					html += "<div class=\"chat-box\">";
+					childNode += '<li>';
+				} else {
+					html += "<div class=\"chat-box adm\">";
+					childNode += '<li class="mine">';									
+				}
+			} else {
+				html += "<div class=\"chat-box\">";		
+				childNode += '<li>';		
+			} 
+			
+			if($("#chatAnnym").val() == "N") {
+				html += "<div class=\"chat-writer-info\"><b class=\"writer\">"+ msg.userName + "("+msg.userId+")</b><small>&nbsp;&nbsp;"+nowDate()+"</small>";
+				
+				// 전체 화면 채팅 쌓기 
+				childNode += '<span class="writer-info">';
+				childNode += '	<i class="name">' + msg.userName + '(' + msg.userId + ')</i>';
+				
+			} else {
+				//전체 화면 채팅 쌓기
+				childNode += '<span class="writer-info">';
+				
+				if(msg.adminChk === "Y") {
+					html += "<div class=\"chat-writer-info\"><b class=\"writer\">"+ msg.userName + "("+msg.userId+")</b><small>&nbsp;&nbsp;"+nowDate()+"</small>";
+				
+					childNode += '	<i class="name">' + msg.userName + '(' + msg.userId + ')</i>';
+				} else {
+					html += "<div class=\"chat-writer-info\"><b class=\"writer\"> 익명</b><small>&nbsp;&nbsp;"+nowDate()+"</small>";
+					
+					childNode += '	<i class="name"> 익명</i>';
+				}
+				
+		    }	
+			
+			html += "<small>&nbsp;&nbsp;<a onclick='javascript:msgDelete(\""+msg.content+"\",\""+messageId+"\");'>삭제</a></small></div>";
+			html += "<div class=\"chat-box-text\" data-msgId="+messageId+">"+msg.content+"</div>";				
+			html += "</div>";
+			
+			childNode += '	<i>' + nowDate() + '</i>';
+			childNode += '  <i onclick="javascript:msgDelete(\'' + msg.content + '\', \'' + messageId + '\');">삭제</i>';   
+			childNode += '	<p class="chat-box-text" data-msgId="' + messageId + '">' + msg.content + '</p>';
+			childNode += '</li>';
+			
+			$("#chatWrap").append(html);
+			$("#fullChatWrap").append(childNode);
+			
+		} else {
+			alert("메시지를 전송하는데 실패했습니다.");
+		}
+	
+	//채팅 사용하는 경우(메시지 삭제)
+	} else if(msg.type === 'DELETE') {
+		if(msg.status === 'SUCCESS') {
+			$('.chat-box-text[data-msgId="'+msg.messageId+'"]').text(msg.content);
+		} else {
+			alert("메시지 삭제를 실패했습니다.");
+		}
+		
+	//채팅 사용하는 경우(초기화)	
+	} else if(msg.type === 'INIT') {
+// 		console.log("초기화");
+	}
+	
+	//채팅 화면 스크롤
+	$("#chatList").scrollTop($("#chatList").prop("scrollHeight"));
+	//전체 화면 채팅 스크롤
+	$("#fullChatListDiv").scrollTop($("#fullChatListDiv").prop("scrollHeight"));
+
+}
+
+function urlCopy(seq) {
+	
+	var uri = '';
+	var textarea = document.createElement('textarea');
+	
+	document.body.appendChild(textarea);
+	uri =  window.location.protocol + "//" + window.location.host + /* [[ @{/p/} ]]*/ '/p/' + seq;
+	textarea.value = uri;
+	textarea.select();
+	
+	document.execCommand("copy");
+	document.body.removeChild(textarea);
+	
+	alert("URL이 복사되었습니다.");
+}
+
+function getRecEnable(){
+	
+	$.ajax({
+		beforeSend : function(xhr) {
+			xhr.setRequestHeader(header, token);
+		},
+		url : /*[[@{/live/getDynamicRecordEnable.do}]]*/ '/live/getDynamicRecordEnable.do',
+		data: {"lbSeq" : $("#lbSeq").val()},
+        dataType : 'text',
+        type: 'POST',
+		success: function (rtn) {
+			if (rtn == "Y") {
+				$("#recEnableBtn").text("녹화 중지");
+				$("#recEnableBtn").attr("data-enable-yn", "N");
+				$("#recEnableBtn").removeClass("btn-warning");
+				$("#recEnableBtn").addClass("btn-secondary");
+				$("#recEnableStatus").show();
+			} else if(rtn == "N"){
+				$("#recEnableBtn").text("녹화 시작");
+				$("#recEnableBtn").removeClass("btn-secondary");
+				$("#recEnableBtn").addClass("btn-warning");
+				$("#recEnableBtn").attr("data-enable-yn", "Y");
+				$("#recEnableStatus").hide();
+			} 
+		},
+		error : function (e){
+			alert("시스템상 문제가 발생하였습니다. 관리자에게 문의하세요");
+		}
+	});
+}
+
+function updateRecEnable(){
+	
+	console.log("data-enable-yn ::: " + $('#recEnableBtn').attr('data-enable-yn'));
+	$.ajax({
+		beforeSend : function(xhr) {
+			xhr.setRequestHeader(header, token);
+		},
+		url : /*[[ @{/live/updateDynamicRecordEnable.do} ]]*/ '/live/updateDynamicRecordEnable.do',
+		data: { "lbSeq" : $("#lbSeq").val(),
+				"enableYn" : $("#recEnableBtn").attr("data-enable-yn"),
+				"lbChatYn" : $("#chatYn").val()
+		},
+        dataType : 'text',
+        type: 'POST',
+		success: function (rtn) {
+			if (rtn == "SUCCESS") {
+				alert("녹화 상태가 변경되었습니다.");
+				getRecEnable();
+			} else if(rtn == "NULL") {
+				alert("방송 시작 준비중이거나 종료 처리된 방송으로 녹화 상태변경이 불가능합니다.");
+			} else if(rtn == "ALREADY") {
+				alert("다른 관리자에 의해 이미 처리된 요청입니다. \n 변경된 상태를 반영합니다.");
+				getRecEnable();
+			} else {
+				alert("라이브녹화 상태변경 중에 오류가 발생하였습니다.\n 잠시 후에 다시 요청 바랍니다.");
+			}
+		},
+		error : function (e){
+			alert("시스템상 문제가 발생하였습니다. 관리자에게 문의하세요");
+		}
+	});
+}
+
+/*]]*/
+</script>
+
+
+<!-- 컨텐츠 영역 -->
+<div class="app-content content">
+<div class="content-wrapper">
+<!-- 컨텐츠:헤더-페이지명,네비게이터 -->
+<div class="content-header row">
+	<div class="content-header-left col-md-8 col-12 mb-2 breadcrumb-new">
+		<h3 class="content-header-title mb-0 d-inline-block">라이브방송관리</h3>
+		<div class="row breadcrumbs-top d-inline-block">
+			<div class="breadcrumb-wrapper col-12">
+				<ol class="breadcrumb">
+					<li class="breadcrumb-item">홈</li>
+					<li class="breadcrumb-item">라이브방송관리</li>
+					<li class="breadcrumb-item active">라이브방송관리</li>
+				</ol>
+			</div>
+		</div>
+	</div>
+</div>
+<!--// 컨텐츠:헤더-페이지명,네비게이터 -->
+<!-- 컨텐츠:본문 영역 -->
+
+<form id="chatForm" name="chatForm">
+	<input type="hidden" id="chatId" name="chatId" th:value="${userId}"/>
+	<input type="hidden" id="chatName" name="chatName" th:value="${userName}"/>
+	<input type="hidden" id="chatYn" name="chatYn" th:value="${vo.lbChatYn}"/>
+	<input type="hidden" id="chatAnnym" name="chatAnnym" th:value="${vo.lbChatAnnym}"/>
+</form>
+
+<form id="liveForm" name="liveForm" method="post">
+<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+<!-- <input type="hidden" id="lbfSeq" name="lbfSeq" th:value="${vo.lbfSeq}"/>-->
+<input type="hidden" id="lbSeq" name="lbSeq" th:value="${vo.lbSeq}"/>
+<input type="hidden" id="lbStatus" name="lbStatus" th:value="${vo.lbStatus}"/>
+<input type="hidden" id="lbjDuration" name="lbjDuration" th:value="${vo.lbjDuration}"/>
+<input type="hidden" id="lbfImgEncNm" name="lbfImgEncNm" th:value="${vo.lbfImgEncNm}"/>
+<input type="hidden" id="lbfImgEncPath" name="lbfImgEncPath" th:value="${vo.lbfImgEncPath}"/>
+<input type="hidden" id="lbTitle" name="lbTitle" th:value="${vo.lbTitle}"/>
+<input type="hidden" id="lbfSeq" 			name="lbfSeq" 			th:value="${vo.lbfSeq}"/>
+<input type="hidden" id="lcUrl" name="lcUrl" th:value="${vo.lcUrl}" />
+
+<div class="content-body">
+	<div class="row ">
+		<div class="col-sm-12">
+			<div class="card">
+				<div class="card-header view-title pb-2">
+					<!-- 제목 및 주요버튼 -->
+					<h3 class="mb-0">
+						<span class="badge badge-secondary badge-sm mr-Half align-middle" th:if="${vo.lcName == null || vo.lcName.isEmpty()}" th:text="VOD"></span>
+						<span class="badge badge-secondary badge-sm mr-Half align-middle" th:unless="${vo.lcName == null || vo.lcName.isEmpty()}" th:text="'채널 ' + ${vo.lcName}"></span>
+							<th:block th:switch="${vo.lbStatus}">
+								<th:block th:case="1"><span class="badge badge-danger badge-sm mr-Half align-middle eng-text">LIVE</span></th:block>
+								<th:block th:case="3"><span class="badge badge-dark badge-sm mr-Half align-middle eng-text">스트리밍 일시중지</span></th:block>
+								<th:block th:case="4"><span class="badge badge-info badge-sm mr-Half align-middle eng-text">스트리밍 재시작</span></th:block>
+								<th:block th:case="8"><span class="badge badge-success badge-sm mr-Half align-middle eng-text">방송 시작중</span></th:block>
+								<th:block th:case="9"><span class="badge badge-warning badge-sm mr-Half align-middle eng-text">스트리밍 오류</span></th:block>
+							</th:block>
+						&nbsp;<span th:utext="${vo.lbTitle}">[[ ${vo.lbTitle} ]]</span>
+					</h3>
+					<div class="view-title-info mb-0">
+						<span>접속자 <b id="liveUsers">0</b></span>
+						<a th:if="${vo.lbEndDate} == null"></a>
+						<span th:unless="${vo.lbEndDate} == null">라이브 일정<b class="ml-Half" th:text="${vo.lbStartDate}+' ~ '+ ${vo.lbEndDate}"></b></span>
+						<span><b th:text="${vo.regUserName}"></b></span>
+						<button type="button" class="btn btn-primary btn-sm" th:onclick="urlCopy([[${vo.lbSeq}]]);">URL 복사</button>
+					</div>
+					<!-- 제목 및 주요버튼 -->
+				</div>
+				<div class="card-content">
+					<div class="card-body">
+						<div class="row">
+							<div class="col-8">
+								<div class="view-player position-relative">
+									<th:block th:if="${vo.lbVodSaveYn.equals('Y')}">
+										<span class="badge-record badge badge-pill badge-danger badge-md" id="recEnableStatus"><i class="fa fa-circle"></i>녹화중</span>
+									</th:block>
+									<span class="position-absolute badge badge-danger player-on">
+										<th:block th:switch="${vo.lbStatus}">
+											<th:block th:case="1">LIVE</th:block>
+											<th:block th:case="3">스트리밍 일시중지</th:block>
+											<th:block th:case="4">스트리밍 재시작</th:block>
+											<th:block th:case="*">스트리밍 오류</th:block>
+										</th:block>
+									</span>
+									
+									<!-- 동영상플레이어영역 -->
+<!-- 									<iframe id="videoFrame" name="videoFrame" src="" scrolling="no" style="width:100%;" ></iframe> -->
+									<!--// 동영상플레이어엉역 -->
+									
+									<div id="video-contaier">
+<!-- 										<video id="videoPlayer" width="100%" height="430px" th:poster="@{${vo.lbfImgEncPath} +'/'+ ${vo.lbfImgEncNm}}" data-plyr-config='{"quality":{"default": 480}}' preload="none" controlsList="nodownload" controls playsinline autoplay muted> -->
+										<video id="videoPlayer" width="100%" height="430px" th:poster="@{/app-assets/images/imgthumb/dark_default_thumb.jpg}" data-plyr-config='{"quality":{"default": 480}}' preload="none" controlsList="nodownload" controls playsinline autoplay muted>
+										
+										<!-- //VOD -->
+										<th:block th:if="${vo.lcUrl.equals('VOD')}">
+											<!-- //적응형 O -->
+											<th:block th:if="${#strings.equals(vo.adaptiveYn, 'Y')}">
+												<th:block th:if="${#strings.equals(vo.adaptiveType, 'advance')}">
+													<source th:src="@{${vo.vodStreamUrl} + ${vo.lbVodPath} + ${vo.lbVodSeq} +'/_media_,1920x1080,1280x720,640x360,.mp4.urlset/master.m3u8'}" type="video/mp4" size="480"/>
+												</th:block>
+												<th:block th:if="${#strings.equals(vo.adaptiveType, 'basic')}">
+													<source th:src="@{${vo.vodStreamUrl} + ${vo.lbVodPath} + ${vo.lbVodSeq} +'/_media_,1920x1080,1280x720,.mp4.urlset/master.m3u8'}" type="video/mp4" size="480"/>
+												</th:block>
+											</th:block>
+											<!-- //적응형 X -->
+											<th:block th:if="${#strings.equals(vo.adaptiveYn, 'N')}">
+								 				<source th:src="@{${vo.vodStreamUrl} + ${vo.lbVodPath} + ${vo.lbVodName} +'/index.m3u8'}" type="video/mp4" size="480"/>
+											</th:block>
+										</th:block>
+										
+										<!-- //LIVE -->
+										<th:block th:unless="${vo.lcUrl.equals('VOD')}">
+											<!-- //적응형 O -->
+											<th:block th:if="${#strings.equals(vo.adaptiveYn, 'Y')}">
+							 					<source th:src="@{${vo.liveStreamUrl} + 'live/' + ${vo.lbSeq} +'/master.m3u8'}" type="video/mp4" size="480"/>
+											</th:block>
+											<!-- //적응형 X -->
+											<th:block th:if="${#strings.equals(vo.adaptiveYn, 'N')}">
+							 					<source th:src="@{${vo.liveStreamUrl}+ '/live/' +${vo.lbSeq} +'/index.m3u8'}" type="video/mp4" size="480"/>
+											</th:block>
+										</th:block>
+										
+<!-- 									<source src="http://123.111.139.103:1935/live/hmall.stream/playlist.m3u8" type="video/mp4" size="480"/> -->
+<!-- 									<source src="https://content.jwplatform.com/manifests/vM7nH0Kl.m3u8" type="video/mp4" size="480"/> master.m3u8 test -->
+										</video>
+									</div>
+								</div>
+							</div>
+								<!-- chat-wrap -->
+<!-- 								<div class="col-4 chat-wrap live" th:if="${vo.lbChatYn != null and #strings.equals(vo.lbChatYn,'Y')}"> -->
+								<div class="col-4 chat-wrap live">
+									<div class="chat-summary">
+										<p class="small">라이브 채팅 <b class="info" id="totalUser"></b>
+											<!-- <button type="button" onclick="connect();" id="connectJoin">참여</button>
+											<button type="button" onclick="roomOut();" id="connectOut" style="display: none;">나가기</button> -->
+										</p>
+									</div>
+									<!-- chat-list -->
+									<div class="chat-list" id="chatList">
+									<div class="chat-list-wrap" id="chatWrap">
+									</div> <!--// chat-list-wrap -->
+									</div> <!--// chat-list -->
+									<!-- chat-write -->
+									<div class="notice-check">
+											<div class="form-check abc-checkbox abc-checkbox-info pl-0">
+												<input type="checkbox" class="form-checkbox-input" name="colorRadio" id="checkBox" />
+												<label class="form-check-label font-weight-bold" for="checkBox">공지사항으로 등록</label>
+											</div>
+										</div>
+									<div class="chat-write">
+										<textarea name="" cols="" rows="" title="" placeholder="최대 200자로 제한되며, 욕설, 비난글은 삭제됩니다." id="textMessage" onkeypress="if(event.keyCode==13) return false;" onkeydown="if(event.keyCode==13) javascript:sendChk(event, 'default');"></textarea>
+										<button type="button" class="btn btn-info" onclick="sendChk(event, 'default');">등록</button>
+									</div> <!--// chat-write -->
+								</div> <!--// chat-wrap -->
+						</div>
+						<!-- 방송 정보 영역 -->
+						<div class="view-form view-form-vertical mt-2">
+							<table cellpadding="0" cellspacing="0" class="w-100" summary="" >
+								<colgroup>
+									<col width="9%"/>
+									<col width="24.333%"/>
+									<col width="9%"/>
+									<col width="24.333%"/>
+									<col width="9%"/>
+									<col width="24.333%"/>
+								</colgroup>
+								<tbody>
+									<tr>
+										<th class="text-height">등록일시</th>
+										<td th:text="${vo.lbRegDate}"></td>
+										<th class="text-height">방송 시간</th>
+										<td th:if="${vo.lbEndDate != null}"><b class="info" id="curDuration">00:00:00</b> / [[ ${vo.totalDuration} ]]</td>
+										<td th:unless="${vo.lbEndDate != null}"><b class="info" id="curDuration">00:00:00</b></td>
+<!-- 										<th class="text-height">프리셋</th> -->
+<!-- 										<th:block th:switch="${vo.lbPresetCd}"> -->
+<!-- 												<td th:case="high">고화질</td> -->
+<!-- 												<td th:case="mid">중화질</td> -->
+<!-- 												<td th:case="low">저화질</td> -->
+<!-- 												<td th:case="*">-</td> -->
+<!-- 										</th:block> -->
+										<th class="text-height">공개여부</th>
+										<td th:text="${#strings.equals(vo.lbOpenYn, 'Y') ?  '공개' : '비공개'}"></td>
+									</tr>
+									<tr>
+										<th class="text-height">VOD저장여부</th>
+										<td th:text="${#strings.equals(vo.lbVodSaveYn, 'Y') ?  '사용' : '미사용'}"></td>
+										<th class="text-height">다운로드 사용여부</th>
+										<td th:text="${#strings.equals(vo.lbVodDownYn, 'O') ?  '원본 다운로드' : '다운로드 불가'}"></td>
+										<th class="text-height">카테고리</th>
+										<td colspan="3">
+											<small class="category" th:if="${vo.fullCategoryName == null}">-</small>
+											<small class="category" th:unless="${vo.fullCategoryName == null}">
+												<span class="black" th:each="item : ${#strings.arraySplit(vo.fullCategoryName,'|')}" th:text="${item}"></span>
+											</small>
+										</td>
+									</tr>
+<!-- 									<tr> -->
+<!-- 										<th class="text-height">태그</th> -->
+<!-- 										<td colspan="7"> -->
+<!-- 											<th:block th:if="${vo.lhTagName == null}">-</th:block> -->
+<!-- 											<th:block th:unless="${vo.lhTagName == null}"> -->
+<!-- 												<div class="tag tag-view m-0" th:each="item : ${#strings.arraySplit(vo.lhTagName,'|')} "> -->
+<!-- 													<span th:text="${item}"></span> -->
+<!-- 												</div> -->
+<!-- 											</th:block> -->
+<!-- 										</td> -->
+<!-- 									</tr> -->
+									<tr>
+										<th class="text-height">설명</th>
+										<td colspan="7" th:utext="${vo.lbDesc == ''} ? '-' : ${#strings.replace(vo.lbDesc, nlString, '&lt;br /&gt;')}"></td>
+									</tr>
+									<tr>
+										<th class="text-height">첨부파일</th>
+										<td colspan="7">
+											<th:block th:unless="${vo.lbfAttachOriginalNm == null}">
+													<i class="ft-save info"></i>
+													<a href="javascript:downloadAttachFile();" th:text="${vo.lbfAttachOriginalNm}"></a>
+												</th:block>
+												<th:block th:if="${vo.lbfAttachOriginalNm == null}">
+													첨부파일 없음
+											</th:block>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div> <!--// 방송 정보 영역 -->
+					</div>
+				</div>
+				<!-- 버튼영역 -->
+				<div class="card-footer">
+					<div class="mr-auto float-left">
+						<button type="button" class="btn btn-danger livePause" data-toggle="modal" data-target="#livePause">실시간 스트리밍 일시중지</button>
+						<th:block th:if="${vo.lbVodSaveYn.equals('Y')}">
+							<button type="button" class="btn btn-warning" data-toggle="modal" id="recEnableBtn" data-enable-yn="N" onclick="updateRecEnable();">녹화 중지</button>
+						</th:block>
+<!-- 						<button type="button" class="btn btn-info hidden liveRestart">실시간 스트리밍 재시작</button> -->
+					</div>
+					<div class="mr-auto float-right">
+						<button type="button" class="btn btn-secondary px-2" data-toggle="modal" data-target="#liveEnd">라이브 종료</button>
+						<button type="button" class="btn btn-info px-2" onclick="goList()">목록</button>
+					</div>
+				</div>
+				<!--// 버튼영역 -->
+			</div>
+		</div>
+	</div>
+</div>
+<!--// 컨텐츠 본문 영역 -->
+</form>
+</div>
+</div>
+<!--// 컨텐츠 영역 -->
+<div th:replace="inc/_footer"></div>
+
+<!-- Plyr Player -->
+<link rel="stylesheet" type="text/css" th:href="@{/player/plyr/plyr.css}" />
+<script th:src="@{/player/tgplayer/plugin/js/jquery-3.4.1.min.js}"></script>
+<script th:src="@{/player/tgplayer/plugin/js/jquery-ui.min.js}"></script>
+<!-- <script th:src="@{/player/plyr/hls.js}"></script> -->
+<!-- <script th:src="@{/player/plyr/plyr.js}"></script> -->
+<script th:src="@{/player/tgplayer/plugin/js/hls/tg_hls.js}"></script>
+<script th:src="@{/player/tgplayer/plugin/js/tg_player.js}"></script>
+<script th:src="@{/player/plyr/plyr.polyfilled.js}"></script>
+<!-- Plyr Player -->
+
+<!-- var playerOption = {
+    		progress : false
+      	  , ratio:'16:9'
+      	  , pip:false
+      	  , speed: { selected: 1, options: [1] }
+    	  , controls : ['play-large', 'restart', 'play', 'progress', 'current-time', 'duration', 'mute', 'volume', 'settings', 'fullscreen']
+  		  , i18n: {
+  		        qualityBadge: { 2160: '4K', 1440: 'FHD', 1080: 'FHD', 720: 'HD', 640: 'SD', 576: 'SD', 480: 'SD', 360: 'SD', 320: 'SD', 240 : 'SD' , 1 : "auto" }
+  		   	}
+    		
+    }; -->
+
+<script type="text/javascript" th:inline="javascript">
+/*<![CDATA[*/
+	var watermark = /*[[${watermarkVo} ]]*/ ''; //워터마크
+	var lbStatus = /*[[${vo.lbStatus} ]]*/ ''; //방송 상태
+	var parentsNode = ""; //전체화면 채팅 html
+	
+	//채팅 Html-----------------------------------------------------------
+	//채팅여부가 Y 인 경우와 라이브 및 재시작인 경우에 전체 화면에 채팅 추가
+	if(lbStatus == 1 || lbStatus == 4) {
+		parentsNode += '<div class="chat-ctrl" onclick="toggleLiveChat(event);" ondblclick="toggleLiveChat(event);">';
+		parentsNode += '	<span><i class="icon-bubble"></i></span>';
+		parentsNode += '</div>';
+		
+		//채팅
+		parentsNode += '<div class="live-chat" id="live-full-chat" onclick="stopEvent(event);" ondblclick="stopEvent(event);">';
+		parentsNode += '<h4>라이브 채팅 <b id="totalUser2"></b></h4>';
+		parentsNode += '	<div class="chat-list" id="fullChatListDiv">';
+		parentsNode += '		<div class="chat-list-inner" id="fullChatList">';
+		parentsNode += '			<ul id="fullChatWrap">';
+		parentsNode += '			</ul>';
+		parentsNode += '		</div>';
+		parentsNode += '	</div>';
+		parentsNode += '	<div class="chat-write">';
+		parentsNode += '		<textarea name="" id="textMessage2" placeholder="최대 200자로 제한되며, 욕설, 비난글은 삭제됩니다." cols="" rows="" title="" onclick="event.stopPropagation();" ondblclick="event.stopPropagation();" onkeypress="if(event.keyCode==13) return false;" onkeydown="if(event.keyCode==13) javascript:sendChk(event, \'fullscreen\');"></textarea>';
+		parentsNode += '<button type="button" id="chatbtn" class="" ondblclick="sendChk(event, \'fullscreen\');" onclick="sendChk(event, \'fullscreen\');">등록</button>';
+		parentsNode += '	</div>';
+	}
+	
+	
+//Player 관련 전역변수
+var player; //player
+var video = document.querySelector("#videoPlayer"); //<video>
+var source = video.getElementsByTagName('source'); //<source>[]
+var sourceUrl = source[0].src; //scr url
+var first = true;
+
+var autoQualInt = 1;
+var ChangeTime = 0;
+var ChangeYn = "N";
+var isIE = /Netscape|trident|msie/i.test(navigator.userAgent) ? true: false;
+// var hls = []; var i = 0;
+
+
+$(function(){
+	//player 설정
+	var playerOptions = {
+			  playsinline: true
+	        , loop: { active: false }
+	        , tooltips: { controls: true, seek: true }      
+	        , captions: { active: true, update: true}
+// 	    	, speed: { selected: 1, options: [0.8, 1, 1.2, 1.4, 1.6] }
+	    	, controls: [ 'play-large', /* 'restart', */ 'play', 'progress', 'current-time', 'duration', 'mute', 'volume',/*  'settings', */ 'fullscreen']	
+	    	, invertTime : false
+	        , listeners: {
+	        	seek: function customSeekBehavior(e) {
+					var currentTime = player.currentTime;
+					var newTime = _getTargetTime(player, e);
+						player.currentTime = newTime;
+	        	}
+	        }
+	        , previewThumbnails: { enabled: false }
+	        , i18n: {
+	            qualityBadge: { 2160: '4K', 1440: 'FHD', 1080: 'FHD', 720: 'HD', 640: 'SD', 576: 'SD', 480: 'SD', 360: 'SD', 320: 'SD', 240 : 'SD' , 1 : "auto" }
+	        }
+	        , ratio:"16:9"
+	        , fullscreen : { enabled: true, fallback: true, iosNative: false, container: null }
+			
+	};
+	
+	player = new Plyr('#videoPlayer', playerOptions);
+	
+	//HLS 세팅 (Stream모듈 사용시)
+	var hls = new Hls();
+	hls.loadSource(sourceUrl);
+	hls.attachMedia(video);
+	
+	
+    player.on("loadeddata", function() {
+    	console.log("load");
+    	
+    	player.volume = 0;	//muted
+    	player.play();	//autoplay
+    	
+    	if($("#lcUrl").val() == "VOD"){
+    		var duration = $("#lbjDuration").val();
+    		player.currentTime = Number(duration);
+    	}
+    		
+    	$("<style></style>").appendTo("head").html(" .plyr__time{ display: none; pointer-events: none; } ");
+		$("<style></style>").appendTo("head").html(" .plyr__progress{ pointer-events: none; } ");
+	      
+		// 라이브 한정 프로그레스바 보이지 않도록 처리
+		$("<style></style>").appendTo("head").html(" .plyr__progress{ display : none; } ");
+		    	
+		//워터마크가 없는 경우에 오류 방지
+		if(watermark != null) {
+			var imgUrl = watermark.imgWebPath+ "/" + watermark.imgServerFileName;
+		}
+		  
+		//워터마크 데이터가 존재하고 워터마크 사용여부가 Y인 경우에만 워터마크 출력
+		if(watermark != null && watermark.useYn == "Y") {
+			if(watermark.position == '1') {
+				$('.plyr__video-wrapper').append("<div class='watermark'><img src='"+imgUrl+"' style='position: absolute; margin:10px;top: 0; left: 0; display: inline; z-index: 1; opacity: 0.5; width: 10vw'/></div>");
+			} else if(watermark.position == '2') {
+				$('.plyr__video-wrapper').append("<div class='watermark'><img src='"+imgUrl+"' style='position: absolute; margin:10px;top: 0; right: 0; display: inline; z-index: 1; opacity: 0.5; width: 10vw'/></div>");
+			} else if(watermark.position == '3') {
+				$('.plyr__video-wrapper').append("<div class='watermark'><img src='"+imgUrl+"' style='position: absolute; margin:10px;bottom: 0; right: 0; display: inline; z-index: 1; opacity: 0.5; width: 10vw'/></div>");
+			} else if(watermark.position == '4') {
+				$('.plyr__video-wrapper').append("<div class='watermark'><img src='"+imgUrl+"' style='position: absolute; margin:10px;bottom: 0; left: 0; display: inline; z-index: 1; opacity: 0.5; width: 10vw'/></div>");
+			}
+		}
+		
+    });
+    
+    $('.plyr__video-wrapper').prepend(parentsNode);
+    $('.live-chat').css('display', 'none');
+    $('.chat-ctrl').css('display', 'none');
+    
+    player.on('play', function(){
+        if(first) { 
+           loadHLS(sourceUrl); 
+        }
+        
+        first = false;
+    });
+
+    player.on('enterfullscreen', function(){
+		
+		$('.plyr__video-wrapper').addClass('fullscreen');
+// 		$('.live-chat').addClass('display-block');
+// 		$('.chat-ctrl').addClass('off');
+ 		$('.chat-ctrl').css('display', 'block');
+		$('.live-chat').removeClass('display-block');    
+		$('.chat-ctrl').removeClass('off');
+	});
+    
+    player.on('exitfullscreen', function(){
+    	
+		$('.plyr__video-wrapper').removeClass('fullscreen');
+// 		$('.live-chat').addClass('display-block');
+// 		$('.chat-ctrl').addClass('off');
+		$('.live-chat').removeClass('display-block');    
+ 		$('.chat-ctrl').css('display', 'none');
+// 		$('.chat-ctrl').removeClass('off');
+		
+	});
+       
+    // quality change
+    player.on('qualitychange', function(){
+        seek = player.currentTime;
+        source = video.getAttribute('src');
+       	loadHLS(source); 
+    });
+	
+ 	
+});
+
+
+function loadHLS(source) {
+	var hls = new Hls();
+    hls.loadSource(source);
+    hls.attachMedia(video);
+}
+
+
+//전체화면 채팅 on / off
+function toggleLiveChat(event) {
+	//클릭 이벤트가 상위로 넘어가지 않게 방지
+	event.stopPropagation();
+	
+	var className = $(".chat-ctrl").attr("class");
+	
+	if($('.plyr__video-wrapper').attr('class').indexOf('fullscreen') > -1) {
+		if(className.indexOf('off') > -1) {
+			$('.chat-ctrl').removeClass('off');
+			$('.live-chat').removeClass('display-block');
+		} else {
+			$('.chat-ctrl').addClass('off');
+			$('.live-chat').addClass('display-block');
+		}
+	}
+}
+
+//전체 화면에서 라이브 채팅 영역 클릭 시 동영상 멈추는 이벤트 방지
+function stopEvent(event) {
+	var target = event.target;
+	target = $(target).attr('id');
+	
+	if(target == 'chatbtn' || target == 'textMessage2') {
+		return;
+	} else {
+		event.stopPropagation();
+	}
+}
+
+function TimeValid(st){
+	var time = st.split(":");
+	var resultTime = 0;
+	if(time.length == 2){
+		resultTime = (time[0] * 60) + (time[1] * 1);
+	}else if(time.length == 3){
+		resultTime = (time[0] * 60 * 60) + (time[1] * 60) + (time[2] * 1);
+	}
+	
+	return resultTime;
+}
+
+/*]]*/
+</script>
+
+<!-- 팝업인크루드 -->
+<div th:replace="popup/livePause"></div>
+<div th:replace="popup/liveEnd"></div>
+<!--// 팝업인크루드 -->
+
+<!-- Stomp & SockJS -->
+<script th:src="@{/chatjs/stomp.min.js}" type="text/javascript"></script>
+<script th:src="@{/chatjs/sockjs.min.js}" type="text/javascript"></script>
+<!--// Stomp & SockJS -->
+<!-- chatjs -->
+<!-- <script th:src="@{/chatjs/chat.js}" type="text/javascript"></script> -->
+<!--// chatjs -->

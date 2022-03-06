@@ -1,0 +1,199 @@
+@charset "utf-8";
+
+/*reset*/
+html,body,h1,h2,h3,h4,h5,h6,div,p,blockquote,pre,code,address,ul,ol,li,dl,dt,dd,table,caption,th,td,form,fieldset,legend,hr,input,button,textarea{margin:0;padding:0;}
+ul,ol,li{list-style:none;}
+table{border-spacing:0;border-collapse:collapse;}
+img, fieldset, abbr, input.type-image,  button {border:0;}
+img{border:0;padding:0;}
+li img{vertical-align:top;}
+address, caption, cite, code,  em {font-style:normal;font-weight:normal;}
+input, select, textarea, button {color:#555;vertical-align:middle;font-family:'Nanum Gothic', sans-serif;}
+hr{display:none;}
+
+/*base*/
+body{font-family: "Nanum Gothic", sans-serif;font-size:14px;color:#7d7d7d;width:100%;height:100%;
+letter-spacing:-1px;line-height:44px;}
+a,a:visited {text-decoration:none;},a:active{color:#24ff00;text-decoration:none;}
+a:hover{color:#56c7ff;}a:focus strong{color:#56c7ff;}
+caption,legend{width:0;height:0;font-size:0;line-height:0;overflow:hidden;visibility:hidden;position:absolute;left:-10000px;}
+.hide{width:0;height:0;font-size:0;line-height:0;overflow:hidden;visibility:hidden;position:absolute;z-index:-1;}
+  
+/*common layout*/
+/*body*/
+/* body {background:url("/public/images/bg_img.png") repeat-x 0 0;} */
+
+body { background-color:#f7f7f7; }
+
+/*wrap*/
+#wrap{margin-right:0 auto;}
+
+/*header*/
+#header {margin-right:0 auto;width:1230px;height:70px;/*background-color:#ffffff;border-bottom:solid 1px #d3d7dd;*/}
+#header h1{width:230px; height:63px;float:left;background-color:#13181f;text-align:center;margin-top: 5px;border-bottom:solid 2px #272d37;}
+#header #amin {float:left;width:1000px;height:70px;}
+.time {padding:15px 0px 0px 80px;position:absolute; vertical-align:middle;}
+.time img{padding:0px 10px 5px 0px;vertical-align:middle;}
+.logout_b {float:right;padding:15px 0px 0px 60px;}
+.logout_b img{padding-right:10px;vertical-align:middle;}
+.admin {color:#4f87e6;}
+#header #amin ul {list-style:none;float:right;width:500px;right:0;list-style:none;}
+#header #amin .am li  {right:0;top:10px;width:500px;right:0;border:solid 1px #dfdfdf;}
+
+/*footer*/
+#footer {width:100%;}
+#footer #add { width:1092px;text-align: right;position:relative;left: 310px;border-top: solid 1px #d3d7dd; }
+#footer address p{width:1092px;clear:both;text-align:right;color:#636363;padding:5px 0px 5px 0px;}
+
+/* type_style*******************************************************************************************************/
+
+/*font style*/
+h2{font-weight:500;font-size:18px;color:#fff;}
+h3{font-weight:500;font-size:26px;color:#000000;}
+h4{font-weight:500;font-size:20px;color:#fff;}
+h5{font-weight:500;font-size:16px;color:#000000;}
+h6{font-weight:500;font-size:20px;color:#fff;}
+
+/*input style*/
+.button01 { letter-spacing:-1px;text-align:center;width:105px;height:40px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #303843;font-size:14px;color:#fff;}
+.button01:hover {background-color: #56c7ff;}
+.button02 { letter-spacing:-1px;text-align:center;width:105px;height:102px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #898989;font-size:14px;color:#fff;}
+.button002:hover {background-color: #545454;}
+.button002 { letter-spacing:-1px;text-align:center;width:105px;height:43px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #898989;font-size:14px;color:#fff;}
+.button02:hover {background-color: #545454;}
+.button03 { letter-spacing:-1px;text-align:center;width:40px;height:40px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #ebebeb;font-size:14px;color:#4f87e6;}
+.button03:hover {background-color: #ffffff;}
+.button04 { letter-spacing:-1px; text-align:center;width:70px;height:40px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#e6614f;}
+.button04:hover {background-color: #ebebeb;}
+.button05 { letter-spacing:-1px;text-align:center;width:110px;height:40px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #34495e;font-size:14px;color:#fff;}
+.button05:hover {background-color: #4f87e6;}
+.button06 { letter-spacing:-1px;text-align:center;width:110px;height:40px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #4f87e6;font-size:14px;color:#fff;}
+.button06:hover {background-color: #56c7ff;}
+.button07 { letter-spacing:-1px;text-align:center;width:70px;height:30px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#4f87e6;}
+.button07:hover {background-color: #ebebeb;}
+.button08 { letter-spacing:-1px;text-align:center;width:100px;height:30px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#4f87e6;}
+.button08:hover {background-color: #ebebeb;}
+.button09 { letter-spacing:-1px; text-align:center;width:110px;height:40px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #4f87e6;font-size:14px;color:#fff;}
+.button09:hover {background-color: #285299;}
+
+
+.button10 { letter-spacing:-1px; text-align:center;width:70px;height:30px;padding:10px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#4f87e6; vertical-align:middle; }
+.button10:hover {background-color: #ebebeb;}
+.button11 { letter-spacing:-1px; text-align:center;width:70px;height:30px;padding:10px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #ebebeb;font-size:14px;color:#4f87e6; vertical-align:middle; }
+.button11:hover {background-color: #fff;}
+.button12 { letter-spacing:-1px;text-align:center;width:100px;height:30px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#e6614f;}
+.button12:hover {background-color: #ebebeb;}
+.button13 { letter-spacing:-1px;text-align:center;width:110px;height:40px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#e6614f;}
+.button13:hover {background-color: #ebebeb;}
+.button14 { letter-spacing:-1px; text-align:center;width:110px;height:40px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #209c92;font-size:14px;color:#fff;}
+.button14:hover {background-color: #03413c;}
+.button15 { letter-spacing:-1px; text-align:center;width:110px;height:40px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #4f87e6;font-size:14px;color:#fff;}
+.button15:hover {background-color: #285299;}
+.button16 { letter-spacing:-1px;text-align:center;width:105px;height:40px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #898989;font-size:14px;color:#fff;}
+.button16:hover {background-color: #545454;}
+.button17 { letter-spacing:-1px; text-align:center;width:67px;height:30px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#e6614f;}
+.button17:hover {background-color: #ebebeb;}
+.button18 { letter-spacing:-1px; text-align:center;width:67px;height:30px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#4f87e6;}
+.button18:hover {background-color: #ebebeb;}
+
+#button_login { letter-spacing:-1px;text-align:center;width:110px;height:40px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #4f87e6;font-size:14px;color:#fff;}
+#button_login:hover {background-color: #ebebeb;}
+
+.text01  { letter-spacing:-1px;width:255px;height:30px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#000000;resize:none;}
+.text02  { letter-spacing:-1px;width:140px;height:30px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#000000;resize:none;}
+.text03  { letter-spacing:-1px;width:100px;height:30px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#000000;resize:none;}
+.text04  { letter-spacing:-1px;width:870px;height:30px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#000000;resize:none;}
+.text05  { letter-spacing:-1px;width:440px;height:30px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#000000;resize:none;}
+.text06  { letter-spacing:-1px;width:550px;height:435px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#000000;resize:none;}
+
+
+input[type="checkbox"] + label { vertical-align:middle; line-height:15px; display: inline-block; width: 20px;height: 20px;border: 1px solid #d3d7dd;border-radius: 3px;background-color:#ffffff;cursor: pointer;}
+input[type="checkbox"]:checked + label:after { position: relative;top: 0px;left: 2px;content: '\2714';font-size: 24px;color :#4f87e6 ;}
+input[type="checkbox"] { display: none;}
+/*  
+input[type="file"] 
+{ position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip:rect(0,0,0,0); border: 0; } 
+label01 { letter-spacing:-1px; text-align:center;width:70px;height:40px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;;font-size:14px;color:#e6614f;} named upload 
+.upload-name {letter-spacing:-1px;width:400px;height:30px;padding:5px; border-radius:3px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#e6614f;}
+.upload-name01 {letter-spacing:-1px;width:400px;height:30px;padding:5px; border-radius:3px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#e6614f;}
+.upload-name02 {letter-spacing:-1px;width:400px;height:30px;padding:5px; border-radius:3px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#8f8f8f;}  */
+
+input::-webkit-input-placeholder {  color:#8f8f8f; }
+input::-moz-placeholder { color:#8f8f8f; }
+input:-ms-input-placeholder { color:#8f8f8f; }
+input:-moz-placeholder { color:#8f8f8f; }
+
+progress { width:300px;height:10px; background-color: #4f87e6; border-radius:6px; border:solid 1px #d3d7dd;}
+
+.m_up_text01 { letter-spacing:-1px;width:640px;height:30px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#150404;resize:none;}
+.m_up_text01_1 { letter-spacing:-1px;width:640px;height:100px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#150404;resize:none;}
+.m_up_text02 { letter-spacing:-1px;width:400px;height:30px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#000000;resize:none;}
+.m_up_text03 { letter-spacing:-1px;width:120px;height:30px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#000000;resize:none;}
+.m_up_text04 { letter-spacing:-1px;width:100px;height:30px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#000000;resize:none;}
+.m_up_text05 { letter-spacing:-1px;width:325px;height:30px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#000000;resize:none;}
+.m_up_text06 { letter-spacing:-1px;width:410px;height:30px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#000000;resize:none;}
+
+.select01 { letter-spacing:-1px;width:650px;height:40px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#000000;}
+.select02 { letter-spacing:-1px;width:130px;height:40px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#000000;}
+.select02_01 { letter-spacing:-1px;width:103px;height:25px;padding:0px 5px 0px 5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:12px;color:#000000;}
+.select03 { letter-spacing:-1px;width:130px;height:40px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#000000;}
+.select04 { letter-spacing:-1px;width:240px;height:40px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#000000;}
+.select05 { letter-spacing:-1px;width:320px;height:40px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#000000;}
+
+/* m_up 팝업 */
+.m_up_button01 {  letter-spacing:-1px; text-align:center;width:110px;height:40px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#e6614f;}
+.m_up_button01:hover {background-color: #ebebeb;}
+.m_up_button02 { letter-spacing:-1px; text-align:center;width:70px;height:40px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#e6614f;}
+.m_up_button02:hover {background-color: #ebebeb;}
+.m_up_button03 { letter-spacing:-1px; text-align:center;width:110px;height:40px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #898989;font-size:14px;color:#fff;}
+.m_up_button03:hover {background-color: #545454;}
+.m_up_button04 { letter-spacing:-1px; text-align:center;width:110px;height:40px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #4f87e6;font-size:14px;color:#fff;}
+.m_up_button04:hover {background-color: #285299;}
+
+.m_up_button04_01 { letter-spacing:-1px; text-align:center;width:35px; height:25px; border-radius:6px; border:solid 1px #d3d7dd; background-color: #FFFFFF; font-size:12px; color:#4f87e6;}
+.m_up_button04_01:hover {background-color: #285299;}
+
+.m_up_button04_02 { letter-spacing:-1px; text-align:center;width:90px;height:25px; border-radius:6px; border:solid 1px #d3d7dd; background-color: #FFFFFF; font-size:12px; color:#4f87e6;}
+/* .m_up_button04_02:hover {background-color: #FFFFFF;} */
+
+.m_up_button04_03 { letter-spacing:-1px; text-align:center;width:48px;height:25px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #FFFFFF; font-size:12px; color:#4f87e6;}
+/* .m_up_button04_03:hover {background-color: #FFFFFF;} */
+
+.m_up_button05 { letter-spacing:-1px; text-align:center;width:110px;height:40px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #209c92;font-size:14px;color:#fff;}
+.m_up_button05:hover {background-color: #03413c;}
+.m_up_button06 { letter-spacing:-1px; text-align:center;width:110px;height:40px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #e6614f;font-size:14px;color:#fff;}
+.m_up_button06:hover {background-color: #7d1d10;}
+.m_up_button07 { letter-spacing:-1px; text-align:center;width:70px;height:40px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;;font-size:14px;color:#4f87e6;}
+.m_up_button07:hover {background-color: #ebebeb;}
+.m_up_button08 {  letter-spacing:-1px; text-align:center;width:110px;height:40px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #ebebeb;font-size:14px;color:#4f87e6;}
+.m_up_button08:hover {background-color: #fff;}
+
+/* img_m_up 팝업 */
+.img_m_button01 { letter-spacing:-1px;text-align:center;width:85px;height:110px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #898989;font-size:14px;color:#fff;}
+.img_m_button01:hover {background-color: #545454;}
+.img_m_button02 { letter-spacing:-1px;text-align:center;width:48px;height:25px;padding:2px; border-radius:4px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#e6614f;}
+.img_m_button02:hover {background-color: #ebebeb;}
+.img_m_text01  { letter-spacing:-1px;width:570px;height:100px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#000000;}
+.img_m_text02 { letter-spacing:-1px;width:70px;height:30px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#000000;}
+.img_m_select01 { letter-spacing:-1px;width:130px;height:40px;padding:5px; border-radius:6px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#000000;}
+
+/* 동영상 팝업상 올리기-이미지 추가버튼*/
+.upload_edit_button01 { letter-spacing:-1px;text-align:center;width:360px; height:60px; border-radius:6px;padding:5px;font-size:14px;color:#fff;background:#34495e url(/images/new/edit_button_icon01.png) 100px 19px no-repeat; 
+ border:1px solid #d3d7dd;font-size:14px;color:#fff;}
+.upload_edit_button01:hover {background-color: #18232d;}
+.upload_edit_button02 { letter-spacing:-1px;text-align:center;width:360px; height:60px; border-radius:6px;padding:5px;font-size:14px;color:#fff;background:#209c92 url(/images/new/edit_button_icon01.png) 100px 19px no-repeat; 
+ border:1px solid #d3d7dd;font-size:14px;color:#fff;}
+.upload_edit_button02:hover {background-color: #03413c;}
+
+.upload_edit_button03 { letter-spacing:-1px;text-align:center;width:48px;height:25px;padding:2px; border-radius:4px; border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#4f87e6;}
+.upload_edit_button03:hover {background-color: #ebebeb;}
+.upload_edit_text01 { letter-spacing:-1px;width:28px;height:19px; border-radius:6px; padding:2px;border:solid 1px #d3d7dd;background-color: #fff;font-size:14px;color:#000000;}
+
+/* 리딩 바*/
+/* #m_p_upload {text-align:center; background-color:#f7f7f7}
+#m_p_upload .progress  {margin:0 auto;text-align:center;width:310px;text-align:center;padding:120px 0px 0px 0px;position: absolute;}
+#m_p_upload .progress .upload_txt { font-size:24px;color:#636363;}
+#m_p_upload .progress .bar { background-color: #4f87e6;width: 0%;height: 5px;border-radius: 3px 0px 0px 3px;float:left;}
+#m_p_upload .progress .bar2 { background-color: #d3d7dd;width: 0%;height: 5px;border-radius: 0px 3px 3px 0px;float:left;}
+#m_p_upload .progress .percent  { font-size:72px;color:#4f87e6;}
+#m_p_upload .progress #file_txt { font-size:20px;color:#636363;} */

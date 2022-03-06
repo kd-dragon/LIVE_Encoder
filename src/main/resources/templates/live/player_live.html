@@ -1,0 +1,204 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<!doctype html>
+<html lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<!-- <meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Cache-Control" content="no-cache"/> -->
+<meta charset="utf-8" http-equiv="x-ua-compatible" content="ie=edge,chrome=1" />
+		
+<title></title>
+
+<!-- script -->
+<!-- Plyr Player -->
+<link rel="stylesheet" type="text/css" th:href="@{/player/plyr/plyr.css}" />
+<script th:src="@{/player/tgplayer/plugin/js/jquery-3.4.1.min.js}"></script>
+<script th:src="@{/player/tgplayer/plugin/js/jquery-ui.min.js}"></script>
+<script th:src="@{/player/plyr/plyr.js}"></script>
+<script th:src="@{/player/plyr/plyr.polyfilled.js}"></script>
+<script th:src="@{/player/plyr/hls.js}"></script>
+<link rel="stylesheet" type="text/css" th:href="@{/assets/css/style.css}">
+<link rel="stylesheet" type="text/css" th:href="@{/app-assets/fonts/simple-line-icons/style.min.css}">
+<!-- Plyr Player -->
+
+<!-- chatjs -->
+<!-- <script th:src="@{/chatjs/chat.js}" type="text/javascript"></script> -->
+<!--// chatjs -->
+
+
+</head>
+
+<body oncontextmenu="return false" ondragstart="return false" style="margin:0px;" onselectstart="return false" >
+	<form id="theForm" name="theForm" onsubmit="return false;" method="post" theme="css_xhtml">
+		<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+		<input type="hidden" id="duration" name="duration" />
+		<input type="hidden" id="currentTime"/>
+		<div id="video-contaier">
+			<video id="player" width="100%" th:poster="@{${lbvo.lbfImgEncPath} +'/'+ ${lbvo.lbfImgEncNm}}" data-plyr-config='{"quality":{"default": 480}}' preload="none" controlsList="nodownload" controls playsinline autoplay muted poster="">
+ 				<source th:src="@{${lbvo.liveStreamingUrl} + 'cam' + ${lbvo.lbSeq} + '/index.m3u8'}" type="video/mp4" size="480"/>
+<!-- test		<source src="http://123.111.139.103:1935/live/hmall.stream/playlist.m3u8" type="video/mp4" size="480"/> -->
+			</video>
+		</div>
+		
+	</form>
+</body>
+
+
+
+<script type="text/javascript" th:inline="javascript">
+/*<![CDATA[*/
+	var token = $("meta[name='_csrf']").attr("content");
+	var header = $("meta[name='_csrf_header']").attr("content");
+	var watermark = /*[[${watermarkVo} ]]*/ '';
+	var imgUrl = watermark.imgWebPath+ "/" + watermark.imgServerFileName;
+	var lbStatus = /*[[${lbvo.lbStatus} ]]*/ '';
+	
+	//전체 화면 채팅
+	var parentsNode = "";
+	if(lbStatus == 1) {
+		parentsNode += '<div class="chat-ctrl" onclick="toggleLiveChat(event);" ondblclick="toggleLiveChat(event);">';
+		parentsNode += '	<span><i class="icon-bubble"></i></span>';
+		parentsNode += '</div>';
+		
+		//채팅
+		parentsNode += '<div class="live-chat" id="live-chat" onclick="stopEvent(event);" ondblclick="stopEvent(event);">';
+		parentsNode += '<h4>라이브 채팅 <b id="totalUser2"></b></h4>';
+		parentsNode += '	<div class="chat-list" id="fullChatListDiv">';
+		parentsNode += '		<div class="chat-list-inner" id="fullChatList">';
+		parentsNode += '			<ul id="fullChatWrap">';
+		parentsNode += '			</ul>';
+		parentsNode += '		</div>';
+		parentsNode += '	</div>';
+		parentsNode += '	<div class="chat-write">';
+		parentsNode += '		<textarea name="" id="textMessage2" placeholder="최대 200자로 제한되며, 욕설, 비난글은 삭제됩니다." cols="" rows="" title="" onclick="event.stopPropagation();" ondblclick="event.stopPropagation();" onkeypress="if(event.keyCode==13) return false;" onkeydown="if(event.keyCode==13) javascript:sendChk(event, \'fullscreen\');"></textarea>';
+		parentsNode += '<button type="button" id="chatbtn" class="" ondblclick="sendChk(event, \'fullscreen\');" onclick="sendChk(event, \'fullscreen\');">등록</button>';
+		parentsNode += '	</div>';
+	}
+	
+$(function(){
+	//Live 관련
+	var player;
+	var first = true;
+	
+	var video = document.querySelector('video');
+    var default_src = jQuery('source[size=480]')[0];
+    player = new Plyr('#player', {progress : false, ratio:'16:9', pip:false, speed: { selected: 1, options: [1] }});
+    
+    
+    
+    player.on("loadeddata", function() {
+    	player.volume = 0;	//muted
+    	player.play();	//autoplay
+    	
+    	if(watermark != null && watermark.useYn == "Y") {
+    		if(watermark.position == '1') {
+    			$('.plyr__video-wrapper').append("<div class='watermark'><img src='"+imgUrl+"' style='position: absolute; margin:10px;top: 0; left: 0; display: inline; z-index: 1; opacity: 0.5; width: 10vw'/></div>");
+    		} else if(watermark.position == '2') {
+    			$('.plyr__video-wrapper').append("<div class='watermark'><img src='"+imgUrl+"' style='position: absolute; margin:10px;top: 0; right: 0; display: inline; z-index: 1; opacity: 0.5; width: 10vw'/></div>");
+    		} else if(watermark.position == '3') {
+    			$('.plyr__video-wrapper').append("<div class='watermark'><img src='"+imgUrl+"' style='position: absolute; margin:10px;bottom: 0; right: 0; display: inline; z-index: 1; opacity: 0.5; width: 10vw'/></div>");
+    		} else if(watermark.position == '4') {
+    			$('.plyr__video-wrapper').append("<div class='watermark'><img src='"+imgUrl+"' style='position: absolute; margin:10px;bottom: 0; left: 0; display: inline; z-index: 1; opacity: 0.5; width: 10vw'/></div>");
+    		}
+    	}
+    });
+    //var preName = parent.document.all["parentsNode"].value;
+    //console.log(preName);
+    $('.plyr__video-wrapper').prepend(parentsNode);
+    console.log(parentsNode);
+    console.log('parentsNode');
+    $('.live-chat').css('display', 'none');
+    
+    player.on('play', function(){
+        if(first) { 
+            source = default_src.getAttribute('src');
+            loadHLS(source); 
+        }
+        
+        first = false;
+    });
+    
+    player.on('pause', function(){
+//         console.log("pause!");
+    });
+    
+    player.on('ended', function(){
+//         console.log("end!");
+    });
+
+    function loadHLS(source) {
+    	var hls = new Hls(); 
+		
+	    hls.loadSource(source);
+	    hls.attachMedia(video);
+        
+    	$("<style></style>").appendTo("head").html(" .plyr__time{ display: none; pointer-events: none; } ");
+        $("<style></style>").appendTo("head").html(" .plyr__progress{ pointer-events: none; } ");
+        
+     // 라이브 한정 프로그레스바 보이지 않도록 처리
+        $("<style></style>").appendTo("head").html(" .plyr__progress{ display : none; } ");
+    }
+    
+    player.on('enterfullscreen', function(){
+		
+		$('.plyr__video-wrapper').addClass('fullscreen');
+		$('.live-chat').addClass('display-block');
+		$('.chat-ctrl').addClass('off');
+		
+	});
+    
+    player.on('exitfullscreen', function(){
+    	
+		$('.plyr__video-wrapper').removeClass('fullscreen');
+		$('.live-chat').removeClass('display-block');    
+		$('.chat-ctrl').removeClass('off');
+		
+	});
+       
+    // quality change
+    player.on('qualitychange', function(){
+    	console.log("quality change!");
+        seek = player.currentTime;
+        source = video.getAttribute('src');
+        loadHLS(source);
+    });
+	
+});
+
+//전체화면 채팅 on / off
+function toggleLiveChat(event) {
+	//클릭 이벤트가 상위로 넘어가지 않게 방지
+	event.stopPropagation();
+	
+	var className = $(".chat-ctrl").attr("class");
+	
+	console.log(className);
+	if($('.plyr__video-wrapper').attr('class').indexOf('fullscreen') > -1) {
+		if(className.indexOf('off') > -1) {
+			$('.chat-ctrl').removeClass('off');
+			$('.live-chat').removeClass('display-block');
+		} else {
+			$('.chat-ctrl').addClass('off');
+			$('.live-chat').addClass('display-block');
+		}
+	}
+}
+
+//전체 화면에서 라이브 채팅 영역 클릭 시 동영상 멈추는 이벤트 방지
+function stopEvent(event) {
+	var target = event.target;
+	target = $(target).attr('id');
+	
+	if(target == 'chatbtn' || target == 'textMessage2') {
+		return;
+	} else {
+		event.stopPropagation();
+	}
+}
+
+/*]]*/
+</script>
+
+</html>
+
+	

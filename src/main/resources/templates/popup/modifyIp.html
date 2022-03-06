@@ -1,0 +1,92 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<!-- Modal : IP 수정 -->
+<div class="modal fade text-left" id="modifyIp" tabindex="-1"
+	role="dialog" aria-labelledby="modifyIpLabel" aria-hidden="true">
+	<form id="modifyForm" name="modifyForm" method="post">
+	<input type="hidden" id="modifyLscSeq" name="modifyLscSeq" th:value="${dto.lscSeq}" />
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header bg-info">
+				<h4 class="modal-title white" id="modifyIpLabel">IP 수정</h4>
+				<button type="button" class="close" data-dismiss="modal"
+					aria-label="Close">
+					<span aria-hidden="true">×</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<ul class="list-left list-disc mb-1">
+					<li>전체 IP 입력시 해당 IP만 접근 가능 (예: 256.256.0.1)</li>
+					<li>특정 네트워크 대역 모두 접근 가능 (예: 256.256)</li>
+				</ul>
+
+				<div class="view-form view-form-vertical">
+					<table cellpadding="0" cellspacing="0" class=" w-100" summary="">
+						<colgroup>
+							<col width="20%" />
+							<col width="80%" />
+						</colgroup>
+						<tbody>
+							<tr>
+								<th>허용 IP</th>
+								<td><input type="text" class="form-control" title=""
+									value="" name="modifyConnectIp" id="modifyConnectIp"/></td>
+							</tr>
+							<tr>
+								<th>IP 설명</th>
+								<td><input type="text" class="form-control" title=""
+									value="" name="modifyIpDesc" id="modifyIpDesc"/></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-outline-success"
+					data-dismiss="modal" onclick="modify()">저장</button>
+				<button type="button" class="btn btn-outline-secondary"
+					data-dismiss="modal">취소</button>
+			</div>
+		</div>
+	</div>
+	</form>
+</div>
+<!--// Modal : IP 수정 -->
+
+<script type="text/javascript" th:inline="javascript">
+/*<![CDATA[*/
+	
+	function modify() {
+		var token = $("meta[name='_csrf']").attr("content");
+		var header = $("meta[name='_csrf_header']").attr("content");
+		
+		var jsonData = {
+				"lscIp" : $("#modifyConnectIp").val(),
+				"lscDesc" : $("#modifyIpDesc").val(),
+				"lscSeq" : $("#modifyLscSeq").val()
+		};
+		
+		$.ajax({
+			beforeSend : function(xhr) {   //데이터를 전송하기 전에 헤더에 csrf값을 설정한다
+			    xhr.setRequestHeader(header, token);},
+			url : /*[[ @{/system/modifyConnectIp.do} ]]*/ '/system/modifyConnectIp.do',
+			data : jsonData,
+			type : "POST",
+			success : function(type) {
+				if(type == "SUCCESS")
+					alert("접속 허용 IP가 수정되었습니다.");
+				else if (type == "DUPLICATION")
+					alert("이미 등록되어있는 IP입니다.");
+				else
+					alert("접속 허용 IP 수정에 실패했습니다.");
+			},
+			error : function(e){
+				alert("시스템 에러가 발생하였습니다. 관리자에게 문의하세요.");
+			},
+			complete : function() {
+				location.reload();
+			}
+		});
+	}
+	
+/*]]*/
+</script>

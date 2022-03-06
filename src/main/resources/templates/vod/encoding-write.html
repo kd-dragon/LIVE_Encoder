@@ -1,0 +1,366 @@
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<div th:replace="inc/_header"></div>
+
+<!-- 페이지 로딩 CSS -->
+<link rel="stylesheet" type="text/css" th:href="@{/app-assets/css/plugins/loaders/loaders.min.css}">
+<link rel="stylesheet" type="text/css" th:href="@{/app-assets/css/core/colors/palette-loader.css}">
+<!--// 페이지 로딩 CSS -->
+
+<style type="text/css">
+	#files { display: none; }
+</style>
+
+<form name="videoUploadForm" id="videoUploadForm" method="post">
+
+<input type="hidden" id="uploaderPort" name="uploaderPort" th:value="${dto.uploaderPort}"/>
+<input type="hidden" id="vodLimitSize" name="vodLimitSize" th:value="${dto.vodLimitSize}" />
+
+<input type="hidden" id="originalFileName" name="originalFileName" />
+<input type="hidden" id="originalFileServer" name="originalFileServer" />
+<input type="hidden" id="originalFileSize" name="originalFileSize" />
+
+<input type="hidden" id="authSeq" name="authSeq" th:value="${loginVO.authSeq}" />
+<input type="hidden" id="categorySeq" name="categorySeq" th:value="${loginVO.categorySeq}" />
+	
+	<!-- 로딩 -->
+	<div class="dim-cover">
+		<div class="loader-wrapper">
+			<div class="loader-container">
+				<div class="ball-pulse-sync loader-white">
+					<div></div>
+					<div></div>
+					<div></div>
+				</div>
+			</div>
+			<div class="loader-text-container">
+				<div class="loader-text"></div>
+			</div>
+		</div>
+	</div>
+	<!--// 로딩 -->
+
+	<!-- 컨텐츠 영역 -->
+	<div class="app-content content">
+		<div class="content-wrapper">
+			<!-- 컨텐츠:헤더-페이지명,네비게이터 -->
+			<div class="content-header row">
+				<div class="content-header-left col-md-8 col-12 mb-2 breadcrumb-new">
+					<h3 class="content-header-title mb-0 d-inline-block">동영상 등록</h3>
+					<div class="row breadcrumbs-top d-inline-block">
+						<div class="breadcrumb-wrapper col-12">
+							<ol class="breadcrumb">
+								<li class="breadcrumb-item">Home</li>
+								<li class="breadcrumb-item">VOD 관리</li>
+								<li class="breadcrumb-item active">동영상 등록</li>
+							</ol>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!--// 컨텐츠:헤더-페이지명,네비게이터 -->
+			
+			<!-- 컨텐츠:본문 영역 -->
+			<div class="content-body">
+				<div class="row ">
+					<!-- 동영상view영역 -->
+					<div class="col-sm-12">
+						<div class="card">
+							<div class="card-header">
+								<h4 class="card-title">동영상 등록</h4>
+							</div>				
+							<div class="card-content">
+								<div class="card-body">
+									<div class="regist-form regist-form-vertical">
+										<table cellpadding="0" cellspacing="0" class="w-100" summary="" >
+											<colgroup>
+
+												<col width="16%"/><col width="84%"/>
+											</colgroup>
+											<tbody>
+												<th:block th:if="${#strings.equals(loginVO.authSeq,'20210000000000000000')}">
+												<tr>
+													<th scope="">카테고리</th>
+<!-- 													<td> -->
+<!-- 														<div class="input-group "> -->
+<!-- 															<input type="text" class="form-control" id="fullCategoryName" name="fullCategoryName" readonly/> -->
+															
+<!-- 															<div class="input-group-append"> -->
+<!-- 																<button type="button" class="btn btn-outline-info" data-toggle="modal" data-target="#callCategory">카테고리 선택</button> -->
+<!-- 															</div> -->
+<!-- 														</div> -->
+<!-- 													</td> -->
+
+													<td><select name="selCategory" title="" class="form-control" id="selCategory"
+														onchange="categoryChange(this.value)">
+															<option value="" selected="selected">카테고리선택</option>
+															<option th:each="val : ${categoryList}"
+																th:value="${val.categorySeq}" th:text="${val.categoryName}"></option>
+													</select></td>
+												</tr>
+												</th:block>
+												<tr>
+													<th>제목</th>
+													<td><input type="text" class="form-control" title="" value="" name="vodTitle" id="vodTitle" placeholder="제목을 입력하세요"/></td>
+												</tr>
+												<tr>
+													<th>썸네일</th>
+													<td colspan="3">
+														<input type="file" class="w-100" title="" value="" id="thumbnail" name="thumbnail" /> 
+														<small class="small success">※ 썸네일 이미지는 16:9 비율로 1280px * 720px 이상의 이미지가 가장 적절합니다.</small>
+														<br>
+														<small class="small success">※ 썸네일 미지정시 영상에서 자동으로 추출합니다. </small>
+													</td>
+												</tr>
+												<tr>
+													<th>동영상</th>										
+													<td>
+														<div class="position-relative mb-Half">
+															<button type="button" class="btn btn-secondary badge" onclick="deleteFile();">삭제</button>
+															<div class="position-absolute no-edge-top no-edge-right">
+																<input type="file" name="files" id="files" onchange="addFile()" onclick="this.value=null;" accept="video/*, .mkv, .flv" style="display: none;" />
+															</div>
+														</div>
+			
+														<div class="add-file table-head">
+															<table cellpadding="0" cellspacing="0" class="w-100">
+																<colgroup>
+																	<col width="5%"/><col width="75%"/><col width="20%"/>
+																</colgroup>
+																<thead>
+																	<tr>
+																		<th scope="">
+																			<!-- <div class="d-inline-block form-check abc-checkbox abc-checkbox-info">
+																				<input type="checkbox" class="custom-control-input" name="colorCheck" id="checkbox0"><label class="custom-control-label" for="checkbox0"></label>
+																			</div> -->
+																		</th>
+																		<th scope="">파일명</th>
+																		<th scope="">파일크기</th>
+																	</tr>
+																</thead>
+															</table>
+														</div>
+														<div class="add-file table-body">
+															<table cellpadding="0" cellspacing="0" class="w-100">
+																<colgroup>
+																	<col width="5%"/><col width="75%"/><col width="20%"/>
+																</colgroup>
+																<tbody id="fileDropZone">
+																	<tr>
+																		<td colspan="3" class="py-3 text-center">이곳을 더블 클릭 또는 파일을 드래그해서 넣어주세요.</td>		
+																	</tr>
+																</tbody>
+															</table>													
+														</div>
+														<div class="summary">
+															최대 <b>1</b>개 / <b id="limitSizeShow">1024MB</b>제한
+															<div class="summary-right">
+																<b id="fileTotalCnt">0</b>개 / <b id="fileTotalSize">0.0MB</b>추가됨
+															</div>
+														</div>
+													</td>
+												</tr>
+												<tr>
+													<th>프리셋선택</th>
+													<td>
+														<select name="vodPreset" id="vodPreset" class="form-control col-xl-2 col-lg-2 col-md-3">
+										                	<option value='high'>고화질(1080p)</option>
+										                	<option value='mid'>중화질(720p)</option>
+										                	<option value='low'>저화질(360p)</option>
+														</select>
+													</td>
+												</tr>
+												<tr>
+													<th class="text-height">영상 다운로드 여부</th>
+													<td>
+														<div class="d-inline form-check abc-radio abc-radio-info">
+															<input class="form-check-input" type="radio" name="vodDownYn" id="vodDownChkY" value="N">
+															<label class="form-check-label" for="vodDownChkY">다운로드 불가</label>
+														</div>
+														<div class="d-inline form-check abc-radio abc-radio-info">
+															<input class="form-check-input" type="radio" name="vodDownYn" id="vodDownChkN" value="Y" checked>
+															<label class="form-check-label" for="vodDownChkN">인코딩 영상 다운로드</label>
+														</div>
+													</td>
+												</tr>
+												<tr>
+													<th>설명</th>
+													<td><textarea cols="" rows="7" name="vodDesc" id="vodDesc" class="form-control" placeholder="설명을 입력하세요"></textarea></td>
+												</tr>
+											</tbody>
+										</table>
+									</div>
+									<!-- 버튼영역 -->
+									<div class="card-footer text-right">
+										<button type="button" class="btn btn-success px-2 " onclick="vodFileUpload();">등록</button>
+										<button type="button" class="btn btn-secondary px-2" onclick="goList()">취소</button>
+									</div><!--// 버튼영역 -->
+								</div>
+							</div>
+						</div>
+					</div>
+					<!--// 동영상view영역 -->
+				</div>
+		
+			</div>
+		</div> <!--// 컨텐츠 본문 영역 -->
+	</div> <!--// 컨텐츠 영역 -->
+</form>
+
+<div th:replace="inc/_footer"></div>
+<!-- 팝업인크루드 -->
+<div th:replace="popup/uploadContents"></div>
+<div th:replace="popup/callCategory"></div>
+<!--// 팝업인크루드 -->
+
+<script th:src="@{/uploader/js/jquery.form.js}"></script>
+<script th:src="@{/uploader/js/tg1st_fileUpload.js}" type="text/javascript"></script>
+
+<script type="text/javascript" lang="javascript" th:inline = "javascript">
+/*<![CDATA[*/
+$(document).ready(function(){
+	$(".lnb_2").addClass("open").addClass("active");
+	
+	// 동영상 올릴 때 로딩 옵션
+	$('.dim-cover').hide();
+	$('.loader-wrapper').hide();
+	
+	if($("#authSeq").val() == "20210000000000000000"){
+		$("#limitSizeShow").text("");
+	} else{
+		$("#limitSizeShow").text(convertFileSize($("#vodLimitSize").val()));
+		$("#vodLimitSize").val("1000000000");
+	}
+	
+	setLoginCategory();
+	
+	refreshOrCloseWindow();
+	fileDropDown();
+});
+
+function setLoginCategory(){
+	$("#selCategory").children().each(function(idx) {
+		if($(this).val() == $("#lbCategorySeq").val()){
+			$(this).val().prop("selected", true);
+		}
+	});
+}
+
+function addFileForm(){
+	e.preventDefault();
+    $("#files").click();
+}
+	
+/* 첨부 파일 크기 체크 */
+function checkFile(obj) {
+	var result = false;
+	var agent = navigator.userAgent.toLowerCase();
+	
+	var maxSize = $("#vodLimitSize").val(); //(최대 5GB)
+	var browser = navigator.appName;
+	var fileSize = obj.size;
+	
+	if($("#authSeq").val() == "20210000000000000000"){
+		return true;
+	}
+	
+	if(fileSize <= maxSize) {
+		result = true;
+	}
+	
+	return result;
+}
+	
+	
+function vodFileUpload() {
+	
+	
+	// 제목 입력 여부 체크
+	if ($.trim($("#vodTitle").val()) == "") {
+		alert("제목을 작성해주세요.");
+		$("#vodTitle").focus();
+		return ;
+	}
+	
+	//파일 용량 체크
+	
+	// 파일 유무 체크 후 업로드 
+    if(fileArr.length > 0) {
+		var uploaderProtocol = window.location.protocol;
+		var hostName = location.hostname;
+		 
+		var url = uploaderProtocol + '//' + hostName + ':' + $("#uploaderPort").val();
+			url += "/chunkUpload";
+		
+// 		url = uploaderProtocol + '//' + hostName + ':' + $("#uploaderPort").val() + "/uploader/chunkUpload";
+			
+		uploadContentsInit();
+		
+		$("#uploadContents").modal({backdrop: 'static'});
+		$("#uploadContents").modal('show');
+		
+		tg1st_fileUpload(url, vodEncoding);
+	} else {
+		alert("동영상 파일을 첨부해주십시오.");
+	} 
+	
+}
+	
+function vodEncoding() {
+// 	$("#uploadContents").modal({backdrop: 'static'});
+// 	$("#uploadContents").modal('hide');
+	var token = $("meta[name='_csrf']").attr("content");
+	var header = $("meta[name='_csrf_header']").attr("content");
+	
+	$("#originalFileSize").val(uploadingResultArr[0].fileSize);
+	$("#originalFileServer").val(uploadingResultArr[0].serverFileName);
+	
+	
+	$(".loader-text").text("등록 처리중 입니다.");
+	$('.dim-cover').show();
+	$('.loader-wrapper').show();
+	
+	$("#files").remove();
+	
+	var formData = new FormData($("#videoUploadForm")[0]);
+	
+	$.ajax({
+		beforeSend : function(xhr) {
+			xhr.setRequestHeader(header, token);
+		},
+		url : /*[[@{/vod/vodWrite.do}]]*/ "/vod/vodWrite.do",
+		data: formData,
+        type: 'POST',
+        enctype: "multipart/form-data", 
+        processData: false,
+        contentType: false,
+		success: function (rtn) {
+			if(rtn.rslt){
+				$("#uploadContents").modal('hide');
+				goList();
+			}
+			alert(rtn.rsltDesc);
+		},
+		error : function (e){
+			alert("시스템상 문제가 발생하였습니다. 관리자에게 문의하세요");
+			$("#uploadContents").modal('hide');
+		},
+    	complete: function(xhr, data) {
+    		$('.modal-backdrop').hide();
+    		$('.dim-cover').hide();
+    		$('.loader-wrapper').hide();
+    	}
+	});
+	
+}
+
+function goList(){
+	location.href = /*[[ @{/vod/vodList.do} ]]*/ '/vod/vodList.do';
+}
+
+
+function categoryChange(seq) {
+	$("#categorySeq").val(seq);
+}
+
+/*]]*/
+</script>

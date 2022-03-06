@@ -1,0 +1,51 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<!-- Modal : 채널 수정 -->
+<div class="modal fade text-left" id="channelModify" tabindex="-1" role="dialog" aria-labelledby="channelModifyLabel" aria-hidden="true">
+	<div class="modal-dialog modal-md" role="document">
+		<div class="modal-content">
+			<div class="modal-header bg-info">
+				<h4 class="modal-title white" id="channelModify">채널 수정하기</h4>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"> <span aria-hidden="true">×</span> </button>
+			</div>
+			<div class="modal-body">
+				<!-- <h5></h5> -->
+				<div class="regist-form">
+					<table cellpadding="0" cellspacing="0" class=" w-100" summary="" >
+						<colgroup>
+							<col width="14%"/><col width="86%"/>
+						</colgroup>
+						<tbody>
+						
+						
+							<tr>
+								<th>채널명</th>
+								<td>
+									<input type="text" class="form-control" id="modName" placeholder=""/>
+									<!-- 채널명이 중복될 경우 <span class="small danger">※ 중복된 채널명이 존재합니다.</span> 나타나고 채널 수정 불가-->
+									<input type="hidden" id="modSeq" name="modSeq" />
+								</td>
+							</tr>
+							<tr>
+								<th>채널 URL</th>
+								<td>
+									<input type="text" class="form-control" id="modUrl" placeholder="채널 URL을 입력해주세요."/>
+									<span class="small success">예) /live/weblive.stream</span>
+								</td>
+							</tr>
+
+							<tr>
+								<th>설명</th>
+								<td><textarea id="modDesc" cols="" rows="7" title="" class="form-control">채널에 대한 설명이 노출됩니다.</textarea></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-outline-success" >저장</button>
+				<button type="button" class="btn btn-outline-secondary" data-dismiss="modal">취소</button>
+			</div>
+		</div>
+	</div>
+</div>
+<!--// Modal : 채널 수정 -->

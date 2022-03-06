@@ -1,0 +1,902 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<div th:replace="inc/_header"></div>
+
+<script type="text/javascript" th:inline="javascript">
+/*<![CDATA[*/
+var token = $("meta[name='_csrf']").attr("content");
+var header = $("meta[name='_csrf_header']").attr("content");	
+
+
+$(function() {
+	
+	$(".lnb_2").addClass("open").addClass("active");
+	
+	$("#selCategory").val(/*[[${vo.getCategorySeq}]]*/);
+
+	var vodStatus = $("#vodStatus").val();
+	
+	//인코딩중일 경우
+	if(vodStatus == '3') {
+		// 일정 주기로 인코딩 진행율 갱신
+		updateViewerInterval = setInterval(function() {
+			$.ajax({
+				beforeSend : function(xhr) {
+					xhr.setRequestHeader(header, token);
+				},
+				url: /*[[ @{/vod/encodingProgressUpdate.do} ]]*/ '/vod/encodingProgressUpdate.do',
+		        type: 'POST',
+				data: { "videoSeq" : $("#vodSeq").val() },
+				success: function (data) {
+						
+					$("#progressBar").width(nvl(data, '0') + '%');
+					$("#progressPercent").text(nvl(data, '0') + '%');
+
+					if(data == '100') {
+						clearInterval(updateViewerInterval);
+
+						setTimeout(function(){
+							alert("[성공] 영상 인코딩이 완료되었습니다.");
+							
+							var f = document.theForm;
+							
+							f.action = /*[[ @{/vod/vodModifyForm.do} ]]*/ '/vod/vodModifyForm.do';
+							f.method = "post";
+							f.submit();
+							
+						}, 2000);
+					}
+				},
+				error: function(e) {
+					alert("영상 진행률을 가져올 수 없습니다.");
+			    },
+			});
+
+		}, 3000);
+
+	}
+	
+// 	setLoginCategory();
+});
+
+//널값 채크하여 빈값으로 치환하는 메소드
+function nvl(str, defaultVal) {
+	var defaultValue = "";
+	if (typeof defaultVal != 'undefined') {
+	  	defaultValue = defaultVal;
+	}
+	if (typeof str == "undefined" || str == null || str == '' || str == "undefined" || str == 'null') { 
+		return defaultValue; 
+	}
+	return str;
+}
+
+function goList(){
+	location.href = /*[[ @{/vod/vodList.do} ]]*/ '/vod/vodList.do';
+}
+
+
+function goDelete(){
+	
+	var vodSeqs = new Array();
+	vodSeqs.push($("#vodSeq").val());
+	
+	$.ajax({
+		beforeSend : function(xhr) {
+			xhr.setRequestHeader(header, token);
+		},
+		url: /*[[ @{/vod/vodDelete.do} ]]*/ '/vod/vodDelete.do',
+        type: 'POST',
+		data: { vodSeqs : vodSeqs },
+		success: function (type) {
+			if (type == "SUCCESS") {
+				alert("삭제되었습니다.");
+			} else {
+				alert("삭제에 실패했습니다.");
+			}
+		},
+		error : function (e){
+			alert("시스템 문제 발생으로 관리자에게 문의해주세요.");
+		},
+		complete : function() {
+	       goList(); 
+	    }
+		
+	});
+}
+
+
+//저장
+function goModify(){
+	//$("#categorySeq").val($("#lbCategorySeq").val());
+	
+	$.ajax({
+		beforeSend : function(xhr) {
+			xhr.setRequestHeader(header, token);
+		},
+		url : /*[[@{/vod/vodModify.do}]]*/ "/vod/vodModify.do",
+		data: $('#theForm').serialize(),
+        dataType : 'text',
+        type: 'POST',
+		success: function (rtn) {
+			if(rtn == "SUCCESS"){
+				alert("수정되었습니다.");
+				goList();
+			} else {
+				alert("수정에 실패하였습니다.");
+			}
+		},
+		error : function (e){
+			alert("시스템상 문제가 발생하였습니다. 관리자에게 문의하세요");
+		}
+	});
+	
+}
+
+//영상 다운로드
+function videoDown(){
+		
+	var f = document.theForm;
+	
+	f.action = /*[[ @{/vod/vodVideoDown.do} ]]*/ '/vod/vodVideoDown.do';
+	f.method = "post";
+	f.submit();
+}
+
+function categoryChange(seq) {
+	$("#categorySeq").val(seq);
+}
+
+//내 부서 카테고리 자동 선택
+function setLoginCategory(){
+	/*
+	$(".cate-group").children().each(function(idx) {
+		if($(this).find("span").attr("seq") == $("#lbCategorySeq").val()){
+			$("#fullCategoryName").val($(this).find("span").attr("fullcategoryname"));
+		}
+	});
+	*/
+	$("#selCategory").children().each(function(idx) {
+		if($(this).val() == $("#lbCategorySeq").val()){
+			$(this).val($("#lbCategorySeq").val()).attr("selected", "selected");
+		}
+	});
+}
+
+
+function urlCopy(seq) {
+	
+	var uri = '';
+	var textarea = document.createElement('textarea');
+	
+	document.body.appendChild(textarea);
+	uri =  window.location.protocol + "//" + window.location.host + /* [[ @{/p/} ]]*/ '/v/' + seq;
+	textarea.value = uri;
+	textarea.select();
+	
+	document.execCommand("copy");
+	document.body.removeChild(textarea);
+	
+	alert("URL이 복사되었습니다.");
+}
+
+function thumbImageModify(seq) {
+	var message = confirm("썸네일을 변경하시겠습니까?");
+	
+	if(message == true) {
+		var formData = new FormData();
+		var thumbSeq = $(":radio[name=radio1]:checked").val();
+		
+		formData.append("thumbSeq", thumbSeq);
+		formData.append("vodSeq", seq);
+		
+		$.ajax({
+			beforeSend : function(xhr) {
+				xhr.setRequestHeader(header, token);
+			},
+			url : /*[[@{/vod/thumbImgModify.do}]]*/ "/vod/thumbImgModify.do",
+			type : "POST",
+			data : formData,
+			contentType : false,
+			processData : false,
+			success : function(type) {
+				if(type == "SUCCESS") {
+					alert("정상적으로 저장되었습니다.");
+					pageReload();
+				} else {
+					alert("썸네일 저장을 실패하였습니다. 다시 시도해주세요.");
+				}
+			}
+		});
+		
+	}
+}
+
+function addImage(seq) {
+	var f = document.theForm;
+	var imageFileName = $("#imageFile").val();
+	
+	if(imageFileName == "") {
+		alert("이미지를 추가해주세요.");
+		return;
+	}
+	
+	if(imageFileName != "") {
+// 		imageFileName = imageFileName.substring(imageFileName.lastIndexOf("\\") + 1);
+// 		f.imageFileName.value = imageFileName;
+		
+		var formData = new FormData();
+		
+// 		imageFileName = imageFileName.substring(imageFileName.lastIndexOf("\\") + 1);
+// 		f.imageFileName.value = imageFileName;
+		
+		formData.append("imageFile", $("input[name=imageFile]")[0].files[0]);
+// 		formData.append("imageFileName", imageFileName);
+		formData.append("vodSeq", seq);
+		
+		$.ajax({
+			beforeSend : function(xhr) {
+				xhr.setRequestHeader(header, token);
+			},
+			url : /*[[ @{/vod/thumbAddInsert.do} ]]*/ "/vod/thumbAddInsert.do",
+			cache : false,
+			processData : false,
+			contentType : false,
+			data : formData,
+			type : "POST",
+			success : function(rtn) {
+				if(rtn.rslt) {
+					pageReload();
+				}
+				alert(rtn.rsltDesc);
+			},
+			error : function(e) {
+				alert("이미지 추가를 실패하였습니다. 다시 시도해주세요.");
+				return false;
+			}
+		});
+	}
+}
+
+function delImage(thumbSeq, reprimageYn) {
+	if(reprimageYn == "Y") {
+		alert("현재 사용중인 대표이미지는 삭제할 수 없습니다.");
+		return;
+	}
+	
+	var formData = new FormData();
+	var message = confirm("이미지를 삭제하시겠습니까?");
+	
+	if(message == true) {
+		formData.append("thumbSeq", thumbSeq);
+		
+		$.ajax({
+			beforeSend : function(xhr) {
+				xhr.setRequestHeader(header, token);
+			},
+			url : /*[[ @{/vod/thumbImgDelete.do}]]*/ "/vod/thumbImgDelete.do",
+			data : formData,
+			type : "POST",
+			contentType : false,
+			processData : false,
+			success : function(type) {
+				if(type == "SUCCESS") {
+					alert("이미지를 삭제하였습니다.");
+					pageReload();
+				} else {
+					alert("이미지 삭제를 실패했습니다. 다시 시도해주세요.");
+					return false;
+				}
+			}
+		});
+	} else {
+		return false;
+	}
+}
+
+function chkFile(obj) {
+	var fileChk = ["bmp","rle","dib","jpeg","jpg","gif","png","tif","tiff","raw"];
+	
+	var fileFormat = obj.value.substring(obj.value.lastIndexOf(".") + 1);
+	var result = false;
+	var lower = navigator.userAgent.toLowerCase();
+	
+	if(obj.value != "") {
+		if($.inArray(fileFormat.toLowerCase(), fileChk) < 0) {
+			alert("[ " + fileFormat + " ] 지원하지 않는 확장자입니다.");
+			
+			if(lower.indexOf("trident") != -1) {
+				$("#imageFile").replaceWith($("#imageFile").clone(true));
+			} else {
+				$("#imageFile").val("");
+			}
+			
+			return;
+		} else {
+			result = true;
+		}
+	}
+	
+	return true;
+}
+
+function pageReload() {
+	var f = document.theForm;
+	
+	f.action = /*[[ @{/vod/vodModifyForm.do} ]]*/ "/vod/vodModifyForm.do";
+	f.method = "post";
+	f.submit();
+}
+/*]]*/
+</script>
+
+
+<!-- 컨텐츠 영역 -->
+<div class="app-content content">
+<div class="content-wrapper">
+<!-- 컨텐츠:헤더-페이지명,네비게이터 -->
+<div class="content-header row">
+	<div class="content-header-left col-md-8 col-12 mb-2 breadcrumb-new">
+		<h3 class="content-header-title mb-0 d-inline-block">VOD 관리</h3>
+		<div class="row breadcrumbs-top d-inline-block">
+			<div class="breadcrumb-wrapper col-12">
+				<ol class="breadcrumb">
+					<li class="breadcrumb-item">Home</li>
+					<li class="breadcrumb-item active">VOD 관리</li>
+				</ol>
+			</div>
+		</div>
+	</div>
+</div>
+<!--// 컨텐츠:헤더-페이지명,네비게이터 -->
+<!-- 컨텐츠:본문 영역 -->
+<div class="content-body management">
+	<div class="row ">
+		<!-- 동영상view영역 -->
+		<div class="col-sm-12">
+		
+		<form id="theForm" name="theForm">
+		<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+		<input type="hidden" id="categorySeq" name="categorySeq" th:value="${vo.categorySeq}"/>
+		<input type="hidden" id="vodSeq" name="vodSeq" th:value="${vo.vodSeq}"/>
+		<input type="hidden" id="vodStatus" name="vodStatus" th:value="${vo.vodStatus}"/>
+		<input type="hidden" id="lbCategorySeq" name="lbCategorySeq" th:value="${loginVO.categorySeq}"/>
+		<input type="hidden" id="imageFileName" name="imageFileName" />
+		
+			<div class="card">
+				<div class="card-header view-title">
+					<!-- 제목 및 주요버튼 -->
+					<h3 th:text="${vo.vodTitle}"></h3>
+					<div class="view-title-info">
+						<span th:text="${vo.regDate}"></span><span>[[ ${vo.regUserName} ]]</span>
+					</div>
+					<th:block th:if="${#strings.equals(vo.vodStatus, '1')}">
+					<div class="heading-elements">
+						<button type="button" class="btn btn-light btn-sm " th:onclick="urlCopy([[${vo.vodSeq}]]);"><i class="ft-share-2"></i> URL복사</a></button>
+						<th:block th:if="${#strings.equals(vo.vodDownYn, 'Y')}">
+						<button type="button" class="btn btn-info btn-sm " onclick="videoDown('')"><i class="ft-download"></i> 영상 다운로드</button>
+						</th:block>
+					</div>
+					</th:block>
+					<!-- 제목 및 주요버튼 -->
+				</div>				
+				<div class="card-content">
+					<div class="card-body">
+						<div class="row">
+						
+							<div class="col-8">
+								<div class="view-player">
+								
+								<!-- 동영상 인코딩 성공/완료 -->
+								<th:block th:if="${#strings.equals(vo.vodStatus, '1')}">
+									<div id="video-contaier">
+											<th:block th:if="${#strings.equals(vo.thumbFileName, 'NULL')}">
+											<video id="videoPlayer" width="100%" height="430px" th:poster="@{/app-assets/images/sample/no-image.jpg}" preload="none" >
+											</th:block>
+											<th:block th:unless="${#strings.equals(vo.thumbFileName, 'NULL')}">
+											<video id="videoPlayer" width="100%" height="430px" th:poster="@{${vo.thumbFilePath} + ${vo.thumbFileName}}" preload="none" >
+											</th:block>
+											<!-- //적응형 O -->
+											<th:block th:if="${#strings.equals(vo.adaptiveYn, 'Y')}">
+												<th:block th:if="${#strings.equals(vo.adaptiveType, 'advance')}">
+													<source th:src="@{${vo.vodStreamUrl} +'/'+ ${vo.encodingFilePath} + ${vo.vodSeq} +'/_media_,1920x1080,1280x720,640x360,.mp4.urlset/master.m3u8'}" type="video/mp4" size="480"/>
+												</th:block>
+												<th:block th:if="${#strings.equals(vo.adaptiveType, 'basic')}">
+													<source th:src="@{${vo.vodStreamUrl} +'/'+ ${vo.encodingFilePath} + ${vo.vodSeq} +'/_media_,1920x1080,1280x720,.mp4.urlset/master.m3u8'}" type="video/mp4" size="480"/>
+												</th:block>
+											</th:block>
+											
+											<!-- //적응형 X -->
+											<th:block th:if="${#strings.equals(vo.adaptiveYn, 'N')}">
+								 				<source th:src="@{${vo.vodStreamUrl} +'/'+ ${vo.encodingFilePath} + ${vo.encodingFileName} +'/index.m3u8'}" type="video/mp4" size="480"/>
+											</th:block>
+											
+											</video>
+										</div>
+								</th:block>
+								
+								<!-- 동영상 인코딩 대기 -->
+								<th:block th:if="${#strings.equals(vo.vodStatus, '0')}">
+									<div class="no-live">
+										<div class="no-live-content">
+											<i class="ft-alert-circle d-block"></i><span>동영상 인코딩 대기중입니다.</span>
+										</div>
+									</div>
+								</th:block>
+								
+								<!-- 동영상 인코딩 실패 -->
+								<th:block th:if="${#strings.equals(vo.vodStatus, '4')}">
+									<div class="no-live">
+										<div class="no-live-content">
+											<i class="ft-alert-triangle d-block"></i><span>동영상 인코딩 실패</span>
+										</div>
+									</div>
+								</th:block>
+								
+								
+								<!-- 동영상 인코딩 중일 경우 -->
+								<th:block th:if="${#strings.equals(vo.vodStatus, '3')}">
+									<div class="add-file table-head">
+										<table cellpadding="0" cellspacing="0" class="w-100">
+											<colgroup>
+												<col width="5%"/><col width="75%"/><col width="*%"/>
+											</colgroup>
+											<thead>
+												<tr>
+													<th scope="">파일명</th>
+													<th scope="">인코딩 진행률</th>
+<!-- 													<th scope="">예상 남은시간</th> -->
+												</tr>
+											</thead>
+										</table>
+									</div>
+									<div class="add-file table-body border-bottom-gray">
+										<table cellpadding="0" cellspacing="0" class="w-100">
+											<colgroup>
+												<col width="15%"/><col width="70%"/><col width="5%"/>
+											</colgroup>
+											<tbody>
+												<tr id="tr_0">
+													<td class="text-left">
+														<img th:src="@{/assets/css/icon/mp4.svg}" class="file-icon" alt="" onerror="extNotExist(this);" th:text="${vo.originalFileName}">
+													</td>
+													<td>
+														<div class="progress mb-0">
+															<div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-warning" role="progressbar" aria-valuenow="100" aria-valuemin="100" aria-valuemax="100" style="width: 0%;">
+															</div>
+														</div>
+													</td>
+													<td class="text-left" id="progressPercent">
+														0%
+													</td>
+													<!-- <td id="estimatedEndTime">
+														인코딩 대기중
+													</td> -->
+												</tr>
+											</tbody>
+										</table>
+									</div>
+									
+									<!-- <div id="video-ing" style="text-align:center;">
+										<img th:src="@{/app-assets/images/player/encoding_1030x601.gif}" alt="동영상 변환중" width="100%" height="100%"/>
+									</div> -->
+								</th:block>
+								<!-- 동영상 인코딩 중일 경우 -->
+								
+								
+								
+								</div>
+							</div>
+
+							<!-- vod 썸네일 변경 -->
+							<th:block th:if="${#strings.equals(vo.vodStatus, '1')}">
+							<div class="col-4">
+								<!-- 이미지정보 -->
+								<ul class="nav nav-tabs tab-inner-design">
+									<li class="nav-item">
+										<a class="nav-link active" id="imageInfo-tab1" data-toggle="tab" href="#imageInfo1" aria-controls="imageInfo1" aria-expanded="true">자동추출이미지</a>
+									</li>
+									<li class="nav-item">
+										<a class="nav-link" id="imageInfo-tab2" data-toggle="tab" href="#imageInfo2" aria-controls="imageInfo2" aria-expanded="true">추가등록이미지</a>
+									</li>
+								</ul>
+								<div class="tab-content mt-Half">
+									<!-- 자동추출이미지 탭 내용 -->
+									<div class="tab-pane active" id="imageInfo1" role="tabpanel" aria-labelledby="imageInfo-tab1" aria-expanded="true">
+										<ul class=" part-list-3 thumbList m-0 p-0 list-contents">
+											<li th:unless="${#lists.isEmpty(dto.vodThumbAList)}" th:each="item : ${dto.vodThumbAList}">
+												<div class="list-contents-img">
+													<img th:src="@{${item.thumbFilePath} + ${item.thumbFileName}}" alt="" class="thumb">
+												</div>
+												<p class="thumb-chk"  th:if="${#strings.equals(item.reprimageYn, 'Y')}"><b class="badge badge-success">대표이미지</b></p>
+												<p class="form-check abc-radio abc-radio-info"  th:if="${#strings.equals(item.reprimageYn, 'Y')}">
+													<input class="form-check-input" type="radio" name="radio1" th:id="'radio1-'+${itemStat.index}" th:value="${item.thumbSeq}" checked>
+													<label class="form-check-label" th:for="'radio1-'+${itemStat.index}" th:utext="${item.thumbTimeToSec}"></label>
+												</p>
+												<p class="form-check abc-radio abc-radio-info"  th:unless="${#strings.equals(item.reprimageYn, 'Y')}">
+													<input class="form-check-input" type="radio" name="radio1" th:id="'radio1-'+${itemStat.index}" th:value="${item.thumbSeq}">
+													<label class="form-check-label" th:for="'radio1-'+${itemStat.index}" th:utext="${item.thumbTimeToSec}"></label>
+												</p>
+											</li>
+										</ul>
+									</div>
+									<!--// 자동추출이미지 탭 내용 -->
+
+									<!-- 추가등록이미지 탭 내용 -->
+									<div class="tab-pane" id="imageInfo2" role="tabpanel" aria-labelledby="imageInfo-tab2" aria-expanded="false">
+										<div class="input-group input-group-sm">
+											<input type="file" class="form-control" id="imageFile" name="imageFile" accept="image/*" title="" value="" onchange="chkFile(this);">
+											<div class="input-group-append">
+												<button type="button" class="btn btn-outline-info" th:onclick="addImage([[ ${vo.vodSeq} ]]);">이미지 추가</button>
+											</div>
+										</div>
+										<ul class=" part-list-3 thumbList m-0 p-0 mt-Half" style="height: 435px; overflow-y: auto;">
+											<li th:unless="${#lists.isEmpty(dto.vodThumbGList)}" th:each="item : ${dto.vodThumbGList}">
+												<img th:src="@{${item.thumbFilePath} + ${item.thumbFileName}}" alt="" class="thumb" style="width:100%; height: 80px">
+												<p class="thumb-chk" th:if="${#strings.equals(item.reprimageYn, 'Y')}"><b class="badge badge-success">대표이미지</b></p>
+												<p class="thumb-del"><a href="#" class="badge badge-pill badge-secondary" th:onclick="delImage([[ ${item.thumbSeq} ]], [[ ${item.reprimageYn} ]])"><i class="ft-x white"></i></a></p>
+												<p class="form-check abc-radio abc-radio-info"  th:if="${#strings.equals(item.reprimageYn, 'Y')}">
+													<input class="form-check-input" type="radio" name="radio1" th:id="'radio2'+${itemStat.index}" th:value="${item.thumbSeq}" checked>
+													<label class="form-check-label" th:for="'radio2-'+${itemStat.index}"></label>
+												</p>
+												<p class="form-check abc-radio abc-radio-info"  th:unless="${#strings.equals(item.reprimageYn, 'Y')}">
+													<input class="form-check-input" type="radio" name="radio1" th:id="'radio2-'+${itemStat.index}" th:value="${item.thumbSeq}">
+													<label class="form-check-label" th:for="'radio2-'+${itemStat.index}"></label>
+												</p>
+											</li>
+										</ul>
+									</div>
+									<!--// 추가등록이미지 탭 내용 -->
+									<div class="text-right border-top-grey border-top-lighten-2 mt-2 pt-1">
+										<button type="button" class="btn btn-info btn-sm" th:onclick="thumbImageModify([[ ${vo.vodSeq} ]]);">대표이미지 저장</button>
+									</div>
+								</div>
+								<!-- 이미지정보 -->
+							</div>
+							</th:block>
+						</div>
+
+						<!-- 정보영역 -->
+						<div class="information mt-2">
+							<ul class="nav nav-tabs nav-top-border no-hover-bg  ">
+								<li class="nav-item">
+									<a class="nav-link active" id="information-tab1" data-toggle="tab" href="#information1" aria-controls="information1" aria-expanded="true">콘텐츠기본정보</a>
+								</li>
+							</ul>
+							<div class="tab-content mt-1">
+								<!-- 콘텐츠기본정보 탭 내용 -->
+								<div class="tab-pane active" id="information1" role="tabpanel" aria-labelledby="information-tab1" aria-expanded="true">
+									<div class="regist-form regist-form-vertical">
+										<table cellpadding="0" cellspacing="0" class="w-100" summary="" >
+											<colgroup>
+												<col width="9%"/><col width="24.333%"/><col width="9%"/><col width="24.333%"/><col width="9%"/><col width="24.333%"/><col width="9%"/><col width="24.333%"/>
+											</colgroup>
+											<tbody>
+												<tr>
+													<th>카테고리</th>
+													<!-- <td colspan="7">
+														<div class="input-group w-41">
+															<input type="text" class="form-control" title="" th:value="${vo.fullCategory}" id="fullCategoryName" name="fullCategoryName" placeholder=""/>
+															<input type="hidden" class="form-control" title="" th:value="${vo.categorySeq}" id="lbCategorySeq" name="lbCategorySeq" placeholder=""/>
+															<div class="input-group-append">
+																<button type="button" class="btn btn-outline-info" data-toggle="modal" data-target="#callCategory">카테고리검색</button>
+															</div>
+														</div>
+													</td> -->
+													<td colspan="1">
+														<select name="selCategory" title="" class="form-control" id="selCategory" onchange="categoryChange(this.value)">
+															<option value="" >카테고리선택</option>
+															<option th:each="val : ${categoryList}" th:value="${val.categorySeq}" th:text="${val.categoryName}"></option>
+														</select>
+													</td>
+													<td colspan="7"></td>
+												</tr>
+												<tr>
+													<th>제목</th>
+													<td colspan="3"><input type="text" class="form-control" title="" th:value="${vo.vodTitle}" id="vodTitle" name="vodTitle" placeholder="" maxlength="100"/></td>
+													
+													<th>원본파일명</th>
+													<th:block th:if="${#strings.isEmpty(vo.originalFileName) || #strings.equals(vo.originalFileName, '')}">
+													<td colspan="3" th:text="${vo.encodingFileName}"></td>
+													</th:block>
+													<th:block th:unless="${#strings.isEmpty(vo.originalFileName) || #strings.equals(vo.originalFileName, '')}">
+													<td colspan="3" th:text="${vo.originalFileName}"></td>
+													</th:block>
+												</tr>
+												<tr>
+													<th>원본 용량</th>
+													<td th:text="${vo.originalFileSize}"></td>
+													<th class="text-height">인코딩 용량</th>
+													<td th:text="${vo.encodingFileSize}"></td>
+													<th>인코딩 일자</th>
+													<td colspan="3" th:text="${vo.encDate}" ></td>
+												</tr>
+												<tr>
+													<th>설명</th>
+													<td colspan="7">
+														<textarea class="form-control" id="vodDesc" name="vodDesc" cols="" rows="7" title="" placeholder="설명을 입력하세요">[[ ${vo.vodDesc} ]]</textarea>
+													</td>
+												</tr>
+											</tbody>
+										</table>
+									</div>
+								</div>
+								<!--// 콘텐츠기본정보 탭 내용 -->
+
+							</div>			
+						</div>
+						<!--// 정보영역 -->
+					</div>
+				</div>
+				<!-- 버튼영역 -->
+				<div class="card-footer">
+					<div class="mr-auto float-right">
+						<button type="button" class="btn btn-info px-2" onclick="goList()">목록</button>
+						<button type="button" class="btn btn-success px-2" onclick="goModify()">저장</button>
+						<button type="button" class="btn btn-secondary px-2" onclick="goDelete()">삭제</button>
+					</div>
+				</div>
+				<!--// 버튼영역 -->
+			</div>
+			
+		</form>
+		
+		</div>
+		<!--// 동영상view영역 -->
+		
+	</div>
+	</div>
+</div>
+<!--// 컨텐츠 본문 영역 -->
+</div>
+</div>
+<!--// 컨텐츠 영역 -->
+<div th:replace="inc/_footer"></div>
+
+<!-- 팝업인크루드 -->
+<div th:replace="popup/callCategory"></div>
+<!--// 팝업인크루드 -->
+
+<!-- 스위치 버튼 JS -->
+<script th:src="@{/app-assets/vendors/js/forms/toggle/bootstrap-switch.min.js}"  type="text/javascript"></script>
+<script th:src="@{/app-assets/vendors/js/forms/toggle/bootstrap-checkbox.min.js}"  type="text/javascript"></script>
+<script th:src="@{/app-assets/vendors/js/forms/toggle/switchery.min.js}" type="text/javascript"></script>
+<script th:src="@{/app-assets/js/scripts/forms/switch.js}" type="text/javascript"></script>
+<!--// 스위치 버튼 JS -->
+
+<!-- Plyr Player -->
+<link rel="stylesheet" type="text/css" th:href="@{/player/plyr/plyr.css}" />
+<script th:src="@{/player/tgplayer/plugin/js/jquery-3.4.1.min.js}"></script>
+<script th:src="@{/player/tgplayer/plugin/js/jquery-ui.min.js}"></script>
+<!-- <script th:src="@{/player/plyr/hls.js}"></script> -->
+<!-- <script th:src="@{/player/plyr/plyr.js}"></script> -->
+<script th:src="@{/player/tgplayer/plugin/js/hls/tg_hls.js}"></script>
+<script th:src="@{/player/tgplayer/plugin/js/tg_player.js}"></script>
+<script th:src="@{/player/plyr/plyr.polyfilled.js}"></script>
+<!-- Plyr Player -->
+
+<script type="text/javascript" th:inline="javascript">
+/*<![CDATA[*/
+// var imgUrl = watermark.imgWebPath+ "/" + watermark.imgServerFileName;
+var watermark = /*[[${watermarkVo} ]]*/ '';
+var videoPreview = /*[[ ${vo.vttFilePath} + ${vo.vodSeq}+'_media_high_preview.vtt' ]]*/ '';
+
+var player;
+var video = document.querySelector("#videoPlayer");
+var source = video.getElementsByTagName('source');
+var sourceUrl = source[0].src;
+
+var autoQualInt = 1;
+var isIE = /Netscape|trident|msie/i.test(navigator.userAgent) ? true: false;
+var hls = []; var i = 0;
+
+$(function(){
+	
+	//player 설정
+	var playerOptions = {
+			  playsinline: true
+	        , loop: { active: false }
+	        , tooltips: { controls: true, seek: true }      
+	        , captions: { active: true, update: true}
+	    	, speed: { selected: 1, options: [0.8, 1, 1.2, 1.4, 1.6] }
+	    	, controls: [ 'play-large', 'restart', 'play', 'progress', 'current-time', 'duration', 'mute', 'volume', 'settings', 'fullscreen']	
+	    	, invertTime : false
+	        , listeners: {
+	        	seek: function customSeekBehavior(e) {
+					var currentTime = player.currentTime;
+					var newTime = _getTargetTime(player, e);
+						player.currentTime = newTime;
+	        	}
+	        }
+	        , previewThumbnails: { 
+	        	  enabled: true
+	        	, src: videoPreview }
+	        , i18n: {
+	            qualityBadge: { 2160: '4K', 1440: 'FHD', 1080: 'FHD', 720: 'HD', 640: 'SD', 576: 'SD', 480: 'SD', 360: 'SD', 320: 'SD', 240 : 'SD' , 1 : "auto" }
+	        }
+	        , ratio:"16:9"
+	        , fullscreen : { enabled: true, fallback: true, iosNative: false, container: null }
+			
+	};
+	
+	
+	//HLS 적응형 비트레이트 적용 --------------------------------------
+	var hls = new Hls();
+	hls.loadSource(sourceUrl);
+	
+	hls.on(Hls.Events.ERROR, function (event, data) {
+		  if (data.fatal) {
+		    switch (data.type) {
+		      case Hls.ErrorTypes.NETWORK_ERROR:
+		        // try to recover network error
+		        console.log('fatal network error encountered, try to recover');
+		        hls.startLoad();
+		        break;
+		      case Hls.ErrorTypes.MEDIA_ERROR:
+		        console.log('fatal media error encountered, try to recover');
+		        hls.recoverMediaError();
+		        break;
+		      default:
+		        // cannot recover
+		        hls.destroy();
+		        break;
+		    }
+		  }
+	});
+	
+	hls.on(Hls.Events.MANIFEST_PARSED,function(event,data) {
+    	var avalQualList = [];
+		var sourceList = [];	
+		
+		// 자동 품질 선택 메뉴 추가
+		avalQualList.push(autoQualInt);
+		var _sourceObj = {};
+		_sourceObj.src = new Array(sourceUrl);
+		_sourceObj.size = autoQualInt;
+		_sourceObj.type = 'video/mp4';
+		sourceList.push(_sourceObj);
+
+    	hls.levels.map(function(v){
+			avalQualList.push(v.height);
+			var sourceObj = {};
+			sourceObj.src = v.url;
+			sourceObj.size = v.height;
+			sourceObj.type = 'video/mp4';
+			sourceList.push(sourceObj);
+    	});
+
+		/* playerOptions.quality = {
+			default : avalQualList[0],
+			options : avalQualList,
+			forced : true,
+    	} */
+		
+    	player = new Plyr("#videoPlayer", playerOptions);
+		
+    	player.source = {
+        		  type: 'video'
+        	    , title: 'TigenSoft html5 video player' 
+        		, sources: sourceList
+        		, tracks: null
+        };
+    	
+		player.on('qualitychange',function(e){
+			// 품질변경시, 현재시간은 가져올수 없기 때문에, innerText로 직접 가져와 초 단위로 처리.
+			if(isIE) {
+				var txtArray = e.target.innerText.replace(/^\s+|\s+$/gm,'\n').split("\n").filter(function(item){
+					return item !== null && item !== undefined && item !== '';
+				});
+// 				console.log(txtArray[3]);
+				ChangeTime = TimeValid(txtArray[3]);	
+			} else {
+// 				console.log(e.target.innerText.split("\n")[2]);
+				ChangeTime = TimeValid(e.target.innerText.split("\n")[2]);							
+			}
+
+			var newQuality = e.detail.quality;
+			var _lvlIndex = 0;
+			window.hls.levels.forEach(function(level, levelIndex){
+				if (level.height == newQuality) {
+				_lvlIndex = levelIndex + 1;
+				window.hls.currentLevel = levelIndex;
+				}
+			})
+			loadHLS($('source')[_lvlIndex].src);
+		});
+		  	        
+		initialPlayer(player);
+
+    });
+	
+	hls.attachMedia(video);
+	window.hls = hls;
+	
+});
+
+
+function initialPlayer(tgplayer){
+
+	player.on('pause', function(event) {
+		$('#currentTime').val(player.currentTime);
+	});
+	  
+	player.on('enterfullscreen', function(event) { 
+		$('.plyr__video-wrapper').attr("style","");
+	});
+  
+
+  var loadFirst = true;
+  player.on("loadeddata", function() {
+	  video = document.querySelector("video");
+	  
+	  if(loadFirst){
+		  loadHLS(sourceUrl);
+		  loadFirst = !loadFirst;
+	  }
+	  
+		//워터마크가 없는 경우에 오류 방지
+		if(watermark != null) {
+			var imgUrl = watermark.imgWebPath+ "/" + watermark.imgServerFileName;
+		}
+		  
+		//워터마크 데이터가 존재하고 워터마크 사용여부가 Y인 경우에만 워터마크 출력
+		if(watermark != null && watermark.useYn == "Y") {
+			if(watermark.position == '1') {
+				$('.plyr__video-wrapper').append("<div class='watermark'><img src='"+imgUrl+"' style='position: absolute; margin:10px;top: 0; left: 0; display: inline; z-index: 1; opacity: 0.5; width: 10vw'/></div>");
+			} else if(watermark.position == '2') {
+				$('.plyr__video-wrapper').append("<div class='watermark'><img src='"+imgUrl+"' style='position: absolute; margin:10px;top: 0; right: 0; display: inline; z-index: 1; opacity: 0.5; width: 10vw'/></div>");
+			} else if(watermark.position == '3') {
+				$('.plyr__video-wrapper').append("<div class='watermark'><img src='"+imgUrl+"' style='position: absolute; margin:10px;bottom: 0; right: 0; display: inline; z-index: 1; opacity: 0.5; width: 10vw'/></div>");
+			} else if(watermark.position == '4') {
+				$('.plyr__video-wrapper').append("<div class='watermark'><img src='"+imgUrl+"' style='position: absolute; margin:10px;bottom: 0; left: 0; display: inline; z-index: 1; opacity: 0.5; width: 10vw'/></div>");
+			}
+		}
+		
+  });
+  
+  player.on('ratechange', function() {
+	  playRateRtn(player.speed);
+  });
+  
+  player.on("captionsenabled", function action(event) {
+	  trackViewRtn(player.currentTrack);
+  });
+  
+  player.on("captionsdisabled", function action(event) {
+	  trackViewRtn(player.currentTrack);
+  });
+  
+  //player.vr({projection: '360'});
+  window.player = player;
+  this.player = player;
+
+}
+
+function loadHLS(source) {
+	hls[i] = new Hls(); 
+	hls[i].loadSource(source);
+	hls[i].attachMedia(video);
+	// video.play();
+	i++;
+}
+
+function TimeValid(st){
+	var time = st.split(":");
+	var resultTime = 0;
+	if(time.length == 2){
+		resultTime = (time[0] * 60) + (time[1] * 1);
+	}else if(time.length == 3){
+		resultTime = (time[0] * 60 * 60) + (time[1] * 60) + (time[2] * 1);
+	}
+	return resultTime;
+}
+
+function _getTargetTime(player, input) { //seek control
+	if ( typeof input === "object" && (input.type === "input" || input.type === "change") ) {
+		return input.target.value / input.target.max * player.media.duration;
+	} else {
+    	return Number(input);
+	}
+}
+
+/*]]*/
+</script>

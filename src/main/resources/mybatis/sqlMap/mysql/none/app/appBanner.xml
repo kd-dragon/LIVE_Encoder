@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="app_banner">
+	
+	<select id="bannerList" resultType="BannerVO">
+		SELECT
+			  BANNER_SEQ
+			, BANNER_IMG_FILE_PATH
+			, SUBSTR(BANNER_IMG_FILE_PATH, INSTR(BANNER_IMG_FILE_PATH, '/upload/'), LENGTH(BANNER_IMG_FILE_PATH)) AS BANNER_IMG_FILE_WEB_PATH
+			, BANNER_IMG_FILE_NAME
+			, BANNER_IMG_FILE_NAME_SERVER
+			, BANNER_SHORTCUT_URL
+			, BANNER_ORDER
+			, REG_USER_ID
+			, REG_DATE
+			, DEL_YN
+			, DEL_USER_ID
+			, DEL_DATE
+			, MOD_DATE
+		FROM TGLIVE_BANNER
+		WHERE DEL_YN = 'N'
+		ORDER BY BANNER_ORDER
+	</select>
+	
+	<insert id="bannerInsert" parameterType="BannerVO">
+		INSERT INTO TGLIVE_BANNER (
+			  BANNER_SEQ
+			, BANNER_IMG_FILE_PATH
+			, BANNER_IMG_FILE_NAME
+			, BANNER_IMG_FILE_NAME_SERVER
+			, BANNER_SHORTCUT_URL
+			, BANNER_ORDER
+			, REG_USER_ID
+			, REG_DATE
+		) VALUES (
+			  CONCAT(DATE_FORMAT(NOW(), '%Y%m%d'), LPAD(NEXTVAL(sequence_banner_12), 12, '0'))
+			, #{bannerImgFilePath}
+			, #{bannerImgFileName}
+			, #{bannerImgFileNameServer}
+			, #{bannerShortcutUrl}
+			, #{bannerOrder}
+			, #{regUserId}
+			, NOW()
+		)
+	</insert>
+	
+	<update id="bannerDelete" parameterType="BannerVO">
+		UPDATE TGLIVE_BANNER
+			SET 
+				  DEL_YN = #{delYn}
+				, DEL_USER_ID = #{delUserId}
+				, DEL_DATE = NOW()
+			WHERE 1 = 0
+			<if test="bannerSeq != null and bannerSeq != ''">
+				OR BANNER_SEQ = #{bannerSeq}
+			</if>
+	</update>
+	
+	<update id="bannerUpdate" parameterType="BannerVO">
+		UPDATE TGLIVE_BANNER
+			SET 
+			  BANNER_SHORTCUT_URL = #{bannerShortcutUrl}
+			, MOD_USER_ID = #{modUserId}
+			, MOD_DATE = NOW()
+		WHERE 1 = 0
+		<if test="bannerSeq != null and bannerSeq != ''">
+			OR BANNER_SEQ = #{bannerSeq}
+		</if>
+	</update>
+</mapper>

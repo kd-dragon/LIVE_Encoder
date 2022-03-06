@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="app_monitor">
+
+	<select id="getStreamingList" resultType="StreamingVO">
+		SELECT STREAMING_SEQ
+			 , STREAMING_IP
+			 , STREAMING_PORT
+			 , STREAMING_DESC
+		  FROM TGLIVE_SETTING_STREAMING
+	</select>
+	
+	<select id="getMonitorStatData" parameterType="LiveMonitorDTO" resultType="LiveMonitorVO">
+	SELECT * FROM
+	(
+		SELECT YEAR || '-' || MONTH || '-' || DAY || ' ' || HOUR || ':' || MINUTE AS MONITOR_DATE
+			<choose>
+				<when test='type.equals("cpu")'>
+					, CPU
+				</when>
+				<when test='type.equals("memory")'>
+					, MEMORY
+				</when>
+				<when test='type.equals("drive")'>
+					, DRIVE
+				</when>
+			</choose>
+			AS MONITOR_DATA
+		  FROM TGLIVE_MONITOR_STATUS
+		 WHERE streaming_seq = #{streamingSeq}
+		 ORDER BY MONITOR_DATE DESC
+	) Z
+	WHERE ROWNUM <![CDATA[<=]]> 7
+	</select>
+	
+	<select id="getDateList" resultType="String">
+	SELECT * FROM
+	(
+		SELECT *FROM
+		(
+				SELECT
+						(YEAR || '-' || MONTH || '-' || DAY || ' ' || HOUR || ':' || MINUTE) AS MONITOR_DATE
+				 FROM TGLIVE_MONITOR_VIEWS
+		)T
+		GROUP BY MONITOR_DATE
+		ORDER BY MONITOR_DATE DESC
+	) Z
+	WHERE ROWNUM <![CDATA[<=]]> 7
+
+	</select>
+	
+	<select id="getMonitorViewsData" parameterType="LiveMonitorDTO" resultType="LiveMonitorVO">
+		SELECT Z.LB_SEQ
+			 , B.LB_TITLE
+			 , NVL(SUM(CASE WHEN MONITOR_DATE = #{date1} THEN ${viewsType} END),0) DATE1
+			 , NVL(SUM(CASE WHEN MONITOR_DATE = #{date2} THEN ${viewsType} END),0) DATE2
+			 , NVL(SUM(CASE WHEN MONITOR_DATE = #{date3} THEN ${viewsType} END),0) DATE3
+			 , NVL(SUM(CASE WHEN MONITOR_DATE = #{date4} THEN ${viewsType} END),0) DATE4
+			 , NVL(SUM(CASE WHEN MONITOR_DATE = #{date5} THEN ${viewsType} END),0) DATE5
+			 , NVL(SUM(CASE WHEN MONITOR_DATE = #{date6} THEN ${viewsType} END),0) DATE6
+			 , NVL(SUM(CASE WHEN MONITOR_DATE = #{date7} THEN ${viewsType} END),0) DATE7
+		  FROM (
+				SELECT 
+					   YEAR || '-' || MONTH || '-' || DAY || ' ' || HOUR || ':' || MINUTE AS MONITOR_DATE
+					 , LB_SEQ 
+					 , ${viewsType}
+				  FROM TGLIVE_MONITOR_VIEWS
+				 WHERE (YEAR|| '-' || MONTH || '-' || DAY || ' ' || HOUR || ':' || MINUTE) IN
+				 <foreach collection="dateList" item="item" open="(" close=")" separator=",">
+				 	#{item}
+				 </foreach> 
+			 ) Z
+		  JOIN TGLIVE_BROADCAST B
+			ON Z.LB_SEQ = B.LB_SEQ
+		   AND B.LB_STATUS = '1'
+		 <if test='!authSeq.equals("20210000000000000000")'>
+		 	AND B.LB_CATEGORY_SEQ = #{categorySeq}
+		 </if>
+        GROUP BY  Z.LB_SEQ, B.LB_TITLE
+        ORDER BY  Z.LB_SEQ
+	</select>
+
+</mapper>

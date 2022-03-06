@@ -1,0 +1,239 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<div th:replace="inc/_header"></div>
+
+<script type="text/javascript" th:inline="javascript">
+/*<![CDATA[*/
+$(document).ready(function(){$(".lnb_1").addClass("open"); $(".lnb_1_1").addClass("open").addClass("active");});
+//수정
+function goModify(){
+	var f = document.liveForm;
+	
+	f.action = /*[[ @{/live/modifyBroadcastForm.do} ]]*/ "/live/modifyBroadcastForm.do";
+	f.submit();
+}
+
+//삭제
+function goRemoveOne(){
+	
+	var token = $("meta[name='_csrf']").attr("content");
+	var header = $("meta[name='_csrf_header']").attr("content");
+	
+	$.ajax({
+		beforeSend : function(xhr) {   //데이터를 전송하기 전에 헤더에 csrf값을 설정한다
+		    xhr.setRequestHeader(header, token);
+		},
+		url: /*[[ @{/live/removeBroadcastOne.do} ]]*/ "/live/removeBroadcastOne.do",
+        type: 'POST',
+        traditional: true,
+		data: { lbSeq : $("#lbSeq").val(),
+			    searchStatus : "0"
+		},
+		success: function (type) {
+			if (type == "SUCCESS") {
+				alert("방송이 삭제되었습니다.");
+			} else {
+				alert("방송 삭제에 실패했습니다.");
+			}
+		},
+		error : function (e){
+			alert("시스템 문제 발생으로 관리자에게 문의해주세요.");
+		},
+		complete : function() {
+			goList();
+	    }
+		
+	});
+}
+
+//목록 돌아가기
+function goList(){
+	window.location.href = /*[[ @{/live/liveWaitList.do} ]]*/'/live/liveWaitList.do';
+}
+
+function downloadAttachFile(){
+	var f = document.liveForm;
+	f.action = /*[[ @{/live/downloadAttachFile.do} ]]*/'/live/downloadAttachFile.do';
+	f.submit();
+}
+/*]]*/
+</script>
+
+<form id="liveForm" name="liveForm" method="post">
+<input type="hidden" 				   th:name="${_csrf.parameterName}" 	th:value="${_csrf.token}"/>
+<input type="hidden" 	id="lbSeq" 	   name="lbSeq" 						th:value="${vo.lbSeq}"/>
+<input type="hidden" 	id="lbSeq"     name="lbfSeq" 						th:value="${vo.lbfSeq}"/>
+	
+	<!-- 컨텐츠 영역 -->
+	<div class="app-content content">
+	<div class="content-wrapper">
+	<!-- 컨텐츠:헤더-페이지명,네비게이터 -->
+	<div class="content-header row">
+		<div class="content-header-left col-md-8 col-12 mb-2 breadcrumb-new">
+			<h3 class="content-header-title mb-0 d-inline-block">라이브방송관리</h3>
+			<div class="row breadcrumbs-top d-inline-block">
+				<div class="breadcrumb-wrapper col-12">
+					<ol class="breadcrumb">
+						<li class="breadcrumb-item">홈</li>
+						<li class="breadcrumb-item">라이브방송관리</li>
+						<li class="breadcrumb-item active">라이브방송관리</li>
+					</ol>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--// 컨텐츠:헤더-페이지명,네비게이터 -->
+	<!-- 컨텐츠:본문 영역 -->
+	<div class="content-body">
+		<div class="row ">
+			<div class="col-sm-12">
+				<div class="card">
+					<div class="card-header view-title pb-2">
+						<!-- 제목 및 주요버튼 -->
+						<h3 class="mb-0">
+							<span class="badge badge-secondary badge-sm mr-Half align-middle" th:text=" ${vo.lcName == null}  ? 'VOD' : ${vo.lcName}"></span>
+							<span class="badge badge-success badge-sm mr-Half align-middle eng-text">라이브 방송 대기</span> 
+							[[ ${vo.lbTitle} ]]
+						</h3>
+						<div class="view-title-info mb-0">
+							<span>라이브 일정<b class="ml-Half" th:text="${vo.lbStartDate}+' ~ '+ ${vo.lbEndDate}"></b></span>
+							<span><b th:text="${vo.regUserName}"></b></span>
+						</div> <!--// 제목 및 주요버튼 -->
+	
+					</div>
+					<div class="card-content">
+						<div class="card-body">
+							<div class="row">
+								<div class="col-8">
+									<div class="view-player">
+<!-- 										<span class="position-absolute badge badge-danger player-on">LIVE</span> -->
+<!-- 										<a href="#"><img th:src="@{/app-assets/images/icons/live-btn-sample.png}" alt="" class="position-absolute liveplay-btn"/></a> -->
+										<!-- 동영상플레이어영역 -->
+										<!-- <img th:src="@{/app-assets/images/sample/sample_player01.png}" alt="" width="100%" on/> -->
+										<img th:src="@{${vo.lbfImgEncPath} +'/'+ ${vo.lbfImgEncNm}}" alt="" width="100%"/>
+<!-- 										<img th:src="@{${vo.defaultThumbnail}}" alt="" width="100%"/> -->
+										<!--// 동영상플레이어엉역 -->
+									</div>
+								</div>
+								<!-- chat-wrap -->
+									<div class="col-4 chat-wrap ">
+										<div class="chat-summary">
+											<p class="small">라이브 채팅 <b class="info">0</b></p>
+										</div>
+										<!-- chat-list -->
+										<div class="chat-list">
+										<div class="chat-list-wrap">
+											<div class="no-data">
+												<i class="ft-video-off"></i>
+												<th:block th:if="${#strings.equals(vo.lbChatYn, 'Y')}">
+													라이브 방송 시작 전 입니다.<br/>
+													라이브 채팅은 방송 시작 후 사용 가능합니다.
+												</th:block>
+												<th:block th:unless="${#strings.equals(vo.lbChatYn, 'Y')}">
+												    라이브 채팅을 사용하지 않습니다.
+												</th:block>
+											</div>
+										</div> <!--// chat-list-wrap -->
+										</div> <!--// chat-list -->
+										<!-- chat-write -->
+										<div class="chat-write">
+											<textarea name="" cols="" rows="" title="" placeholder="최대 200자로 제한되며, 욕설, 비난글은 삭제됩니다." disabled></textarea><button type="button" class="btn btn-info">등록</button>
+										</div> <!--// chat-write -->
+									</div> 
+								
+								<!--// chat-wrap -->
+							</div>
+	
+							<!-- 방송 정보 영역 -->
+							<div class="view-form view-form-vertical mt-2">
+								<table cellpadding="0" cellspacing="0" class="w-100" summary="" >
+									<colgroup>
+										<col width="9%"/><col width="24.333%"/><col width="9%"/><col width="24.333%"/><col width="9%"/><col width="24.333%"/>
+									</colgroup>
+									<tbody>
+										<tr>
+											<th class="text-height">등록일시</th>
+											<td th:text="${vo.lbRegDate}"></td>
+											<th class="text-height">방송 시간</th>
+											<td>[[ ${vo.passDuration} ]] / [[ ${vo.totalDuration} ]]</td>
+<!-- 											<th class="text-height">프리셋</th> -->
+<!-- 											<th:block th:switch="${vo.lbPresetCd}"> -->
+<!-- 												<td th:case="high">고화질</td> -->
+<!-- 												<td th:case="mid">중화질</td> -->
+<!-- 												<td th:case="low">저화질</td> -->
+<!-- 												<td th:case="*">-</td> -->
+<!-- 											</th:block> -->
+											<th class="text-height">공개여부</th>
+											<td th:text="${#strings.equals(vo.lbOpenYn, 'Y') ?  '공개' : '비공개'}"></td>
+										</tr>
+										<tr>
+											<th class="text-height">VOD저장여부</th>
+											<td th:text="${#strings.equals(vo.lbVodSaveYn, 'Y') ?  '사용' : '미사용'}"></td>
+											<th class="text-height">다운로드 사용여부</th>
+											<td th:text="${#strings.equals(vo.lbVodDownYn, 'O') ?  '원본 다운로드' : '다운로드 불가'}"></td>
+											<th class="text-height">카테고리</th>
+											<td colspan="3">
+												<small class="category" th:if="${vo.fullCategoryName == null}">-</small>
+												<small class="category" th:unless="${vo.fullCategoryName == null}">
+													<span class="black" th:text="${vo.categoryName}"></span>
+												</small>
+											</td>
+											
+										</tr>
+<!-- 										<tr> -->
+<!-- 											<th class="text-height">태그</th> -->
+<!-- 											<td colspan="7"> -->
+<!-- 												<th:block th:if="${vo.lhTagName == null}"> -->
+<!-- 													- -->
+<!-- 												</th:block> -->
+<!-- 												<th:block th:unless="${vo.lhTagName == null}"> -->
+<!-- 													<div class="tag tag-view m-0" th:each="item : ${#strings.arraySplit(vo.lhTagName,'|')} "> -->
+<!-- 														<span th:text="${item}"></span> -->
+<!-- 													</div> -->
+<!-- 												</th:block> -->
+<!-- 											</td> -->
+<!-- 										</tr> -->
+										<tr>
+											<th class="text-height">설명</th>
+											<td colspan="7" th:utext="${vo.lbDesc == ''} ? '-' : ${#strings.replace(vo.lbDesc, nlString, '&lt;br /&gt;')}"></td>
+										</tr>
+										<tr>
+											<th class="text-height">첨부파일</th>
+											<td colspan="7">
+												<th:block th:unless="${vo.lbfAttachOriginalNm == null}">
+													<i class="ft-save info"></i>
+													<a href="javascript:downloadAttachFile();" th:text="${vo.lbfAttachOriginalNm}"></a>
+												</th:block>
+												<th:block th:if="${vo.lbfAttachOriginalNm == null}">
+													첨부파일 없음
+												</th:block>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div> <!--// 방송 정보 영역 -->
+						</div>
+					</div>
+					<!-- 버튼영역 -->
+					<div class="card-footer">
+						<div class="mr-auto float-right">
+							<button type="button" class="btn btn-info px-2" onclick="goList(1)">목록</button>
+							<button type="button" class="btn btn-info px-2" onclick="goModify()">수정</button>
+							<button type="button" class="btn btn-secondary px-2" onclick="goRemoveOne()">삭제</button>
+<!-- 							<button type="button" class="btn btn-secondary px-2" data-toggle="modal" data-target="#livewaitDelete" onclick="goRemoveOne()">삭제</button> -->
+						</div>
+					</div>
+					<!--// 버튼영역 -->
+				</div>
+			</div>	
+		</div>
+	</div>
+	<!--// 컨텐츠: 본문 영역 -->
+	</div>
+	</div>
+</form>
+<!--// 컨텐츠 영역 -->
+<div th:replace="inc/_footer"></div>
+
+<!-- 팝업인크루드 -->
+<!-- <%@ include file="../popup/livewaitDelete.jsp"%> -->
+<!--// 팝업인크루드 -->

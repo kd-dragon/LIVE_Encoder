@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="app_notice">
+
+	<sql id="noticeWhere">
+		<if test="searchText != null and searchText != ''">
+			<choose>
+				<when test="searchType != null and searchType != ''">
+					AND ${searchType} LIKE '%${searchText}%'
+				</when>
+				<otherwise>
+					AND(
+						NOTICE_TITLE LIKE '%${searchText}%'
+						OR NOTICE_CTX LIKE '%${searchText}%'
+					)
+				</otherwise>
+			</choose>
+		</if>
+		<if test="searchStrDate != null and searchStrDate != ''and searchEndDate != null and searchEndDate != ''">
+			AND REG_DATE BETWEEN STR_TO_DATE('${searchStrDate} 00:00:00', '%Y-%m-%d %H:%i:%s') 
+				   AND STR_TO_DATE('${searchEndDate} 23:59:59', '%Y-%m-%d %H:%i:%s')
+		</if>
+	</sql>
+	
+	
+	<select id="noticeList" resultType="NoticeVO">
+	/*app_notice.noticeList*/
+		SELECT
+				  A.NOTICE_SEQ
+				, A.NOTICE_TITLE
+				, A.VIEW_CNT
+				, A.MAIN_NOTICE_YN
+				, A.REG_USER_ID
+				, DATE_FORMAT(A.REG_DATE, '%Y-%m-%d') AS REG_DATE
+				, B.LU_NAME AS REG_USER_NAME
+		  FROM  tglive_notice A
+		  JOIN  TGLIVE_USER B
+		  ON 	A.REG_USER_ID = B.LU_ID
+		 WHERE  1=1
+			    AND A.DEL_YN = 'N'
+			    <include refid="noticeWhere"/>
+			    
+	  ORDER BY  FIELD(MAIN_NOTICE_YN, 'Y') DESC, NOTICE_SEQ DESC 
+	  
+		 LIMIT  #{startNo}, #{blockCount}
+	</select>	
+	
+	<select id="noticeListCnt" resultType="int">
+	/*app_notice.noticeListCnt*/
+	  SELECT COUNT(*)
+		FROM tglive_notice
+	   WHERE 1 = 1
+	         AND DEL_YN = 'N'
+	         <include refid="noticeWhere"/>
+    ORDER BY NOTICE_SEQ DESC
+	</select>
+	
+	<insert id="noticeWrite" parameterType="NoticeWriteDTO">
+	/*app_notice.noticeWrite*/
+	 <selectKey resultType="String" keyProperty="noticeSeq" order="BEFORE">
+		SELECT CONCAT(DATE_FORMAT(NOW(), "%Y%m%d"), LPAD(nextval(sequence_notice_12), 12, "0"))
+     </selectKey>
+	INSERT INTO TGLIVE_NOTICE (
+		  NOTICE_SEQ
+		, NOTICE_TITLE
+		, NOTICE_CTX
+		, NOTICE_CTX_SRCH
+		, REG_USER_ID
+		, REG_DATE
+		, MAIN_NOTICE_YN
+	) VALUES (
+		  #{noticeSeq}
+		, #{noticeTitle}
+		, #{noticeCtx}
+		, #{noticeCtxSrch}
+		, #{userId}
+		, NOW()
+		, #{mainNoticeYn}
+	)
+	</insert>
+	
+	<select id="noticeDetail" resultType="NoticeVO">
+	/*app_notice.noticeDetail*/
+		SELECT 
+				  A.NOTICE_SEQ
+				, A.NOTICE_TITLE
+				, A.NOTICE_CTX
+				, A.NOTICE_CTX_SRCH
+				, A.VIEW_CNT
+				, A.MAIN_NOTICE_YN
+				, A.REG_USER_ID
+				, DATE_FORMAT(A.REG_DATE, '%Y-%m-%d') AS REG_DATE
+				, B.LU_NAME AS REG_USER_NAME
+		  FROM  TGLIVE_NOTICE	A
+		  JOIN	TGLIVE_USER B
+		  ON 	A.REG_USER_ID = B.LU_ID
+		 WHERE  A.NOTICE_SEQ = #{value}	
+	</select>
+	
+	<select id="noticeFileList" parameterType="String" resultType="NoticeFileVO">
+	
+	SELECT  
+			 NOTICE_FILE_SEQ
+		   , NOTICE_SEQ
+		   , FILE_PATH
+		   , FILE_NAME
+		   , FILE_NAME_SERVER
+		   
+	  FROM TGLIVE_NOTICE_FILE
+	  
+	 WHERE NOTICE_SEQ = #{value}
+	</select>
+	
+	<insert id="noticeFileInsert" parameterType="NoticeFileVO">
+		INSERT
+			INTO TGLIVE_NOTICE_FILE (
+				  NOTICE_FILE_SEQ
+				, NOTICE_SEQ
+				, FILE_PATH
+				, FILE_NAME
+				, FILE_NAME_SERVER
+			) VALUES (
+				CONCAT(DATE_FORMAT(NOW(), "%Y%m%d"), LPAD(nextval(sequence_notice_file_12), 12, "0"))
+				, #{noticeSeq}
+				, #{filePath}
+				, #{fileName}
+				, #{fileNameServer}
+			)
+	</insert>
+	
+	<select id="chkMainNoticeCnt" resultType="int">
+	/*app_notice.chkMainNoticeCnt*/
+	select count(*)
+	  from TGLIVE_NOTICE
+	 where DEL_YN = 'N'
+	       AND MAIN_NOTICE_YN = 'Y'
+	       <if test=' noticeSeq neq null and  noticeSeq neq "" '>
+	       AND NOTICE_SEQ != #{value}
+	       </if>
+	</select>
+	
+	<update id="noticeViewCntUp">
+	/*app_notice.noticeViewCntUp*/
+	update tglive_notice
+	   set VIEW_CNT = VIEW_CNT+1
+	 WHERE NOTICE_SEQ = #{value}
+	</update>
+	
+	<update id="noticeDelete" parameterType="NoticeDeleteDTO">
+	/*app_notice.noticeDelete*/
+   UPDATE tglive_notice A
+   
+      SET   A.DEL_YN = 'Y'
+          , A.DEL_USER_ID = #{userId}
+          , A.DEL_DATE = NOW()
+          
+    WHERE A.NOTICE_SEQ  IN (
+    		<foreach collection="delNoticeSeqs" item="item" index="index" separator=",">
+				#{item}
+			</foreach>
+    	  )
+	</update>
+	
+	<delete id="deleteUploadFile" parameterType="java.util.List">
+	/*app_notice.deleteUploadFile*/
+		DELETE FROM tglive_notice_file
+			  WHERE NOTICE_FILE_SEQ IN (
+			<foreach collection="list" item="item" index="index" separator=",">
+				#{item}
+			</foreach>
+		)		
+	</delete>
+	
+	<update id="noticeModify">
+	/*app_notice.noticeModify*/
+	 UPDATE   TGLIVE_NOTICE
+	 
+		SET   NOTICE_TITLE = #{noticeTitle}
+			, NOTICE_CTX = #{noticeCtx}
+			, NOTICE_CTX_SRCH = #{noticeCtxSrch}
+			, MAIN_NOTICE_YN = #{mainNoticeYn}
+			, MOD_USER_ID = #{userId}
+			, MOD_DATE = NOW()
+			
+	  WHERE NOTICE_SEQ = #{noticeSeq}
+	</update>
+	
+	<update id="noticeImp">
+	/*app_notice.noticeImp*/
+	 UPDATE   TGLIVE_NOTICE
+		SET   MAIN_NOTICE_YN = 'Y'
+	  WHERE NOTICE_SEQ = #{noticeSeq}
+	</update>
+	
+	<update id="noticeImpCalcel">
+	/*app_notice.noticeImp*/
+	 UPDATE   TGLIVE_NOTICE
+		SET   MAIN_NOTICE_YN = 'N'
+	  WHERE NOTICE_SEQ = #{noticeSeq}
+	</update>
+	
+</mapper>

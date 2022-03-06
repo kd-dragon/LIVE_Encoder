@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="api_vod">
+
+	<select id="vodList" parameterType="RequestVodListDTO" resultType="VodVO">
+		SELECT A.VOD_SEQ
+			 , A.VOD_TITLE
+			 , A.VOD_STATUS
+			 , A.VOD_TYPE
+			 , A.ORIGINAL_FILE_NAME
+			 , DECODE(A.ORIGINAL_FILE_SIZE, null, null, TRUNC(A.ORIGINAL_FILE_SIZE/1024/1024, 1) || 'MB') AS ORIGINAL_FILE_SIZE
+			 , A.REG_USER_ID
+			 , TO_CHAR(A.REG_DATE, 'YYYY-MM-DD HH24:MI:SS') AS REG_DATE
+			 , A.CATEGORY_SEQ
+			 , D.FULL_CATEGORY
+<!-- 			 , B.ENCODING_FILE_PATH -->
+			 , B.ENCODING_FILE_NAME
+			 , DECODE(B.FILE_SIZE, null, null, TRUNC(B.FILE_SIZE/1024/1024, 1) || 'MB') AS ENCODING_FILE_SIZE
+<!-- 			 , REPLACE(C.ENCODING_FILE_PATH, #{webRootPath}, '') THUMB_FILE_PATH -->
+<!-- 			 , C.ENCODING_FILE_NAME THUMB_FILE_NAME -->
+			 , DECODE(C2.LBF_IMG_ENC_PATH, null, REPLACE(C.ENCODING_FILE_PATH, #{replaceRootPath}, '/'), REPLACE(C2.LBF_IMG_ENC_PATH, #{replaceRootPath}, '')  || '/') AS THUMB_FILE_PATH
+			 , DECODE(C2.LBF_IMG_ENC_NM, null, C.ENCODING_FILE_NAME, C2.LBF_IMG_ENC_NM) AS THUMB_FILE_NAME
+			 , E.LU_NAME AS REG_USER_NAME
+		  FROM TGLIVE_VOD A
+	 LEFT JOIN TGLIVE_VOD_FILE B
+			ON A.VOD_SEQ = B.VOD_SEQ
+		   AND UPPER(B.QUALITY) = 'HIGH'
+	 LEFT JOIN TGLIVE_VOD_THUMB C
+			ON A.VOD_SEQ = C.VOD_SEQ
+		   AND REPRIMAGE_YN = 'Y'
+     LEFT JOIN TGLIVE_BROADCAST_FILE C2
+     		ON A.LB_SEQ = C2.LB_SEQ
+		  JOIN (
+           		WITH RECURSIVE CATEGORY_MGR AS
+				(
+					SELECT
+				  		   C1.CATEGORY_SEQ
+         				 , C1.CATEGORY_NAME 
+         				 , C1.UP_CATEGORY_SEQ
+         				 , IFNULL((SELECT C2.CATEGORY_NAME 
+               			 			 FROM TGLIVE_CATEGORY C2 
+               			 		 	WHERE C2.CATEGORY_SEQ = C1.UP_CATEGORY_SEQ), 'ROOT'
+               			 ) AS UP_CATEGORY_NAME 
+         				 , C1.CATEGORY_LEVEL 
+         				 , C1.USE_YN
+         				 , CATEGORY_NAME AS FULL_CATEGORY
+         				 , 1 LVL
+   					FROM TGLIVE_CATEGORY C1
+   					WHERE C1.UP_CATEGORY_SEQ = 1
+        			AND C1.USE_YN = 'Y'
+        			
+   					UNION ALL
+   					
+   					SELECT
+   				  		   C3.CATEGORY_SEQ
+      					 , C3.CATEGORY_NAME 
+      					 , C3.UP_CATEGORY_SEQ
+      					 , IFNULL((SELECT C4.CATEGORY_NAME 
+            			 			 FROM TGLIVE_CATEGORY C4
+            			 			WHERE C4.CATEGORY_SEQ = C3.UP_CATEGORY_SEQ), 'ROOT'
+            			 ) AS UP_CATEGORY_NAME 
+      					 , C3.CATEGORY_LEVEL 
+      					 , C3.USE_YN
+      					 , CONCAT(CM.FULL_CATEGORY, ' > ' , C3.CATEGORY_NAME) AS FULL_CATEGORY
+     					 , LVL + 1 LVL
+   					FROM TGLIVE_CATEGORY C3
+   					JOIN CATEGORY_MGR CM
+   					ON C3.UP_CATEGORY_SEQ = CM.CATEGORY_SEQ
+				) 
+				SELECT * FROM CATEGORY_MGR ORDER BY CATEGORY_SEQ   
+        	 ) D
+	 		ON A.CATEGORY_SEQ = D.CATEGORY_SEQ
+	 		JOIN TGLIVE_USER E
+	 		ON A.REG_USER_ID = E.LU_ID
+	 		
+	 	 WHERE 1=1
+	 	 <include refid="vodList_where" />
+	 	
+		 ORDER BY A.REG_DATE DESC
+		 
+<!-- 		 <bind name="startCnt" value="(currentPage-1) * blockCount"/> -->
+		 LIMIT #{startNo}, #{blockCount}
+	</select>
+	
+	<select id="vodListCount" parameterType="RequestVodListDTO" resultType="int">
+		SELECT COUNT(*)
+		  FROM TGLIVE_VOD A
+	 LEFT JOIN TGLIVE_VOD_FILE B
+			ON A.VOD_SEQ = B.VOD_SEQ
+		   AND UPPER(B.QUALITY) = 'HIGH'
+	 LEFT JOIN TGLIVE_VOD_THUMB C
+			ON A.VOD_SEQ = C.VOD_SEQ
+		   AND REPRIMAGE_YN = 'Y'
+		  JOIN (
+           		WITH RECURSIVE CATEGORY_MGR AS
+				(
+					SELECT
+				  		   C1.CATEGORY_SEQ
+         				 , C1.CATEGORY_NAME 
+         				 , C1.UP_CATEGORY_SEQ
+         				 , IFNULL((SELECT C2.CATEGORY_NAME 
+               			 			 FROM TGLIVE_CATEGORY C2 
+               			 		 	WHERE C2.CATEGORY_SEQ = C1.UP_CATEGORY_SEQ), 'ROOT'
+               			 ) AS UP_CATEGORY_NAME 
+         				 , C1.CATEGORY_LEVEL 
+         				 , C1.USE_YN
+         				 , CATEGORY_NAME AS FULL_CATEGORY
+         				 , 1 LVL
+   					FROM TGLIVE_CATEGORY C1
+   					WHERE C1.UP_CATEGORY_SEQ = 1
+        			AND C1.USE_YN = 'Y'
+        			
+   					UNION ALL
+   					
+   					SELECT
+   				  		   C3.CATEGORY_SEQ
+      					 , C3.CATEGORY_NAME 
+      					 , C3.UP_CATEGORY_SEQ
+      					 , IFNULL((SELECT C4.CATEGORY_NAME 
+            			 			 FROM TGLIVE_CATEGORY C4
+            			 			WHERE C4.CATEGORY_SEQ = C3.UP_CATEGORY_SEQ), 'ROOT'
+            			 ) AS UP_CATEGORY_NAME 
+      					 , C3.CATEGORY_LEVEL 
+      					 , C3.USE_YN
+      					 , CONCAT(CM.FULL_CATEGORY, ' > ' , C3.CATEGORY_NAME) AS FULL_CATEGORY
+     					 , LVL + 1 LVL
+   					FROM TGLIVE_CATEGORY C3
+   					JOIN CATEGORY_MGR CM
+   					ON C3.UP_CATEGORY_SEQ = CM.CATEGORY_SEQ
+				) 
+				SELECT * FROM CATEGORY_MGR ORDER BY CATEGORY_SEQ   
+        	 ) D
+	 		ON A.CATEGORY_SEQ = D.CATEGORY_SEQ
+	 		JOIN TGLIVE_USER E
+	 		ON A.REG_USER_ID = E.LU_ID
+	 	 WHERE 1=1
+	 	 <include refid="vodList_where" />
+	</select>
+	
+	<sql id="vodList_where">
+		AND A.DEL_YN = 'N'
+		<if test="searchRegUserid != null and searchRegUserid != ''">
+			AND A.REG_USER_ID LIKE '%'||#{searchRegUserid}||'%'
+		</if>
+		<if test="searchVodTitle != null and searchVodTitle != ''">
+			AND A.VOD_TITLE LIKE '%'||#{searchVodTitle}||'%'
+		</if>
+		<if test="searchFileName != null and searchFileName != ''">
+			AND (
+				(A.ORIGINAL_FILE_NAME LIKE '%'||#{searchFileName}||'%' AND VOD_TYPE = 'D')
+				OR 
+				(B.ENCODING_FILE_NAME LIKE '%'||#{searchFileName}||'%' AND VOD_TYPE = 'R')
+				)
+		</if>
+		
+		<!-- 검색 시작날짜 -->
+		<if test="searchStrDate != null and searchStrDate != '' 
+					and searchEndDate != null and searchEndDate != ''">
+			AND A.REG_DATE BETWEEN TO_DATE('${searchStrDate} 00:00:00', 'YYYY-MM-DD HH24:MI:SS') 
+							   AND TO_DATE('${searchEndDate} 23:59:59', 'YYYY-MM-DD HH24:MI:SS')
+		</if>
+		
+	</sql>
+
+</mapper>

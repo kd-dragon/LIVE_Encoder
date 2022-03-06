@@ -1,0 +1,121 @@
+#common config
+spring:
+  devtools:
+    livereload:
+      enabled: true
+  profiles:    active: local
+  mvc:    pathmatch:      matching-strategy: ANT_PATH_MATCHER
+
+#---: .yml 파일 구분
+--- # -------------- 개발 환경 --------------
+spring:
+  config:    activate:      on-profile: local  redis:
+    host: 127.0.0.1 #127.0.0.1
+    port: 6379
+    password: #tg1234
+    useYn: Y
+    sentinelYn: N
+    
+  #dbms: oracle 
+  dbms: mysql 
+  daoMode: N
+  webUrl: #http://localhost:8080
+  
+  security:    filter:      order: 5
+  servlet:
+    multipart:
+      max-file-size: 40MB      max-request-size: 40MB
+  thymeleaf:
+    enabled: true
+    encoding: UTF-8
+    prefix: classpath:templates/
+    suffix: .html
+    cache: false
+  datasource:
+    driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+    hikari:
+      #jdbc-url: jdbc:log4jdbc:oracle:thin:@localhost:1521/xe
+      jdbc-url: jdbc:log4jdbc:mysql://localhost:3306/liveencoder?serverTimezone=Asia/Seoul&useSSL=false&autoReconnect=true
+      username: liveencoder
+      password: liveencoder
+      maximum-pool-size: 5
+      minimum-idle: 2
+      auto-commit: true
+      max-lifetime: 600000
+      connection-timeout: 10000
+      idle-timeout: 300000
+      
+      data-source-properties:
+        cachePrepStmts: true
+        prepStmtCacheSize: 250
+        prepStmtCacheSqlLimit: 2048
+        useServerPrepStmts: true  web:    resources:      static-locations: classpath:/static/      cache:        period: 0
+
+server:
+  port: 8090  # 웹서비스 포트
+  
+  servlet:
+    context-path: /
+    session:
+      cookie:
+        name: ADMIN_JSESSIONID
+  resources:
+    location: D:/NAS/upload/
+    uri-path: /upload
+  block-count: 10
+  main-notice-max: 3
+  root-up-category-code: 0
+  link-kind: none
+  chat: 
+    host: 127.0.0.1
+    port: 9090
+
+live:
+  osType: window
+  serialNo: 0000
+  multiplex:
+    enabled: false
+  rootPath: D:/workspace/LIVE_Encoder_1.0/
+  encoderPath: D:/workspace/LIVE_Encoder_1.0/encoder/ # FFMPEG 경로
+  monitor: #라이브 스트리밍 모니터링
+    useYn: Y #사용여부
+    userId: admin #접근 권한을 얻기위한 로그인 아이디
+    userPw: tg1234
+    port: 7070
+  hls:
+    deleteYn: N #라이브 종료 후 hls파일 삭제 여부
+  recordable: false #true : 라이브 모듈 내에서 record 처리 false : record 모듈 사용
+  record-file-local-to-nas: Y #녹화 파일 이동 여부
+  chat:
+    recYn: N #라이브 녹화 시 채팅 녹화 여부
+       
+logging:
+  file:
+    path: 
+      main: D:/workspace/LIVE_Encoder_1.0/logs/
+      ffmpeg: D:/workspace/LIVE_Encoder_1.0/logs/ffmpeg/
+      webapp: D:/workspace/LIVE_Encoder_1.0/logs/webapp/
+      
+---             
+
+#공통 설정
+encoding:
+  isAdaptive: false # 적응형 인코딩 사용 여부
+  type: advance # basic(high, low), advance(high, low, mid)
+  codec:
+    enabled: false # false -> codec copy / true -> codec libx264, acc
+   
+vod:
+  limit-size: 5000000000 #영상 업로드 최대 사이즈 (default:5000000000(5GB))
+  uploader-port: 3000
+  
+netty:
+  ffmpeg:
+    useYn: Y
+    port: 1934
+  monitor:
+    useYn: Y
+    port: 8089
+
+
+  

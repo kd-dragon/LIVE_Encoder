@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cmn">
+
+	<!-- select system config -->
+	<select id="selectSystemConfig" resultType="systemConfigVO">
+		SELECT  LIVE_FILE_LOCAL_PATH	
+			  , ENCODING_VOD_FILE_PATH
+			  , ETC_FILE_UPLOAD_PATH
+			  , REPLACE_ROOT_PATH
+			  , LIVE_STREAMING_URI
+			  , VOD_STREAMING_URI
+			  , ENCODER_WORKER_CNT
+			  , THUMBNAIL_CNT
+			  , THUMBNAIL_TIME
+			  , THUMBNAIL_FORMAT
+			  , VOD_ORIGINAL_FILE_PATH
+			  , VOD_TEMP_FILE_PATH
+			  , DEFAULT_THUMBNAIL
+			  , LIVE_FILE_NAS_PATH
+		  FROM TGLIVE_CONFIG
+	</select>
+	
+</mapper>
+		

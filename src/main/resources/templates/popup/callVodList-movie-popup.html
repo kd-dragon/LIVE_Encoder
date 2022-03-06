@@ -1,0 +1,278 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<div th:replace="inc/_header-p"></div>
+
+<script type="text/javascript" th:inline="javascript">
+/*<![CDATA[*/
+function getContents(){
+	$("#contentsSeq").empty();
+	
+	var token = $("meta[name='_csrf']").attr("content");
+	var header = $("meta[name='_csrf_header']").attr("content");
+	
+	/* MCMS - contents 가져오기 */
+// 	$.ajax({
+// 		beforeSend : function(xhr) {   //데이터를 전송하기 전에 헤더에 csrf값을 설정한다
+// 		    xhr.setRequestHeader(header, token);
+// 		},
+// 		url: /*[[ @{/live/getContentsListByCateSeq.do} ]]*/,
+// 		type: "POST",
+// 		data: { lbCategorySeq :$("#lbCategorySeq").val()},
+// 		dataType : 'json',
+// 		success: function (rtn){
+// 			var html = "";
+// 			if(rtn != null && rtn.length > 0){
+// 				html += "<option value='' selected='selected'>콘텐츠를 선택해주세요.</option>";
+// 				$.each(rtn, function(i){
+// 					html += "<option value='"+this.contentsId+"'>"+this.contentsTitle+"</option>";
+// 				});
+// 			} else {
+// 				html += "<option value='' selected='selected'>등록된 콘텐츠가 없습니다. 다른 카테고리를 선택해주세요</option>";
+// 			}
+// 			$("#contentsSeq").append(html);
+// 		},
+// 		error : function (e){
+// 			alert("처리중 오류가 발생하였습니다.");
+			
+// 		}
+// 	});
+}
+
+function goList(num){
+	if($("#lbCategorySeq").val() == null || $("#lbCategorySeq").val() == ""){
+		alert("카테고리를 선택해주세요.");
+		return;
+	}
+	
+	/* 필수 검색X 
+	if($("#contentsSeq").val() == null || $("#contentsSeq").val() == ""){
+		alert("콘텐츠를 선택해주세요.");
+		return;
+	} */
+	
+	var token = $("meta[name='_csrf']").attr("content");
+	var header = $("meta[name='_csrf_header']").attr("content");
+	
+	$.ajax({
+		beforeSend : function(xhr) {   //데이터를 전송하기 전에 헤더에 csrf값을 설정한다
+		    xhr.setRequestHeader(header, token);
+		},
+		type: "POST",
+		url: /*[[ @{/live/getLiveVodList.do} ]]*/ '',
+		data: {
+				"lbCategorySeq" : $("#lbCategorySeq").val(),
+				"contentsSeq":$("#contentsSeq").val(),
+				"videoTitle" : $("#videoTitle").val(),
+				"currentPage" : num
+				},
+		dataType : 'json',
+		success: function (rtn){
+			
+			$("#liveVodListForm").empty();
+			if(rtn.liveVodList != null && rtn.liveVodList.length > 0){
+				$("#liveVodListForm").empty();
+				var html = "";
+				$.each(rtn.liveVodList, function(i){
+					
+					html += "<tr>";
+					html += "	<td>";
+					html += "	<div class='form-check abc-checkbox'>";
+					html += "		<input type='checkbox' class='form-check-input' name='checkBox' id='checkBox"+i+"' value='"+this.mediaId+"' runtime='"+this.runTime+"'><label class='form-check-label' for='checkBox"+i+"'></label>";
+					html += "	</div>";
+					html += "	</td>";
+					html += "	<td>"+(rtn.totalCount - (rtn.blockCount * (rtn.currentPage-1) + i))+"</td>";
+					html += "	<td>"+this.categoryName+"</td>";
+// 					html += "	<td>"+this.contentsTitle+"</td>";
+					html += "	<td class='text-left'>"+this.videoName+"</td>";
+					html += "	<td>"+this.duration+"</td>";
+					html += "	<td>"+this.regUserId+"</td>";
+					html += "	<td>"+this.regDate+"</td>";
+					html += "</tr>";
+				});
+				
+			} else{
+				html += "<tr><td colspan='8' class='py-5 border-bottom border-light-gray '>등록된 내용이 없습니다. 검색조건을 재설정해주세요.</td></tr>";
+			}
+			
+			$("#liveVodListForm").append(html);
+			$("#pagingHtml").html(rtn.pagingHtml);
+		},
+		error : function (e){
+			alert("처리중 오류가 발생하였습니다.");
+			
+		}
+	});
+	
+}
+
+//검색조건 초기화
+function goReset(){
+	$("#lbCategorySeq").val("");
+	$("#fullCategoryName").val("");
+	$("#contentsSeq").val("");
+	$("#contentsSeq").html('<option value="" selected="selected">카테고리를 먼저 선택해주세요.</option>');
+	$("#videoTitle").val("");
+	$("#currentPage").val(1);
+}
+
+//VOD 선택
+function goSelect(){
+	
+	var chkCnt = 0;
+	var mediaId = "";
+	var mediaName = "";
+	var runtime = 0;
+	
+	$("input[name=checkBox]").each(function(){
+		if(this.checked){
+			chkCnt++;
+			mediaId = $(this).val();
+			runtime = $(this).attr("runtime");
+			mediaName = $(this).parent().parent().next().next().next().text();
+		}
+	});
+	
+	if(chkCnt != 1){
+		alert("VOD를 1개만 선택해 주세요.");
+		return;
+	}
+	
+	opener.$("#channelVodNm").val(mediaName);
+	opener.$("#lbVodSeq").val(mediaId);
+	opener.$("#runTime").val(runtime);
+	window.self.close();
+	
+}
+/*]]*/
+</script>
+
+	<div class="popup-dialog" role="document">
+		<div class="popup-content">
+			<div class="popup-header bg-info">
+				<h4 class="popup-title white" id="callLectureLabel">VOD 불러오기</h4>
+			</div>
+			<div class="popup-body">
+			
+			<form id="theForm" name="theForm">
+			<input type="hidden" id="lbCategorySeq" name="lbCategorySeq" >
+			<input type="hidden" id="currentPage" name="currentPage" >
+			<input type="hidden" id="type"  name="type" value="contents">
+			
+			
+			
+				<!-- 검색 -->
+				<div class="btn-area mb-Half">
+					<button type="button" class="btn btn-secondary btn-sm " onclick="goReset()"><i class="fa fa-repeat"></i> 검색조건 초기화</button>
+					<button type="button" class="btn btn-primary btn-sm ml-Half" onclick="goList(1)"><i class="fa fa-search"></i> 검색</button>
+				</div>
+				<div class="search-area mb-1">
+					<table cellpadding="0" cellspacing="0" class="w-100" summary="" >
+						<colgroup>
+							<col width="9%"/><col width="24.3%"/><col width="9%"/><col width="24.3%"/>
+						</colgroup>
+						<tbody>
+							<tr>
+								<th scope="col">카테고리</th>
+								<td>
+									
+									<div class="input-group">
+										<input type="text" class="form-control" name="fullCategoryName" id="fullCategoryName" readonly/>
+										<div class="input-group-append">
+											<button type="button" class="btn btn-outline-info" data-toggle="modal" data-target="#callCategory" id="btnCategory">검색</button>
+										</div>
+									</div>
+								</td>
+								<!-- <th scope="col">콘텐츠명</th>
+								<td>
+									<select name="" title="" class="form-control" id="contentsSeq">
+										<option value="" selected="selected">카테고리를 먼저 선택해주세요.</option>
+									</select>
+								</td> -->
+								<th scope="col">비디오명</th>
+								<td>
+									<input type="text" class="form-control" title="" value="" id="videoTitle" name="videoTitle"/>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<!--// 검색 -->						
+				<!-- 테이블 -->
+				<div class="w-100  table-responsive align-mcontrol view-poll mt-Half">
+					<table cellpadding="0" cellspacing="0" class="w-100 table table-design-cust text-center mb-Half" summary="">
+						<colgroup>
+							<col width="4%"/>
+							<col width="4%"/>
+							<col width="15%"/>
+							<col width="25%"/>
+							<col width="10%"/>
+							<col width="12%"/>
+							<col width="10%"/>
+						</colgroup>
+						<thead>
+							<tr>
+								<th scope="row">
+									<!-- <div class="d-inline-block form-check abc-checkbox abc-checkbox-info">
+										<input type="checkbox" class="custom-control-input" name="colorCheck" id="checkbox0"><label class="custom-control-label" for="checkbox0"></label>
+									</div> -->
+								</th>
+								<th scope="row">No</th>
+								<th scope="row">카테고리</th>
+<!-- 								<th scope="row">콘텐츠명</th> -->
+								<th scope="row">비디오명</th>
+								<th scope="row">시간</th>
+								<th scope="row">등록자</th>
+								<th scope="row">등록일</th>
+							</tr>
+						</thead>
+						<tbody id="liveVodListForm">
+							
+							<tr>
+								<td colspan="8" class="py-5 border-bottom border-light-gray ">검색조건을 설정해주세요.</td>
+							</tr>
+							
+							<!-- <tr>
+								<td>
+									<div class="d-inline-block form-check abc-checkbox abc-checkbox-info">
+										<input type="checkbox" class="custom-control-input" name="colorCheck" id="checkbox05"><label class="custom-control-label" for="checkbox05"></label>
+									</div>
+								</td>
+								<td>5</td>
+								<td>카테고리>카테2</td>
+								<td>테스트컨텐츠</td>
+								<td class="text-left">비디오입니다.</td>
+								<td>10분</td>
+								<td>김시현</td>
+								<td>2020-04-01</td>
+							</tr> -->
+						</tbody>
+					</table>
+				</div>
+				<!--// 테이블 -->
+				<!-- 페이징 -->
+				<div id="pagingHtml"></div>
+					<!-- <div class="col-lg-12 mt-1">							
+						<nav aria-label="Page navigation">
+							<ul class="pagination">
+								<li class="page-item"><a class="page-link" href="#">«</a></li>
+								<li class="page-item"><a class="page-link" href="#">1</a></li>
+								<li class="page-item"><a class="page-link" href="#">2</a></li>
+								<li class="page-item active"><a class="page-link" href="#">3</a></li>
+								<li class="page-item"><a class="page-link" href="#">4</a></li>
+								<li class="page-item"><a class="page-link" href="#">5</a></li>
+								<li class="page-item"><a class="page-link" href="#">»</a></li>
+							</ul>
+						</nav>
+					</div> -->
+				<!-- //페이징 -->
+				
+				
+				</form>
+			</div>			
+			<div class="popup-footer">
+				<button type="button" class="btn btn-outline-secondary px-2" onclick="window.close();">취소</button>
+				<button type="button" class="btn btn-outline-info ml-Half px-2" onclick="goSelect()">선택</button>
+			</div>			
+		</div>
+	</div>
+<div th:replace="inc/_footer-p"></div>
+<div th:replace="popup/callCategory"></div>

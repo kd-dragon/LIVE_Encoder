@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="login">
+
+	<select id="loginChk" parameterType="String" resultType="loginVO">
+		SELECT 
+			   LU_ID AS USER_ID
+			 , LU_NAME AS USER_NAME
+			 , LU_PWD AS USER_PWD
+			 , AUTH_SEQ
+<!-- 			 , CATEGORY_SEQ -->
+		  FROM TGLIVE_USER
+		 WHERE LU_ID = #{value}
+	</select>
+	
+	<insert id="logInsert" parameterType="LoginIpLogVO">
+		INSERT
+		  INTO TGLIVE_CONNECT_LOG (
+		  	   LCL_SEQ
+		  	 , LU_ID
+		  	 , LCL_REG_DATE
+		  	 , LCL_IP
+		  	 , LCL_CODE
+		  	 , LCL_TYPE
+		  	 , LCL_DEVICE
+		  ) VALUES (
+		  	   TO_CHAR(SYSDATE, 'YYYYMM')|| LPAD(SEQUENCE_LCL_12.NEXTVAL, 12, '0')
+		  	 , #{luId}
+		  	 , SYSDATE
+		  	 , #{lclIp}
+		  	 , #{lclCode}
+		  	 , #{lclType}
+		  	 , #{lclDevice}
+		  )
+	</insert>
+	
+	<select id="userIpChk" parameterType="ConnectIpVO" resultType="int">
+		SELECT COUNT(*)
+		FROM TGLIVE_SETTING_CONNECTIP
+		WHERE LSC_IP = #{lscIp}
+		AND LSC_DEL_YN = 'N'
+	</select>
+	
+	<select id="connectIpCnt" resultType="int">
+		SELECT COUNT(*)
+		FROM TGLIVE_SETTING_CONNECTIP
+		WHERE LSC_DEL_YN = 'N'
+	</select>
+	
+	<select id="onlyIpList" resultType="map">
+		SELECT LSC_IP
+		FROM TGLIVE_SETTING_CONNECTIP
+		WHERE LSC_DEL_YN = 'N'
+	</select>
+	
+	<select id="menuList" parameterType="LoginVO" resultType="MenuVO">
+		 SELECT A.MENU_SEQ
+			 , A.MENU_STEP1
+			 , A.MENU_STEP2
+			 , A.MENU_STEP3
+			 , A.MENU_NAME
+			 , A.MENU_URL
+			 , A.MENU_IMG_ICON
+		  FROM TGLIVE_ADMIN_MENU A
+		  JOIN TGLIVE_AUTH_MENU B
+		    ON A.MENU_SEQ = B.MENU_SEQ
+          JOIN TGLIVE_USER C
+            ON B.AUTH_SEQ = C.AUTH_SEQ
+		 WHERE A.USE_YN = 'Y'
+           AND C.LU_ID = #{userId}
+		 ORDER BY Menu_STEP1, Menu_STEP2, A.MENU_STEP3
+	</select>
+	
+	<update id="loginDateUpdate" parameterType="String">
+		UPDATE TGLIVE_USER
+		SET LAST_LOGIN_DATE = SYSDATE
+		WHERE LU_ID = #{userId}
+	</update>
+
+</mapper>

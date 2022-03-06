@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="monitor">
+
+	<!-- 스트리밍 모듈 리스트 가져오기 -->
+	<select id="selectStreamingList" resultType="StreamingVO">
+		SELECT STREAMING_SEQ
+			 , STREAMING_IP
+			 , STREAMING_PORT
+		  FROM TGLIVE_SETTING_STREAMING
+	</select>
+
+	<select id="onAirList" resultType="String">
+		SELECT LB_SEQ
+		  FROM TGLIVE_BROADCAST
+		 WHERE LB_STATUS = '1'
+	</select>
+	
+	
+	<insert id="insertStreamingList" parameterType="java.util.ArrayList">
+		INSERT 
+		  INTO TGLIVE_MONITOR_STATUS (
+		  		YEAR
+		  	  , MONTH
+		  	  , DAY
+		  	  , HOUR
+		  	  , MINUTE
+		  	  , STREAMING_SEQ
+		  	  , CPU
+		  	  , MEMORY
+		  	  , DRIVE
+		  ) VALUES 
+		  <foreach collection="list" item="item" index="index" separator=",">
+			  (
+			  		DATE_FORMAT(NOW(), '%Y')
+				  , DATE_FORMAT(NOW(), '%m')
+				  , DATE_FORMAT(NOW(), '%d')
+				  , DATE_FORMAT(NOW(), '%H')
+				  , DATE_FORMAT(NOW(), '%i')
+				  , #{item.streamingSeq}
+				  , #{item.cpu}
+				  , #{item.memory}
+				  , #{item.disk}
+			  )
+		  </foreach>
+	</insert>
+	
+	<delete id="deleteLiveStreamingList">
+		 <!-- 1시간 지난 데이터는 삭제 -->
+		DELETE 
+		  FROM TGLIVE_MONITOR_STATUS
+		 WHERE TIMESTAMPDIFF(MINUTE, STR_TO_DATE(CONCAT(YEAR, MONTH, DAY, HOUR, MINUTE), '%Y%m%d%H%i'), NOW()) > 60
+	</delete>
+	
+	<insert id="insertLiveViewsList" parameterType="LiveViewsDTO">
+		INSERT
+		  INTO TGLIVE_MONITOR_VIEWS (
+		  		YEAR
+		  	  , MONTH
+		  	  , DAY
+		  	  , HOUR
+		  	  , MINUTE 
+		  	  , LB_SEQ
+		  	  , ACCESS_MOBILE_CNT
+		  	  , ACCESS_PC_CNT
+		  	  , ACCESS_TOTAL_CNT
+		  ) VALUES 
+		  <foreach collection="viewsList" item="item" index="index" separator=",">
+		  (
+		  		#{year}
+		  	  , #{month}
+		  	  , #{day}
+		  	  , #{hour}
+		  	  , #{minute}
+		  	  , #{item.lbSeq}
+		  	  , #{item.accessMobileCnt}
+		  	  , #{item.accessPcCnt}
+		  	  , #{item.accessTotalCnt}
+		  )
+		  </foreach>
+	</insert>
+	
+</mapper>

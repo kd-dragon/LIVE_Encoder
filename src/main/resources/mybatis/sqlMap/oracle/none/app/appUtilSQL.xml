@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="app_util">
+	<!-- seq 날짜 yyyymmdd 가져오기 -->
+	<select id="getSeq_yyyymmdd" parameterType="String" resultType="String">
+		SELECT CONCAT(TO_CHAR(SYSDATE, 'YYYYMMDD'),LPAD(${value}.NEXTVAL, 12, '0')) FROM DUAL
+	</select>
+	
+	<!-- seq 날짜 yyyy 가져오기 -->
+	<select id="getSeq_yyyymm" parameterType="String" resultType="String">
+		SELECT CONCAT(TO_CHAR(SYSDATE, 'YYYYMM'),LPAD(${value}.NEXTVAL, 14, '0')) FROM DUAL
+	</select>
+	
+	<select id="getConfig" resultType="LiveSchedMemoryVO">
+		SELECT * FROM TGLIVE_CONFIG
+	</select>
+</mapper>

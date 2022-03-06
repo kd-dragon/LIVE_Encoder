@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="app_category">
+
+	<select id="selectCategoryList" resultType="CategoryVO">
+	/*app_category.selectCategoryList*/
+	    SELECT 	      CATEGORY_SEQ
+		 			, UP_CATEGORY_SEQ
+					, CATEGORY_NAME
+					, CATEGORY_NAME AS FULL_CATEGORY_NAME
+					, 1 AS lvl
+					, REG_USER_ID
+					, USE_YN
+					, CATEGORY_LEVEL
+					, COMENT
+					
+		  FROM	TGLIVE_CATEGORY
+	
+	     WHERE 	UP_CATEGORY_SEQ = #{rootUpCategoryCode}
+		   AND USE_YN = 'Y'
+		 ORDER BY CATEGORY_SEQ 
+	</select>
+	
+	<insert id="insertCategory" parameterType="CategoryDTO">
+	/*app_category.insertCategory*/
+		INSERT INTO TGLIVE_CATEGORY (
+			  UP_CATEGORY_SEQ
+			, CATEGORY_NAME
+			, USE_YN
+			, CATEGORY_LEVEL
+			, COMENT
+			, TRAINING_YN
+			, REG_DATE
+		) VALUES (
+			  #{upCateSeq}
+			, #{cateName}
+			, #{regUseYn}
+			, 1
+			, #{cateComent}
+			, 'N'
+			, NOW()
+		)
+	</insert>
+	
+	<update id="updateCategory" parameterType="CategoryDTO">
+	/*app_category.updateCategory*/
+		UPDATE TGLIVE_CATEGORY
+		SET   CATEGORY_NAME = #{modCateName}
+			, UP_CATEGORY_SEQ = #{modUpCateSeq}
+			, USE_YN = #{modUseYn}
+			, COMENT = #{modComent}
+		WHERE CATEGORY_SEQ = #{targetCateSeq}
+	</update>
+	
+	<update id="deleteCategory" parameterType="CategoryDTO">
+	/*app_category.deleteCategory*/
+		UPDATE TGLIVE_CATEGORY
+		SET   USE_YN = 'N'
+		WHERE CATEGORY_SEQ = #{targetCateSeq}
+		OR UP_CATEGORY_SEQ = #{targetCateSeq}
+	</update>
+
+	<select id="categoryNameExistChk" parameterType="String" resultType="int">
+		SELECT COUNT(*)
+		  FROM TGLIVE_CATEGORY
+		 WHERE 
+		 <choose>
+		 	<when test="modCateName != null and modCateName != ''">
+			 	CATEGORY_NAME = #{modCateName}
+		 	</when>
+		 	<otherwise>
+		 		CATEGORY_NAME = #{cateName}
+		 	</otherwise>
+		 </choose>
+		 <if test="targetCateSeq != null and targetCateSeq != ''">
+		   AND CATEGORY_SEQ != #{targetCateSeq}
+		 </if>
+	</select>
+</mapper>

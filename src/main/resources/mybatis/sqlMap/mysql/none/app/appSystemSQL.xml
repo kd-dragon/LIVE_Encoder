@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="app_system">
+	
+	<sql id="adminWhere">
+		<if test="searchText != ''">
+			<choose>
+				<when test="searchTextType == 'ID'">
+					AND LU_ID LIKE '%${searchText}%'
+				</when>
+				<when test="searchTextType == 'NAME'">
+					AND LU_NAME LIKE '%${searchText}%'
+				</when>
+				<otherwise>
+					AND (
+						LU_ID LIKE '%${searchText}%'
+						OR LU_NAME LIKE '%${searchText}%'
+					)
+				</otherwise>
+			</choose>
+		</if>
+	</sql>
+	
+	<!-- 관리자 리스트 -->
+	<select id="adminList" parameterType="UserListDTO" resultType="UserVO">
+		SELECT 
+			  LU_ID
+			, LU_NAME
+			, DATE_FORMAT(A.REG_DATE, '%Y-%m-%d') AS REG_DATE
+			, A.AUTH_SEQ
+			, AUTH_NAME
+			, NVL(DATE_FORMAT(LAST_LOGIN_DATE, '%Y-%m-%d %H:%i'),'') AS LAST_LOGIN_DATE
+		FROM TGLIVE_USER A
+		JOIN TGLIVE_AUTH B
+		  ON A.AUTH_SEQ = B.AUTH_SEQ
+		WHERE DEL_YN = 'N'
+		<include refid="adminWhere"/>
+		ORDER BY LU_ID ASC
+		LIMIT #{startNum}, #{blockCount}
+	</select>
+	
+	<!-- 관리자 리스트 카운트 -->
+	<select id="adminListCount" resultType="int" parameterType="UserListDTO">
+		SELECT COUNT(*)
+		FROM TGLIVE_USER A
+		JOIN TGLIVE_AUTH B
+		  ON A.AUTH_SEQ = B.AUTH_SEQ
+		WHERE DEL_YN = 'N'
+		<include refid="adminWhere"/>
+	</select>
+	
+	<!-- 관리자 삭제(DEL_YN 업데이트) -->
+	<delete id="delAdmin" parameterType="java.util.ArrayList">
+		DELETE
+			FROM TGLIVE_USER
+		WHERE LU_ID
+		<foreach collection="array" item="item" open="IN (" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+	
+	<!-- 관리자 등록 -->
+	<insert id="insertAdmin" parameterType="UserVO">
+		INSERT INTO TGLIVE_USER (
+			  LU_ID
+			, LU_NAME
+			, LU_PWD
+			, AUTH_SEQ
+			, REG_DATE
+			, REG_TYPE
+			) VALUES (
+			  #{luId}
+			, #{luName}
+			, #{luPwd}
+			, #{authSeq}
+			, NOW()
+			, 'M'
+			)
+	</insert>
+	
+	<!-- 관리자 등록 > 아이디 중복 체크 -->
+	<select id="idDupCheck" parameterType="String" resultType="int">
+		SELECT COUNT(*)
+		FROM TGLIVE_USER
+		WHERE UPPER(LU_ID) = UPPER(#{luId})
+	</select>
+	
+	<!-- 관리자 수정 -->
+	<update id="updateAdmin" parameterType="UserVO">
+		UPDATE TGLIVE_USER
+		SET AUTH_SEQ = #{authSeq}
+		  <if test="luPwd != null and luPwd != ''">
+		  , LU_PWD = #{luPwd}
+		  </if>
+		WHERE LU_ID = #{luId}
+	</update>
+	
+	<sql id="loginIpWhere">
+		<!-- 접속IP -->
+		<if test="searchIp != null and searchIp != ''">
+			AND A.LCL_IP LIKE '%${searchIp}%'
+		</if>
+		<!-- 날짜 검색 -->
+		<if test="searchStDate != null and searchStDate != ''">
+			<![CDATA[ AND DATE(A.LCL_REG_DATE) >= STR_TO_DATE('${searchStDate}', '%Y-%m-%d')]]>
+		</if>
+		<if test="searchEnDate != null and searchEnDate != '' ">
+			<![CDATA[ AND DATE(A.LCL_REG_DATE) <= STR_TO_DATE('${searchEnDate}', '%Y-%m-%d')]]>
+		</if>
+		<!-- 전체, 아이디, 이름 -->
+		<if test="searchText != null and searchText != ''">
+			<choose>
+				<!-- 검색 조건이 이름 -->
+				<when test="searchTextType == 'ID'">
+					AND A.LU_ID LIKE '%${searchText}%'
+				</when>
+				<!-- 검색 조건이 아이디 -->
+				<when test="searchTextType == 'NAME'">
+					AND B.LU_NAME LIKE '%${searchText}%'
+				</when>
+				<otherwise>
+					AND (
+						A.LU_ID LIKE '%${searchText}%'
+						OR B.LU_NAME LIKE '%${searchText}%'
+					)
+				</otherwise>
+			</choose>
+		</if>
+	</sql>
+	
+	<!-- 로그인 IP 로그 -->
+	<select id="loginIpLogList" parameterType="LoginIpLogDTO" resultType="LoginIpLogVO">
+		SELECT
+			  A.LU_ID
+			, A.LCL_IP
+			, A.LCL_CODE
+			, DATE_FORMAT(A.LCL_REG_DATE, '%Y-%m-%d %H:%i:%s') AS LCL_REG_DATE
+			, (CASE 
+			  	  WHEN A.LCL_TYPE = 'A' THEN '관리자'
+				  WHEN A.LCL_TYPE = 'U' THEN '사용자' 
+				  ELSE '알수없음'
+			    END
+			  ) AS LCL_TYPE
+			, A.LCL_DEVICE
+			, NVL(B.LU_NAME, '') AS LU_NAME
+		FROM 
+			TGLIVE_CONNECT_LOG A
+		LEFT JOIN
+			TGLIVE_USER B
+		ON	A.LU_ID = B.LU_ID
+		WHERE 1=1
+		<include refid="loginIpWhere"/>
+		ORDER BY A.LCL_REG_DATE DESC
+		LIMIT #{startNum}, #{blockCount}
+	</select>
+	
+	<!-- 로그인 IP 로그 리스트 카운트 -->
+	<select id="loginIpLogListCount" parameterType="LoginIpLogDTO" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM TGLIVE_CONNECT_LOG A
+		LEFT JOIN TGLIVE_USER B
+		ON A.LU_ID = B.LU_ID
+		WHERE 1=1
+		<include refid="loginIpWhere"/>
+	</select>
+	
+	<!-- 접속 허용 IP 리스트 -->
+	<select id="connectIpList" parameterType="ConnectIpDTO" resultType="ConnectIpVO">		
+		SELECT 
+			 LSC_SEQ
+			,LSC_IP
+			,LSC_REG_DATE
+			,LSC_DESC
+		FROM TGLIVE_SETTING_CONNECTIP
+		WHERE LSC_DEL_YN = 'N'
+		
+		ORDER BY LSC_SEQ DESC
+		LIMIT #{startNum}, #{blockCount}
+	</select>
+	
+	<!-- 접속 허용 IP 카운트 -->
+	<select id="connectIpListCount" resultType="int" parameterType="ConnectIpDTO">
+		SELECT COUNT(*)
+		FROM TGLIVE_SETTING_CONNECTIP
+		WHERE LSC_DEL_YN = 'N'
+	</select>
+	
+	<!-- 접속 허용 IP 둥록 -->
+	<insert id="insertConnectIp" parameterType="ConnectIpDTO">
+		INSERT INTO TGLIVE_SETTING_CONNECTIP (
+			  LSC_SEQ
+			, LSC_IP
+			, LSC_REG_DATE
+			, LSC_DESC
+		) VALUES (
+			  CONCAT(DATE_FORMAT(NOW(), '%Y'),LPAD(nextval(sequence_lsc_16), 16, '0'))
+			, #{lscIp}
+			, NOW()
+			, #{lscDesc}
+		)
+	</insert>
+	
+	<!-- 접속 허용 IP 등록 > 중복 체크 -->
+	<select id="ipDupCheck" parameterType="ConnectIpVO" resultType="int">
+		SELECT COUNT(*)
+		FROM TGLIVE_SETTING_CONNECTIP
+		WHERE LSC_IP = #{lscIp}
+		AND LSC_DEL_YN = 'N'
+	</select>
+		
+	<!-- 접속 허용 IP 수정 -->
+	<update id="updateConnectIp" parameterType="ConnectIpVO">
+		UPDATE TGLIVE_SETTING_CONNECTIP
+		SET  LSC_IP = #{lscIp}
+			,LSC_DESC = #{lscDesc}
+		WHERE LSC_SEQ = #{lscSeq}
+	</update>
+	
+	<!-- 접속 허용 IP 삭제 (DEL_YN 업데이트) -->
+	<delete id="delConnectIp" parameterType="java.util.ArrayList">
+		UPDATE TGLIVE_SETTING_CONNECTIP
+		SET 
+			 LSC_DEL_YN ='Y'
+		   , LSC_DEL_DATE = NOW()
+		WHERE LSC_IP
+		<foreach collection="array" item="item" open="IN (" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+	
+	<!-- 스트리밍 리스트 -->
+	<select id="streamingList" parameterType="StreamingDTO" resultType="StreamingVO">		
+		SELECT 
+			  STREAMING_SEQ
+			, STREAMING_IP
+			, STREAMING_PORT
+			, DATE_FORMAT(STREAMING_REG_DATE, '%Y-%m-%d %H:%i') AS STREAMING_REG_DATE
+			, STREAMING_DESC
+		FROM TGLIVE_SETTING_STREAMING
+		ORDER BY STREAMING_SEQ DESC
+		LIMIT #{startNum}, #{blockCount}
+	</select>
+	
+	<!-- 스트리밍 카운트 -->
+	<select id="streamingListCount" resultType="int" parameterType="StreamingDTO">
+		SELECT COUNT(*)
+		FROM TGLIVE_SETTING_STREAMING
+	</select>
+	
+	<!-- 스트리밍 둥록 -->
+	<insert id="insertStreaming" parameterType="StreamingDTO">
+		INSERT INTO TGLIVE_SETTING_STREAMING (
+			  STREAMING_IP
+			, STREAMING_PORT
+			, STREAMING_DESC
+		) VALUES (
+			  #{streamingIp}
+			, #{streamingPort}
+			, #{streamingDesc}
+		)
+	</insert>
+	
+	<!-- 스트리밍 등록 > 중복 체크 -->
+	<select id="streamingDupCheck" parameterType="StreamingVO" resultType="int">
+		SELECT COUNT(*)
+		FROM TGLIVE_SETTING_STREAMING
+		WHERE STREAMING_IP = #{streamingIp}
+	</select>
+		
+	<!-- 스트리밍수정 -->
+	<update id="updateStreaming" parameterType="StreamingVO">
+		UPDATE TGLIVE_SETTING_STREAMING
+		SET   STREAMING_IP = #{streamingIp}
+		    , STREAMING_PORT = #{streamingPort}
+			, STREAMING_DESC = #{streamingDesc}
+		WHERE STREAMING_SEQ = #{streamingSeq}
+	</update>
+	
+	<!-- 스트리밍 삭제 -->
+	<delete id="delStreaming" parameterType="java.util.ArrayList">
+		DELETE 
+		  FROM TGLIVE_SETTING_STREAMING
+		WHERE STREAMING_SEQ
+		<foreach collection="array" item="item" open="IN (" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+	
+	<!-- 모니터링 > 폴더 정보 -->
+	<select id="selectUploadRootPath" resultType="String">
+		SELECT
+			ETC_FILE_UPLOAD_PATH
+		FROM TGLIVE_CONFIG
+	</select>
+	
+	
+	<!-- 권한 리스트 -->
+	<select id="getAuthList" resultType="AuthVO">
+		SELECT AUTH_SEQ
+			 , AUTH_NAME
+		  FROM TGLIVE_AUTH
+	</select>
+	
+	<!-- 카테고리(부서) 리스트 -->
+	<select id="getCategoryList" resultType="CategoryVO">
+		/*app_system.getCategoryList*/
+	    SELECT 	      CATEGORY_SEQ
+		 			, UP_CATEGORY_SEQ
+					, CATEGORY_NAME
+					, REG_USER_ID
+					, USE_YN
+					
+		  FROM	TGLIVE_CATEGORY
+	
+	     WHERE 	UP_CATEGORY_SEQ != #{rootUpCategoryCode}
+		   AND USE_YN = 'Y'
+		 ORDER BY CATEGORY_SEQ
+	</select>
+	
+</mapper>

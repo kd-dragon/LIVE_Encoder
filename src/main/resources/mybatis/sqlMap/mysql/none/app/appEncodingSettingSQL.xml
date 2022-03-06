@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="app_encodingSetting">
+	
+	<!-- 워터마크 조회 -->
+	<select id="watermarkView" resultType="WatermarkVO">
+		SELECT
+			  WM_SEQ
+			, POSITION
+			, REG_DATE
+			, LU_ID
+			, IMG_FILE_PATH
+			, IMG_FILE_NAME
+			, IMG_SERVER_FILE_NAME
+			, REPLACE(IMG_FILE_PATH, #{replaceRootPath}, '/') IMG_WEB_PATH
+			, USE_YN
+		FROM TGLIVE_WATERMARK
+	</select>
+	
+	<!-- 워터마크 등록 -->
+	<insert id="insertWatermark" parameterType="WatermarkVO">
+		INSERT
+			INTO TGLIVE_WATERMARK (
+				  WM_SEQ
+				, POSITION
+				, REG_DATE
+				, LU_ID
+				, IMG_FILE_PATH
+				, IMG_FILE_NAME
+				, IMG_SERVER_FILE_NAME
+				, USE_YN
+			) VALUES (
+				  '1'
+				, #{position}
+				, NOW()
+				, #{luId}
+				, #{imgFilePath}
+				, #{imgFileName}
+				, #{imgServerFileName}
+				, #{useYn}
+			)
+	</insert>
+	
+	<!-- 워터마크 업데이트 -->
+	<update id="updateWatermark" parameterType="WatermarkVO">
+		UPDATE TGLIVE_WATERMARK
+		SET
+			<if test="position != null and position != ''">
+			POSITION = #{position}
+			</if>
+			, REG_DATE = NOW()
+			, LU_ID = #{luId}
+			<if test="imgFilePath != ''">
+			, IMG_FILE_PATH = IFNULL(#{imgFilePath}, IMG_FILE_PATH)
+			</if>
+			<if test="imgFileName != ''">
+			, IMG_FILE_NAME = IFNULL(#{imgFileName}, IMG_FILE_NAME)
+			</if>
+			<if test="imgServerFileName != ''">
+			, IMG_SERVER_FILE_NAME = IFNULL(#{imgServerFileName}, IMG_SERVER_FILE_NAME)
+			</if>
+			<if test="useYn != ''">
+			, USE_YN = #{useYn}
+			</if>
+			WHERE WM_SEQ = '1'
+	</update>
+	
+	<!-- 수정 시에 기존 워터마크 삭제하기 위함-->
+	<select id="selectWatermark" resultType="WatermarkVO">
+		SELECT * FROM TGLIVE_WATERMARK
+		WHERE WM_SEQ = '1'
+	</select>
+	
+	<!-- 워터마크 설정 변경 -->
+	<update id="updateStatus" parameterType="WatermarkVO">
+		UPDATE TGLIVE_WATERMARK
+		SET
+			POSITION = #{position}
+			, LU_ID = #{luId}
+			, IMG_FILE_PATH = #{imgFilePath}
+			, IMG_FILE_NAME = #{imgFileName}
+			, IMG_SERVER_FILE_NAME = #{imgServerFileName}
+			, USE_YN = #{useYn}
+		WHERE WM_SEQ = '1'
+	</update>
+	
+	<!-- config 조회 -->
+	<select id="selectMediaConfig" resultType="SystemConfigVO">
+		SELECT  LIVE_FILE_LOCAL_PATH
+			  , ENCODING_VOD_FILE_PATH
+			  , ETC_FILE_UPLOAD_PATH
+			  , REPLACE_ROOT_PATH
+			  , LIVE_STREAMING_URI
+			  , VOD_STREAMING_URI
+			  , ENCODER_WORKER_CNT
+			  , VOD_ORIGINAL_FILE_PATH
+			  , LIVE_FILE_NAS_PATH
+		  FROM TGLIVE_CONFIG
+	</select>
+	
+	<!-- config update -->
+	<update id="updateMediaConfig" parameterType="SystemConfigVO">
+		UPDATE TGLIVE_CONFIG
+		SET
+			<if test="liveFileLocalPath != null and liveFileLocalPath != ''">
+			LIVE_FILE_LOCAL_PATH = #{liveFileLocalPath}
+			</if>
+			<if test="encodingVodFilePath != null and encodingVodFilePath != ''">
+			, ENCODING_VOD_FILE_PATH = #{encodingVodFilePath}
+			</if>
+			<if test="etcFileUploadPath != null and etcFileUploadPath != ''">
+			, ETC_FILE_UPLOAD_PATH = #{etcFileUploadPath}
+			</if>
+			<if test="replaceRootPath != null and replaceRootPath != ''">
+			, REPLACE_ROOT_PATH = #{replaceRootPath}
+			</if>
+			<if test="liveStreamingUri != null and liveStreamingUri != ''">
+			, LIVE_STREAMING_URI = #{liveStreamingUri}
+			</if>
+			<if test="vodStreamingUri != null and vodStreamingUri != ''">
+			, VOD_STREAMING_URI = #{vodStreamingUri}
+			</if>
+			<if test="encoderWorkerCnt != null and encoderWorkerCnt != ''">
+			, ENCODER_WORKER_CNT = #{encoderWorkerCnt}
+			</if>
+			<if test="vodOriginalFilePath != null and vodOriginalFilePath != ''">
+			, VOD_ORIGINAL_FILE_PATH = #{vodOriginalFilePath}
+			</if>
+			<if test="defaultThumbnail != null and defaultThumbnaul != ''">
+			, DEFAULT_THUMBNAIL = #{defaultThumbnail}
+			</if>
+	</update>
+</mapper>

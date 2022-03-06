@@ -1,0 +1,1014 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="app_live">
+
+	<select id="onAirList" resultType="appBroadcastVO" parameterType="appBroadcastListDTO">
+	/*app_live.onAirList*/
+		SELECT A.LB_SEQ
+		     , A.LB_TITLE
+		     , NVL(A.LB_DESC, '-') LB_DESC
+		     , NVL(A.LB_REG_USER_ID, '-') LB_REG_USER_ID
+		     , DATE_FORMAT(A.LB_REG_DATE, '%Y.%m.%d %H:%i') LB_REG_DATE
+		     , A.LB_STATUS
+		     , A.LB_OPEN_YN
+		     , DATE_FORMAT(A.LB_START_DATE, '%Y.%m.%d %H:%i') LB_START_DATE
+		     , DATE_FORMAT(A.LB_END_DATE, '%Y.%m.%d %H:%i') LB_END_DATE
+		     , TIME_FORMAT(TIMEDIFF(A.LB_END_DATE, A.LB_START_DATE), '%H:%i') TOTAL_DURATION
+		     , TIME_FORMAT (SEC_TO_TIME (IFNULL(C.LBJ_DURATION, C2.LBJ_DURATION)),  '%H:%i') PASS_DURATION
+		     , TIME_FORMAT(TIMEDIFF(A.LB_END_DATE, A.LB_START_DATE), '%H시간 %i분') TOTAL_DURATION_FORMAT
+		     , A.LB_VOD_SAVE_YN
+		     , A.LB_CHAT_YN
+		     , REPLACE(B.LBF_IMG_ENC_PATH, #{webRootPath}, '/') LBF_IMG_ENC_PATH
+		     , B.LBF_IMG_ENC_NM
+		     , B.LBF_IMG_ORIGINAL_NM
+		     , IFNULL(C.LBJ_DURATION, C2.LBJ_DURATION) LBJ_DURATION
+		     , D.LC_SEQ
+		     , D.LC_NAME
+		     , F.FULL_CATEGORY_NAME  
+		       
+		  FROM TGLIVE_BROADCAST A
+		  JOIN TGLIVE_BROADCAST_FILE B
+		    ON A.LB_SEQ = B.LB_SEQ
+		  LEFT JOIN TGLIVE_BROADCAST_JOB C
+		    ON A.LB_SEQ = C.LB_SEQ
+		  LEFT JOIN TGLIVE_BROADCAST_JOB_LOG C2
+		    ON A.LB_SEQ = C2.LB_SEQ
+		  LEFT JOIN TGLIVE_CHANNEL D
+		    ON A.LC_SEQ = D.LC_SEQ
+		  LEFT JOIN (				     	
+			  			WITH RECURSIVE CATEGORY_MGR AS
+						(
+						
+						    SELECT 	      CATEGORY_SEQ
+							 			, UP_CATEGORY_SEQ
+										, CATEGORY_NAME
+										, CATEGORY_NAME AS FULL_CATEGORY_NAME
+										, 1 AS lvl
+										, CATEGORY_TYPE
+										, CATEGORY_REG_USER_ID
+										, CATEGORY_ORDER 
+										
+							  FROM	tgmcms_category
+						
+						    WHERE 	UP_CATEGORY_SEQ = #{rootUpCategoryCode}
+						
+						UNION ALL
+						
+						   SELECT 	 	  T1.CATEGORY_SEQ
+							 			, T1.UP_CATEGORY_SEQ
+										, T1.CATEGORY_NAME
+										, CONCAT(T2.FULL_CATEGORY_NAME,'|',T1.CATEGORY_NAME) AS FULL_CATEGORY_NAME
+										, lvl + 1 AS lvl
+										, T1.CATEGORY_TYPE
+										, T1.CATEGORY_REG_USER_ID
+										, T1.CATEGORY_ORDER 
+						
+						    FROM   tgmcms_category	 T1
+							JOIN   CATEGORY_MGR      T2 
+							      ON T2.CATEGORY_SEQ = T1.UP_CATEGORY_SEQ
+						
+						)
+						
+						SELECT	* 
+						  FROM	CATEGORY_MGR
+						 WHERE	1=1
+		  
+		  		 )F
+		  	  ON A.LB_CATEGORY_SEQ = F.CATEGORY_SEQ
+		 WHERE 1 = 1
+		        AND A.LB_DEL_YN = 'N'
+		 <choose>
+			 <when test="searchStatus != null &amp;&amp; searchStatus != ''">
+			 	AND A.LB_STATUS = #{searchStatus}
+			 </when>
+			 <otherwise>
+			 	AND A.LB_STATUS IN ('1','3','4')
+			 </otherwise>
+		 </choose>
+		 ORDER BY A.LB_STATUS ASC, A.LB_START_DATE DESC
+		 LIMIT #{startNum}, #{blockCount}
+	</select>
+	
+	<select id="onAirListCount" resultType="int" parameterType="appBroadcastListDTO">
+	/*app_live.onAirListCount*/
+		SELECT COUNT(*)
+		  FROM TGLIVE_BROADCAST A
+		  JOIN TGLIVE_BROADCAST_FILE B
+		    ON A.LB_SEQ = B.LB_SEQ
+		  LEFT JOIN TGLIVE_BROADCAST_JOB C
+		    ON A.LB_SEQ = C.LB_SEQ
+		  LEFT JOIN TGLIVE_BROADCAST_JOB_LOG C2
+		  	ON A.LB_SEQ = C2.LB_SEQ
+		  LEFT JOIN TGLIVE_CHANNEL D
+		    ON A.LC_SEQ = D.LC_SEQ
+		  LEFT JOIN TGLIVE_CATEGORY E
+		    ON A.LB_CATEGORY_SEQ = E.CATEGORY_SEQ
+		 WHERE 1 = 1
+		 	   AND A.LB_DEL_YN = 'N'
+		 <choose>
+			 <when test="searchStatus != null &amp;&amp; searchStatus != ''">
+			 	AND A.LB_STATUS = #{searchStatus}
+			 </when>
+			 <otherwise>
+			 	AND A.LB_STATUS IN ('1','3','4')
+			 </otherwise>
+		 </choose>
+	</select>
+	
+	<sql id="searchLive">
+		<!-- 상태 -->
+		<if test='searchStatus neq null and searchStatus neq"" '>
+			AND A.LB_STATUS = #{searchStatus}
+		</if>
+		<!-- 공개여부 -->
+		<if test='searchOpen neq null and searchOpen neq"" '>
+			AND A.LB_OPEN_YN = #{searchOpen}
+		</if>
+		<!-- 검색어 -->
+		<if test='searchText neq null and searchText neq"" '>
+			<choose>
+				<when test="searchTextType == 'TITLE'">
+					AND A.LB_TITLE LIKE '%${searchText}%'
+				</when>
+				<when test="searchTextType == 'REGUSER'">
+					AND A.LB_REG_USER_ID  LIKE '%${searchText}%'
+				</when>
+				<otherwise>
+					AND (A.LB_TITLE LIKE '%${searchText}%' OR A.LB_REG_USER_ID  LIKE '%${searchText}%')
+				</otherwise>
+			</choose>
+		</if>
+		
+		<!-- 검색 시작날짜 -->
+		<if test=' searchStDate neq null and searchStDate neq "" '>
+			<![CDATA[ AND DATE(A.LB_START_DATE) >= STR_TO_DATE('${searchStDate}', '%Y-%m-%d')]]>
+		</if>
+		
+		<!-- 검색 종료날짜 -->
+		<if test=' searchEnDate neq null and searchEnDate neq "" '>
+			<![CDATA[ AND DATE(A.LB_START_DATE) <= STR_TO_DATE('${searchEnDate}', '%Y-%m-%d')]]>
+		</if>
+	</sql>
+	
+	<select id="waitList" resultType="appBroadcastVO" parameterType="appBroadcastListDTO">
+	/*app_live.waitList*/
+		SELECT A.LB_SEQ
+		     , A.LB_TITLE
+		     , A.LB_REG_USER_ID
+		     , DATE_FORMAT(A.LB_REG_DATE, '%Y.%m.%d %H:%i') LB_REG_DATE
+		     , A.LB_STATUS
+		     , A.LB_OPEN_YN
+		     , DATE_FORMAT(A.LB_START_DATE, '%Y.%m.%d %H:%i') LB_START_DATE
+		     , DATE_FORMAT(A.LB_END_DATE, '%Y.%m.%d %H:%i') LB_END_DATE
+		     , TIME_FORMAT(TIMEDIFF(A.LB_END_DATE, A.LB_START_DATE), '%H:%i') TOTAL_DURATION
+		     , TIME_FORMAT (SEC_TO_TIME (0),  '%H:%i') PASS_DURATION
+		     , A.LB_VOD_SAVE_YN
+		     , A.LB_CHAT_YN
+		     , B.LBF_IMG_ENC_PATH
+		     , B.LBF_IMG_ENC_NM
+		     , B.LBF_IMG_ORIGINAL_NM
+		     , C.LBJ_DURATION
+		     , D.LC_SEQ
+		     , D.LC_NAME
+		  FROM TGLIVE_BROADCAST A
+		  JOIN TGLIVE_BROADCAST_FILE B
+		    ON A.LB_SEQ = B.LB_SEQ
+		  LEFT JOIN TGLIVE_BROADCAST_JOB C
+		    ON A.LB_SEQ = C.LB_SEQ
+		  LEFT JOIN TGLIVE_CHANNEL D
+		    ON A.LC_SEQ = D.LC_SEQ
+		  LEFT JOIN TGLIVE_CATEGORY E
+		    ON A.LB_CATEGORY_SEQ = E.CATEGORY_SEQ
+		 WHERE A.LB_STATUS = '0'
+		       AND A.LB_DEL_YN = 'N'
+		       <include refid="searchLive"/>
+	  <choose>
+	 	<when test="orderByType == 'start'">
+		 	 ORDER BY A.LB_START_DATE DESC
+		 </when>
+		 <otherwise>
+		 	 ORDER BY A.LB_REG_DATE DESC
+		 </otherwise>
+	 </choose>
+	 
+		 LIMIT #{startNum}, #{blockCount}
+	</select>
+	
+	<select id="waitListCount" resultType="int" parameterType="appBroadcastListDTO">
+		SELECT COUNT(*)
+		  FROM TGLIVE_BROADCAST A
+		  JOIN TGLIVE_BROADCAST_FILE B
+		    ON A.LB_SEQ = B.LB_SEQ
+		  JOIN TGLIVE_BROADCAST_JOB C
+		    ON A.LB_SEQ = C.LB_SEQ
+		  LEFT JOIN TGLIVE_CHANNEL D
+		    ON A.LC_SEQ = D.LC_SEQ
+		  LEFT JOIN TGLIVE_CATEGORY E
+		    ON A.LB_CATEGORY_SEQ = E.CATEGORY_SEQ
+		 WHERE A.LB_STATUS = '0'
+		       AND A.LB_DEL_YN = 'N'
+		       <include refid="searchLive"/>
+	</select>
+	
+	<select id="getLpStatus" resultType="String">
+	/*app_live.getLpStatus*/
+	SELECT	LB_STATUS
+	  FROM	TGLIVE_BROADCAST
+	 WHERE  LB_SEQ = '${value}'
+	</select>
+	
+	<delete id="updateLbDelYn">
+	/*app_live.updateLbDelYn*/
+	UPDATE	TGLIVE_BROADCAST
+	   SET	LB_DEL_YN = 'Y'
+	 WHERE	LB_SEQ = '${value}'
+	</delete>
+	
+	<delete id="deleteLbj">
+	/*app_live.deleteLbj*/
+	DELETE FROM	TGLIVE_BROADCAST_JOB
+	      WHERE	LB_SEQ = '${value}'
+	</delete>
+	
+	<update id="updateBroadcast" parameterType="appBroadcastVO">
+	/*app_live.updateBroadcast*/
+	UPDATE	TGLIVE_BROADCAST
+	
+	   SET    LB_TITLE = #{lbTitle}
+			, LB_DESC = #{lbDesc}
+			, LB_START_DATE = STR_TO_DATE(#{lbStartDate}, '%Y-%m-%d %H:%i')
+			, LB_END_DATE = STR_TO_DATE(#{lbEndDate}, '%Y-%m-%d %H:%i')
+			, LB_OPEN_YN =  #{lbOpenYn}
+			, LB_CHAT_YN = #{lbChatYn}
+		<choose>
+			<when test=" lcSeq eq 'VOD'.toString() ">
+			, LB_VOD_SAVE_YN = 'N'
+			, LB_VOD_DOWN_YN = 'N'
+<!-- 			, LB_PRESET_CD =  null -->
+		    , LC_SEQ = ''
+		    , LB_VOD_SEQ = #{lbVodSeq}
+			, LB_CATEGORY_SEQ = null
+			</when>
+			<otherwise>
+			, LB_VOD_SAVE_YN = #{lbVodSaveYn}
+			, LB_VOD_DOWN_YN = #{lbVodDownYn}
+<!-- 			, LB_PRESET_CD =  #{lbPresetCd} -->
+			, LC_SEQ = #{lcSeq}
+			, LB_VOD_SEQ = null
+				<choose>
+					<when test=' lbVodSaveYn eq "Y".toString() '>
+						, LB_CATEGORY_SEQ = #{lbCategorySeq}
+					</when>
+					<otherwise>
+						, LB_CATEGORY_SEQ = null
+					</otherwise>
+				</choose>
+			</otherwise>
+		</choose>
+     WHERE  LB_SEQ = #{lbSeq}
+	
+	</update>
+	<select id="finishList" resultType="appBroadcastVO" parameterType="appBroadcastListDTO">
+	/*app_live.finishList*/
+		SELECT A.LB_SEQ
+		     , A.LB_TITLE
+		     , A.LB_REG_USER_ID
+		     , DATE_FORMAT(A.LB_REG_DATE, '%Y.%m.%d %H:%i') LB_REG_DATE
+		     , A.LB_STATUS
+		     , A.LB_OPEN_YN
+		     , DATE_FORMAT(A.LB_START_DATE, '%Y.%m.%d %H:%i') LB_START_DATE
+		     , DATE_FORMAT(A.LB_END_DATE, '%Y.%m.%d %H:%i') LB_END_DATE
+		     , A.LB_VOD_SAVE_YN
+		     , A.LB_CHAT_YN
+		     , B.LBF_IMG_ENC_PATH
+		     , B.LBF_IMG_ENC_NM
+		     , B.LBF_IMG_ORIGINAL_NM
+		     , D.LC_SEQ
+		     , D.LC_NAME
+		     , IFNULL(C.LBJ_DURATION, C2.LBJ_DURATION)  as LBJ_DURATION
+		     , TIME_FORMAT(TIMEDIFF(A.LB_END_DATE, A.LB_START_DATE), '%H:%i') TOTAL_DURATION
+		     , TIME_FORMAT (SEC_TO_TIME (IFNULL(C.LBJ_DURATION, C2.LBJ_DURATION)),  '%H:%i') PASS_DURATION
+		  FROM TGLIVE_BROADCAST A
+		  JOIN TGLIVE_BROADCAST_FILE B
+		    ON A.LB_SEQ = B.LB_SEQ
+		  LEFT JOIN TGLIVE_BROADCAST_JOB_LOG C
+		    ON A.LB_SEQ = C.LB_SEQ
+		  LEFT JOIN TGLIVE_BROADCAST_JOB C2
+   		    ON A.LB_SEQ = C2.LB_SEQ
+		  LEFT JOIN TGLIVE_CHANNEL D
+		    ON A.LC_SEQ = D.LC_SEQ
+		 WHERE A.LB_STATUS IN ('2', '9', '5')
+		 	   AND A.LB_DEL_YN = 'N'
+		 	   <include refid="searchLive"/>
+	  <choose>
+	 	 <when test="orderByType == 'start'">
+		 	 ORDER BY A.LB_START_DATE DESC
+		 </when>
+		 <otherwise>
+	 		 ORDER BY A.LB_REG_DATE DESC
+		 </otherwise>
+	  </choose>
+		 LIMIT #{startNum}, #{blockCount}
+	</select>
+	
+	<select id="finishListCount" resultType="int" parameterType="appBroadcastListDTO">
+		SELECT COUNT(*)
+		  FROM TGLIVE_BROADCAST A
+		  JOIN TGLIVE_BROADCAST_FILE B
+		    ON A.LB_SEQ = B.LB_SEQ
+		  LEFT JOIN TGLIVE_BROADCAST_JOB_LOG C
+		    ON A.LB_SEQ = C.LB_SEQ
+		  LEFT JOIN TGLIVE_CHANNEL D
+		    ON A.LC_SEQ = D.LC_SEQ
+		  LEFT JOIN TGLIVE_CATEGORY E
+		    ON A.LB_CATEGORY_SEQ = E.CATEGORY_SEQ
+		 WHERE A.LB_STATUS IN ('2', '9', '5')
+		 	   AND A.LB_DEL_YN = 'N'
+		 	    <include refid="searchLive"/>
+	</select>
+	
+	<select id="onAirStatusList" resultType="appBroadcastStatusVO" parameterType="appBroadcastListDTO">
+		SELECT LB_STATUS
+		  	 , CASE LB_STATUS 
+			   		WHEN 1 THEN 'onair'
+			   		WHEN 2 THEN 'finish'
+					WHEN 3 THEN 'pause'
+					WHEN 0 THEN 'wait'
+					WHEN 4 THEN 'restart'
+					ELSE 'error'
+			   END AS LB_STATUS_NM
+		     , COUNT(*) AS LB_STATUS_CNT
+		  FROM TGLIVE_BROADCAST
+		 WHERE LB_STATUS IN ('1','3','9','4') 
+		 GROUP BY LB_STATUS
+	</select>
+	
+	<select id="broadcastDetail" resultType="appBroadcastVO" parameterType="appBroadcastVO">
+		SELECT A.LB_SEQ
+		     , A.LB_TITLE
+		     , A.LB_CATEGORY_SEQ
+		     , NVL(A.LB_DESC, '') LB_DESC
+		     , NVL(A.LB_REG_USER_ID, '-') LB_REG_USER_ID
+		     , DATE_FORMAT(A.LB_REG_DATE, '%Y.%m.%d %H:%i') LB_REG_DATE
+		     , A.LB_STATUS
+		     , A.LB_OPEN_YN
+		     , A.LB_PRESET_CD
+		     , DATE_FORMAT(A.LB_START_DATE, '%Y.%m.%d %H:%i') LB_START_DATE
+		     , DATE_FORMAT(A.LB_END_DATE, '%Y.%m.%d %H:%i') LB_END_DATE
+		     , TIME_FORMAT(TIMEDIFF(A.LB_END_DATE, A.LB_START_DATE), '%H:%i:%s') TOTAL_DURATION
+		     , TIME_FORMAT (SEC_TO_TIME (IFNULL(IFNULL(C.LBJ_DURATION, C2.LBJ_DURATION), 0 )),  '%H:%i:%S') PASS_DURATION
+		     , A.LB_VOD_SAVE_YN
+		     , A.LB_CHAT_YN
+		     , A.LB_VOD_DOWN_YN
+             , NVL(F.VOD_SEQ, A.LB_VOD_SEQ) LB_VOD_SEQ
+             
+		     , (SELECT GROUP_CONCAT(LH_TAG_NAME SEPARATOR '|')
+		         FROM TGLIVE_HASHTAG
+		        WHERE LB_SEQ = A.LB_SEQ)  AS LH_TAG_NAME
+		        
+		     , B.LBF_SEQ
+		     , B.LBF_ATTACH_ORIGINAL_NM
+		     , B.LBF_ATTACH_PATH
+		     , B.LBF_ATTACH_SERVER_NM
+		     , B.LBF_IMG_ENC_NM
+		     , REPLACE(B.LBF_IMG_ENC_PATH, #{webRootPath}, '/') LBF_IMG_ENC_PATH
+		     
+		     , IFNULL(C.LBJ_DURATION, C2.LBJ_DURATION) LBJ_DURATION
+		     , IFNULL(C.LBJ_LOG_DESC, C2.LBJ_LOG_DESC) LBJ_LOG_DESC
+		     , IFNULL(C.LBJ_LOG_MSG, C2.LBJ_LOG_MSG) LBJ_LOG_MSG
+		     
+		     , D.LC_SEQ
+		     , D.LC_NAME
+		     , NVL(D.LC_URL, 'VOD') LC_URL
+		     
+			 , E.FULL_CATEGORY_NAME
+			 
+			 <!-- VOD 관련 -->
+             , G.DURATION AS LB_VOD_RUNTIME
+             , G.ENCODING_FILE_NAME AS LB_VOD_NAME
+		     , REPLACE(G.ENCODING_FILE_PATH, #{webRootPath},'/') AS LB_VOD_PATH
+             
+		  FROM TGLIVE_BROADCAST 					A
+		  
+		  JOIN TGLIVE_BROADCAST_FILE 				B
+		    ON A.LB_SEQ = B.LB_SEQ
+		    
+		  LEFT JOIN TGLIVE_BROADCAST_JOB_LOG 		C
+	        ON A.LB_SEQ = C.LB_SEQ
+	        
+  	 	  LEFT JOIN TGLIVE_BROADCAST_JOB 	   		C2
+   		    ON A.LB_SEQ = C2.LB_SEQ
+   		    
+		  LEFT JOIN TGLIVE_CHANNEL 					D
+		    ON A.LC_SEQ = D.LC_SEQ
+		    
+		  LEFT JOIN (
+		  				WITH RECURSIVE CATEGORY_MGR AS
+						(
+						
+						    SELECT 	      CATEGORY_SEQ
+							 			, UP_CATEGORY_SEQ
+										, CATEGORY_NAME
+										, CATEGORY_NAME AS FULL_CATEGORY_NAME
+										, 1 AS lvl
+										, CATEGORY_TYPE
+										, CATEGORY_REG_USER_ID
+										, CATEGORY_ORDER 
+										
+							  FROM	TGMCMS_CATEGORY
+						
+						    WHERE 	UP_CATEGORY_SEQ = #{rootUpCategoryCode}
+						
+						UNION ALL
+						
+						   SELECT 	 	  T1.CATEGORY_SEQ
+							 			, T1.UP_CATEGORY_SEQ
+										, T1.CATEGORY_NAME
+										, CONCAT(T2.FULL_CATEGORY_NAME,'|',T1.CATEGORY_NAME) AS FULL_CATEGORY_NAME
+										, lvl + 1 AS lvl
+										, T1.CATEGORY_TYPE
+										, T1.CATEGORY_REG_USER_ID
+										, T1.CATEGORY_ORDER 
+						
+						    FROM   tgmcms_category	 T1
+						    
+							JOIN   CATEGORY_MGR      T2 
+							  ON T2.CATEGORY_SEQ = T1.UP_CATEGORY_SEQ
+						
+						)
+						
+						SELECT	* 
+						  FROM	CATEGORY_MGR
+		  ) 										E
+		  ON A.LB_CATEGORY_SEQ = E.CATEGORY_SEQ
+		  
+	    LEFT JOIN TGLIVE_VOD						F
+	           ON A.LB_VOD_SEQ = F.VOD_SEQ
+	           OR A.LB_SEQ = F.VOD_SEQ
+	           
+	    LEFT JOIN TGLIVE_VOD_FILE					G
+	    	   ON F.VOD_SEQ = G.VOD_SEQ
+			  
+		    WHERE A.LB_SEQ = #{lbSeq}
+		    
+		    LIMIT 1
+	</select>
+	
+	<insert id="insertBroadcast" parameterType="appBroadcastVO">
+		INSERT INTO TGLIVE_BROADCAST (
+	           LB_SEQ
+	         , LB_TITLE
+	         , LB_DESC
+	         , LB_REG_USER_ID
+		     , LB_REG_DATE
+		     , LB_STATUS
+		     , LB_OPEN_YN
+		     , LB_CHAT_YN
+		     , LB_START_DATE
+		     , LB_END_DATE
+		     <if test=' lbVodSaveYn eq "Y".toString() '>
+		     , LB_CATEGORY_SEQ
+		     </if>
+		     , LB_VOD_SEQ
+		     , LB_VOD_SAVE_YN
+		     , LB_VOD_DOWN_YN
+		     , LC_SEQ
+<!-- 		     , LB_PRESET_CD -->
+		) VALUES (
+		       #{lbSeq}
+		     , #{lbTitle}
+		     , #{lbDesc}
+		     , #{lbRegUserId}
+		     , NOW()
+		     , '0'
+		     , #{lbOpenYn}
+		     , #{lbChatYn}
+		     , STR_TO_DATE(#{lbStartDate}, '%Y-%m-%d %H:%i')
+		     , STR_TO_DATE(#{lbEndDate}, '%Y-%m-%d %H:%i')
+		     <if test=' lbVodSaveYn eq "Y".toString() '>
+		     , #{lbCategorySeq}
+		     </if>
+	      <choose>
+			 <when test=" lcSeq eq 'VOD'.toString() ">
+		     , #{lbVodSeq}
+			 , 'N'
+			 , 'N'
+			 , ''
+			 , null
+			 </when>
+			 <otherwise>
+			 , null
+		     , #{lbVodSaveYn}
+		     , #{lbVodDownYn}
+			 , #{lcSeq}
+<!-- 		     , #{lbPresetCd} -->
+			 </otherwise>
+		 </choose>
+		)
+	</insert>
+	
+	
+	<insert id="insertBroadcastJob" parameterType="appBroadcastVO">
+		INSERT INTO TGLIVE_BROADCAST_JOB (
+	           LBJ_SEQ
+	         , LBJ_PROCESS_ID
+	         , LBJ_DURATION
+		     , LBJ_PAUSE_DATE
+		     , LBJ_CUR_VIEWER_CNT
+		     , LBJ_VOD_LAST_POSITION
+		     , LBJ_LOG_REG_DATE
+		     , LBJ_LOG_MSG
+		     , LBJ_LOG_DESC
+		     , LB_SEQ
+		) VALUES (
+		       CONCAT(DATE_FORMAT(NOW(), '%Y%m%d'),LPAD(NEXTVAL(SEQUENCE_LBJ_12), 12, '0'))
+		     , #{lbjProcessId}
+		     , #{lbjDuration}
+		     , STR_TO_DATE(#{lbjPauseDate}, '%Y%m%d%H%i')
+		     , #{lbjCurViewerCnt}
+		     , #{lbjVodLastPosition}
+		     , STR_TO_DATE(#{lbjLogRegDate}, '%Y%m%d%H%i')
+		     , #{lbjLogMsg}
+		     , #{lbjLogDesc}
+		     , #{lbSeq}
+		)
+	</insert>
+	
+	<insert id="insertBroadcastJobLog" parameterType="appBroadcastVO">
+		INSERT INTO TGLIVE_BROADCAST_JOB_LOG (
+	           LBJ_SEQ
+	         , LBJ_PROCESS_ID
+	         , LBJ_DURATION
+		     , LBJ_PAUSE_DATE
+		     , LBJ_CUR_VIEWER_CNT
+		     , LBJ_VOD_LAST_POSITION
+		     , LBJ_REG_DATE
+		     , LBJ_MSG
+		     , LBJ_DESC
+		     , LB_SEQ
+		) SELECT 
+		       LBJ_SEQ
+	         , LBJ_PROCESS_ID
+	         , LBJ_DURATION
+		     , LBJ_PAUSE_DATE
+		     , LBJ_CUR_VIEWER_CNT
+		     , LBJ_VOD_LAST_POSITION
+		     , NOW()
+		     , #{lbjMsg}
+		     , #{lbjDesc}
+		     , LB_SEQ
+			FROM TGLIVE_BROADCAST_JOB
+		   WHERE LBJ_SEQ = #{lbjSeq}
+	</insert>
+	
+	
+	<update id="updateAttachFile">
+	/*app_live.updateAttachFile*/
+	UPDATE	tglive_broadcast_file
+	
+	   SET	  LBF_ATTACH_PATH = #{lbfAttachPath}
+	        , LBF_ATTACH_ORIGINAL_NM = #{lbfAttachOriginalNm}
+	        , LBF_ATTACH_SERVER_NM = #{lbfAttachServerNm}
+	        
+	 WHERE	LB_SEQ = #{lbSeq}
+	</update>
+	
+	<update id="updateThumbnail">
+	/*app_live.updateThumbnail*/
+	UPDATE	tglive_broadcast_file
+	
+	   SET	  LBF_IMG_PATH = #{lbfImgPath}
+	        , LBF_IMG_ORIGINAL_NM = #{lbfImgOriginalNm}
+	        , LBF_IMG_SERVER_NM = #{lbfImgServerNm}
+	        , LBF_IMG_ENC_PATH = #{lbfImgEncPath}
+	        , LBF_IMG_ENC_NM = #{lbfImgEncNm}
+	        
+	 WHERE	LB_SEQ = #{lbSeq}
+	</update>
+
+	<select id="selectFile" resultType="AppBroadcastVO">
+	/*app_live.selectFile*/
+	SELECT	*
+	  FROM	tglive_broadcast_file
+	 WHERE	LB_SEQ = #{value}
+	</select>
+	
+	<!-- 라이브 종료하기 -->
+	<update id="liveBroadcastStatusEnd" parameterType="String">
+		UPDATE TGLIVE_BROADCAST
+		   SET LB_END_DATE = NOW()
+		 WHERE LB_SEQ = #{value}
+	</update>
+	
+	<!-- 라이브 일시중지 및 재시작-->
+	<update id="livePauseAndStart" parameterType="AppBroadcastVO">
+		UPDATE TGLIVE_BROADCAST
+		SET
+			<choose>
+				<when test="lbStatus == 1">
+					LB_STATUS = '3'
+				</when>
+				<when test="lbStatus == 3">
+					LB_STATUS = '4'
+				</when>
+				<when test="lbStatus == 4">
+					LB_STATUS = '3'
+				</when>
+			</choose>
+		WHERE LB_SEQ = #{lbSeq}
+	</update>
+	
+	<!-- 라이브, 재시작 >> 일시중지 시 Date Update -->
+	<update id="pauseDateUpdate" parameterType="AppBroadcastVO">
+		UPDATE TGLIVE_BROADCAST_JOB 
+		   SET LBJ_PAUSE_DATE = NOW()
+		     , LBJ_DURATION = #{lbjDuration} 
+		 WHERE LB_SEQ = #{lbSeq}
+	</update>
+	
+	<select id="selectCategoryList" resultType="CategoryVO">
+	/*app_live.selectCategoryList*/
+		SELECT 
+		   R1.*,
+		   U.USER_NAME 
+		FROM (
+				WITH RECURSIVE CATEGORY_MGR AS
+				(
+				
+				    SELECT 	      CATEGORY_SEQ
+					 			, UP_CATEGORY_SEQ
+								, CATEGORY_NAME
+								, CATEGORY_NAME AS FULL_CATEGORY_NAME
+								, 1 AS lvl
+								, CATEGORY_TYPE
+								, CATEGORY_REG_USER_ID
+								, CATEGORY_ORDER 
+								
+					  FROM	tgmcms_category
+				
+				    WHERE 	UP_CATEGORY_SEQ = #{rootUpCategoryCode}
+				
+				UNION ALL
+				
+				   SELECT 	 	  C.CATEGORY_SEQ
+					 			, C.UP_CATEGORY_SEQ
+								, C.CATEGORY_NAME
+								, CONCAT(CM.FULL_CATEGORY_NAME,' > ',C.CATEGORY_NAME) AS FULL_CATEGORY_NAME
+								, lvl + 1 AS lvl
+								, C.CATEGORY_TYPE
+								, C.CATEGORY_REG_USER_ID
+								, C.CATEGORY_ORDER 
+				
+				    FROM   tgmcms_category	 C
+					JOIN   CATEGORY_MGR      CM 
+					      ON CM.CATEGORY_SEQ = C.UP_CATEGORY_SEQ
+				
+				)
+				
+				SELECT * FROM CATEGORY_MGR
+				WHERE 1=1
+				 
+			 ) R1 
+			 	INNER JOIN  TGMCMS_USER U
+			ON U.USER_ID = R1.CATEGORY_REG_USER_ID
+			WHERE 1=1
+			 AND CATEGORY_TYPE='N'
+			ORDER BY FULL_CATEGORY_NAME 
+	</select>
+	
+	<!-- 워터마크 설정 -->
+	<select id="selectWatermark" resultType="WatermarkVO">
+		SELECT
+			  WM_SEQ
+			, POSITION
+			, IMG_FILE_PATH
+			, IMG_SERVER_FILE_NAME
+			, USE_YN
+			, REPLACE(IMG_FILE_PATH, #{webRootPath}, '/') IMG_WEB_PATH
+		FROM TGLIVE_WATERMARK
+		WHERE WM_SEQ = '1'
+	</select>
+	
+	<!-- 라이브 채팅 파일 다운로드 관련 -->
+	<select id="getLiveInfo" parameterType="String" resultType="AppBroadcastVO">
+		SELECT 
+			  LB_SEQ
+			, LB_TITLE 
+			, DATE_FORMAT(LB_START_DATE, '%Y') AS START_YEAR
+			, DATE_FORMAT(LB_START_DATE, '%m') AS START_MONTH
+			, DATE_FORMAT(LB_START_DATE, '%d') AS START_DAY
+			, DATE_FORMAT(LB_END_DATE, '%Y') AS END_YEAR
+			, DATE_FORMAT(LB_END_DATE, '%m') AS END_MONTH
+			, DATE_FORMAT(LB_END_DATE, '%d') AS END_DAY
+			, (SELECT UPLOAD_ROOT_PATH FROM TGLIVE_CONFIG) AS UPLOAD_ROOT_PATH
+		FROM TGLIVE_BROADCAST
+		WHERE LB_SEQ = #{lbSeq}
+	</select>
+	
+	
+	<select id="checkEncoderWorkerCnt" resultType="_int">
+	/*api.checkEncoderWorkerCnt*/
+	<![CDATA[
+	
+	SELECT 
+	       CASE
+	    	  WHEN COUNT(*) < ( SELECT encoder_worker_cnt FROM tglive_config ) THEN 1
+	    	  ELSE 0
+	       END  as checkEncoderWorker
+	       
+	FROM TGLIVE_BROADCAST
+	
+	WHERE LB_DEL_YN = 'N'
+		  AND LB_STATUS != '2'
+		  AND STR_TO_DATE('${lbStartDate}', '%Y-%m-%d %H:%i') < LB_END_DATE
+	      AND STR_TO_DATE('${lbEndDate}'  , '%Y-%m-%d %H:%i') > LB_START_DATE
+	]]>
+		  <if test='lbSeq neq null and lbSeq neq "" '>
+		  AND LB_SEQ != #{lbSeq}
+		  </if>
+	</select>
+	
+	
+	 <sql id="liveVod_where">
+    	AND C.CATEGORY_SEQ = #{lbCategorySeq}
+		 OR C.UP_CATEGORY_SEQ = #{lbCategorySeq}
+		 OR C.UP_CATEGORY_SEQ IN (SELECT CATEGORY_SEQ 
+								   FROM TGMCMS_CATEGORY
+								  WHERE UP_CATEGORY_SEQ = #{lbCategorySeq})
+    	<if test="contentsSeq != null and contentsSeq != ''">
+		 <!--   AND B.CONTENTS_ID = #{contentsSeq} -->
+		 		AND B.VOD_SEQ = #{contentsSeq}
+		   </if>
+		 <if test="videoTitle != null and videoTitle != ''">
+		 	<!-- AND ORIGINAL_FILE_NAME LIKE '%${videoTitle}%' -->
+		 		AND VOD_TITLE LIKE '%${videoTitle}%'
+		 </if>
+    </sql>
+    
+	<!-- 라이브 VOD 불러오기 > 비디오 리스트 -->
+	<select id="getLiveVodList" parameterType="LiveVodDTO" resultType="LiveVodVO">
+		<!-- SELECT Z.* 
+		  FROM (
+			SELECT A.MEDIA_ID
+				 , C.CATEGORY_NAME
+				 , B.CONTENTS_TITLE
+				 , A.ORIGINAL_FILE_NAME VIDEO_NAME
+				 , TIME_FORMAT(SEC_TO_TIME(A.DURATION),'%H:%i:%s') DURATION
+				 , A.DURATION AS RUN_TIME
+				 , DATE_FORMAT(A.REG_DATE, '%Y-%m-%d') REG_DATE
+				 , A.REG_USER_ID
+			  FROM TGMCMS_VIDEO A
+			  JOIN TGMCMS_CONTENTS B
+				ON A.CONTENTS_ID = B.CONTENTS_ID
+			  JOIN TGMCMS_CATEGORY C
+				ON B.CATEGORY_CD = C.CATEGORY_SEQ
+			 WHERE A.DEL_YN = 'N'
+			 <include refid="liveVod_where" />
+			 ORDER BY REG_DATE
+		 	) Z
+		 LIMIT #{startNo}, #{endNo} -->
+		 SELECT Z.*
+		 FROM (
+		 	SELECT
+		 		A.LB_SEQ
+		 		, C.CATEGORY_NAME
+		 		, A.VOD_TITLE AS CONTENTS_TITLE
+		 		, B.ENCODING_FILE_NAME AS VIDEO_NAME
+		 		, B.ENCODING_FILE_PATH
+		 		, TIME_FORMAT(SEC_TO_TIME(B.DURATION), '%H:%i:%s') AS DURATION
+		 		, B.DURATION AS RUN_TIME
+		 		, DATE_FORMAT(A.REG_DATE, '%Y-%m-%d') AS REG_DATE
+		 		, A.REG_USER_ID
+		 	FROM TGLIVE_VOD A
+		 	JOIN TGLIVE_VOD_FILE B
+		 	ON A.VOD_SEQ = B.VOD_SEQ
+		 	AND A.DEL_YN = 'N'
+		 	JOIN TGMCMS_CATEGORY C
+		 	ON A.CATEGORY_SEQ = C.CATEGORY_SEQ
+		 	WHERE A.VOD_STATUS = '1'
+		 	<include refid="liveVod_where" />
+		 ) Z
+		 ORDER BY LB_SEQ DESC
+		 LIMIT #{startNo}, #{endNo}
+	</select>
+	
+	<!-- 라이브 VOD 불러오기 > 비디오 리스트 Count-->
+	<select id="getLiveVodListCount" parameterType="LiveVodDTO" resultType="int">
+	/*app_live.getLiveVodListCount*/
+		<!-- SELECT COUNT(*)
+		  FROM TGMCMS_VIDEO A
+		  JOIN TGMCMS_CONTENTS B
+			ON A.CONTENTS_ID = B.CONTENTS_ID
+		  JOIN TGMCMS_CATEGORY C
+			ON B.CATEGORY_CD = C.CATEGORY_SEQ
+		 WHERE A.DEL_YN = 'N' -->
+		 SELECT COUNT(*)
+		 FROM TGLIVE_VOD A
+		 JOIN TGLIVE_VOD_FILE B
+		 ON A.VOD_SEQ = B.VOD_SEQ
+		 AND A.DEL_YN = 'N'
+		 JOIN TGMCMS_CATEGORY C
+		 ON A.CATEGORY_SEQ = C.CATEGORY_SEQ
+		 WHERE A.VOD_STATUS = '1'
+		 <include refid="liveVod_where" />
+	</select>    
+	
+	    <!-- 라이브 VOD 불러오기 > Contents List 가져오기 -->
+    <select id="getContentsListByCateSeq" parameterType="String" resultType="LiveContentsVO">
+    /*app_live.getContentsListByCateSeq*/
+    	SELECT CONTENTS_ID
+    	     , CONTENTS_TITLE
+		  FROM TGMCMS_CONTENTS A
+		  JOIN TGMCMS_CATEGORY B 
+			ON A.CATEGORY_CD = B.CATEGORY_SEQ
+		 WHERE A.DEL_YN = 'N'
+		   AND B.CATEGORY_SEQ = #{lbCategorySeq}
+			OR B.UP_CATEGORY_SEQ = #{lbCategorySeq}
+			OR B.UP_CATEGORY_SEQ IN (SELECT CATEGORY_SEQ 
+									   FROM TGMCMS_CATEGORY
+									  WHERE UP_CATEGORY_SEQ = #{lbCategorySeq})
+    </select>
+    
+    <!-- 라이브 상태 확인 (1:진행중/2:종료/3:일시정지) -->
+	<select id="liveStatusCheck" parameterType="String" resultType="String">
+		SELECT CASE WHEN COUNT(*)=0 THEN '2'
+				  	WHEN COUNT(*)=1 AND LB_STATUS='3' THEN '3'
+				  	ELSE '1'
+			   END STATUS
+		  FROM TGLIVE_BROADCAST 
+		 WHERE LB_SEQ = #{value}
+		   AND TIMESTAMPDIFF(SECOND, NOW(), LB_END_DATE) > 0
+	</select>
+	
+    
+    <select id="finishListExcel" resultType="appBroadcastVO" parameterType="appBroadcastListDTO">
+	/*app_live.finishList*/
+		SELECT A.LB_SEQ
+		     , A.LB_TITLE
+		     , A.LB_REG_USER_ID
+		     , DATE_FORMAT(A.LB_REG_DATE, '%Y.%m.%d %H:%i') LB_REG_DATE
+		     , A.LB_STATUS
+		     , A.LB_OPEN_YN
+		     , DATE_FORMAT(A.LB_START_DATE, '%Y.%m.%d %H:%i') LB_START_DATE
+		     , DATE_FORMAT(A.LB_END_DATE, '%Y.%m.%d %H:%i') LB_END_DATE
+		     , A.LB_VOD_SAVE_YN
+		     , A.LB_CHAT_YN
+		     , B.LBF_IMG_ENC_PATH
+		     , B.LBF_IMG_ENC_NM
+		     , B.LBF_IMG_ORIGINAL_NM
+		     , D.LC_SEQ
+		     , D.LC_NAME
+		     , IFNULL(C.LBJ_DURATION, C2.LBJ_DURATION)  as LBJ_DURATION
+		     , TIME_FORMAT(TIMEDIFF(A.LB_END_DATE, A.LB_START_DATE), '%H:%i') TOTAL_DURATION
+		     , TIME_FORMAT (SEC_TO_TIME (IFNULL(C.LBJ_DURATION, C2.LBJ_DURATION)),  '%H:%i') PASS_DURATION
+		  FROM TGLIVE_BROADCAST A
+		  JOIN TGLIVE_BROADCAST_FILE B
+		    ON A.LB_SEQ = B.LB_SEQ
+		  LEFT JOIN TGLIVE_BROADCAST_JOB_LOG C
+		    ON A.LB_SEQ = C.LB_SEQ
+		  LEFT JOIN TGLIVE_BROADCAST_JOB C2
+   		    ON A.LB_SEQ = C2.LB_SEQ
+		  LEFT JOIN TGLIVE_CHANNEL D
+		    ON A.LC_SEQ = D.LC_SEQ
+		 WHERE A.LB_STATUS IN ('2', '9', '5')
+		 	   AND A.LB_DEL_YN = 'N'
+		 	   <include refid="searchLive"/>
+	  <choose>
+	 	 <when test="orderByType == 'start'">
+		 	 ORDER BY A.LB_START_DATE DESC
+		 </when>
+		 <otherwise>
+	 		 ORDER BY A.LB_REG_DATE DESC
+		 </otherwise>
+	  </choose>
+	</select>
+	
+	<select id="waitListExcel" resultType="appBroadcastVO" parameterType="appBroadcastListDTO">
+	/*app_live.waitList*/
+		SELECT A.LB_SEQ
+		     , A.LB_TITLE
+		     , A.LB_REG_USER_ID
+		     , DATE_FORMAT(A.LB_REG_DATE, '%Y.%m.%d %H:%i') LB_REG_DATE
+		     , A.LB_STATUS
+		     , A.LB_OPEN_YN
+		     , DATE_FORMAT(A.LB_START_DATE, '%Y.%m.%d %H:%i') LB_START_DATE
+		     , DATE_FORMAT(A.LB_END_DATE, '%Y.%m.%d %H:%i') LB_END_DATE
+		     , TIME_FORMAT(TIMEDIFF(A.LB_END_DATE, A.LB_START_DATE), '%H:%i') TOTAL_DURATION
+		     , TIME_FORMAT (SEC_TO_TIME (0),  '%H:%i') PASS_DURATION
+		     , A.LB_VOD_SAVE_YN
+		     , A.LB_CHAT_YN
+		     , B.LBF_IMG_ENC_PATH
+		     , B.LBF_IMG_ENC_NM
+		     , B.LBF_IMG_ORIGINAL_NM
+		     , C.LBJ_DURATION
+		     , D.LC_SEQ
+		     , D.LC_NAME
+		  FROM TGLIVE_BROADCAST A
+		  JOIN TGLIVE_BROADCAST_FILE B
+		    ON A.LB_SEQ = B.LB_SEQ
+		  LEFT JOIN TGLIVE_BROADCAST_JOB C
+		    ON A.LB_SEQ = C.LB_SEQ
+		  LEFT JOIN TGLIVE_CHANNEL D
+		    ON A.LC_SEQ = D.LC_SEQ
+		  LEFT JOIN TGLIVE_CATEGORY E
+		    ON A.LB_CATEGORY_SEQ = E.CATEGORY_SEQ
+		 WHERE A.LB_STATUS = '0'
+		       AND A.LB_DEL_YN = 'N'
+		       <include refid="searchLive"/>
+	  <choose>
+	 	<when test="orderByType == 'start'">
+		 	 ORDER BY A.LB_START_DATE DESC
+		 </when>
+		 <otherwise>
+		 	 ORDER BY A.LB_REG_DATE DESC
+		 </otherwise>
+	 </choose>
+	</select>
+	
+	<select id="onAirListExcel" resultType="appBroadcastVO" parameterType="appBroadcastListDTO">
+	/*app_live.onAirList*/
+		SELECT A.LB_SEQ
+		     , A.LB_TITLE
+		     , NVL(A.LB_DESC, '-') LB_DESC
+		     , NVL(A.LB_REG_USER_ID, '-') LB_REG_USER_ID
+		     , DATE_FORMAT(A.LB_REG_DATE, '%Y.%m.%d %H:%i') LB_REG_DATE
+		     , A.LB_STATUS
+		     , A.LB_OPEN_YN
+		     , DATE_FORMAT(A.LB_START_DATE, '%Y.%m.%d %H:%i') LB_START_DATE
+		     , DATE_FORMAT(A.LB_END_DATE, '%Y.%m.%d %H:%i') LB_END_DATE
+		     , TIME_FORMAT(TIMEDIFF(A.LB_END_DATE, A.LB_START_DATE), '%H:%i') TOTAL_DURATION
+		     , TIME_FORMAT (SEC_TO_TIME (IFNULL(C.LBJ_DURATION, C2.LBJ_DURATION)),  '%H:%i') PASS_DURATION
+		     , TIME_FORMAT(TIMEDIFF(A.LB_END_DATE, A.LB_START_DATE), '%H시간 %i분') TOTAL_DURATION_FORMAT
+		     , A.LB_VOD_SAVE_YN
+		     , A.LB_CHAT_YN
+		     , REPLACE(B.LBF_IMG_ENC_PATH, #{webRootPath}, '/') LBF_IMG_ENC_PATH
+		     , B.LBF_IMG_ENC_NM
+		     , B.LBF_IMG_ORIGINAL_NM
+		     , IFNULL(C.LBJ_DURATION, C2.LBJ_DURATION) LBJ_DURATION
+		     , D.LC_SEQ
+		     , D.LC_NAME
+		     , F.FULL_CATEGORY_NAME  
+		       
+		  FROM TGLIVE_BROADCAST A
+		  JOIN TGLIVE_BROADCAST_FILE B
+		    ON A.LB_SEQ = B.LB_SEQ
+		  LEFT JOIN TGLIVE_BROADCAST_JOB C
+		    ON A.LB_SEQ = C.LB_SEQ
+		  LEFT JOIN TGLIVE_BROADCAST_JOB_LOG C2
+		    ON A.LB_SEQ = C2.LB_SEQ
+		  LEFT JOIN TGLIVE_CHANNEL D
+		    ON A.LC_SEQ = D.LC_SEQ
+		  LEFT JOIN (				     	
+			  			WITH RECURSIVE CATEGORY_MGR AS
+						(
+						
+						    SELECT 	      CATEGORY_SEQ
+							 			, UP_CATEGORY_SEQ
+										, CATEGORY_NAME
+										, CATEGORY_NAME AS FULL_CATEGORY_NAME
+										, 1 AS lvl
+										, CATEGORY_TYPE
+										, CATEGORY_REG_USER_ID
+										, CATEGORY_ORDER 
+										
+							  FROM	tgmcms_category
+						
+						    WHERE 	UP_CATEGORY_SEQ = #{rootUpCategoryCode}
+						
+						UNION ALL
+						
+						   SELECT 	 	  T1.CATEGORY_SEQ
+							 			, T1.UP_CATEGORY_SEQ
+										, T1.CATEGORY_NAME
+										, CONCAT(T2.FULL_CATEGORY_NAME,'|',T1.CATEGORY_NAME) AS FULL_CATEGORY_NAME
+										, lvl + 1 AS lvl
+										, T1.CATEGORY_TYPE
+										, T1.CATEGORY_REG_USER_ID
+										, T1.CATEGORY_ORDER 
+						
+						    FROM   tgmcms_category	 T1
+							JOIN   CATEGORY_MGR      T2 
+							      ON T2.CATEGORY_SEQ = T1.UP_CATEGORY_SEQ
+						
+						)
+						
+						SELECT	* 
+						  FROM	CATEGORY_MGR
+						 WHERE	1=1
+		  
+		  		 )F
+		  	  ON A.LB_CATEGORY_SEQ = F.CATEGORY_SEQ
+		 WHERE 1 = 1
+		        AND A.LB_DEL_YN = 'N'
+		 <choose>
+			 <when test="searchStatus != null &amp;&amp; searchStatus != ''">
+			 	AND A.LB_STATUS = #{searchStatus}
+			 </when>
+			 <otherwise>
+			 	AND A.LB_STATUS IN ('1','3','4')
+			 </otherwise>
+		 </choose>
+		 ORDER BY A.LB_STATUS ASC, A.LB_START_DATE DESC
+	</select>
+	
+</mapper>

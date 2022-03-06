@@ -1,0 +1,45 @@
+.form-simple input[type="text"] {
+	margin-bottom: -1px;
+	border-bottom-right-radius: 0;
+	border-bottom-left-radius: 0; }
+
+.form-simple input[type="mail"] {
+	margin-bottom: -1px;
+	border-top-left-radius: 0;
+	border-top-right-radius: 0;
+	border-bottom-right-radius: 0;
+	border-bottom-left-radius: 0; }
+
+.form-simple input[type="password"] {
+	margin-bottom: 10px;
+	border-top-left-radius: 0;
+	border-top-right-radius: 0; }
+
+.help-block ul {
+	margin: 0  !important;
+	padding: 0 !important; }
+.help-block ul li {
+	list-style: none; }
+
+.navbar-brand {}
+.navbar-brand img {
+	margin-bottom:.8rem;}
+.navbar-brand h3 {
+	font-size:2.2rem;
+	line-height:1.3rem;}
+.navbar-brand h3 small {
+	font-size:1rem;}
+
+
+body {background-color: #dedde3 !important; background-image:url('/app-assets/images/customizing/bg-login.jpg'); background-position:top left; background-repeat:no-repeat; }
+
+.card {border-radius: 15px;}
+.card-title {background:url('/app-assets/images/customizing/bg-logo.gif') top center no-repeat ; padding-top: 92px;}
+.card-title p {margin-bottom: 8px;}
+.card-title small {font-family: 'nanumSB'; font-size: 17px; letter-spacing: -0.05rem;}
+.btn-login {background: #009881; color: #FFF;}
+
+
+
+footer span {color: #FFF;}
+footer span a {color: #FFF;}
