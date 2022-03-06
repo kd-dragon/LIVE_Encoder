@@ -65,7 +65,6 @@ server:
   block-count: 10
   main-notice-max: 3
   root-up-category-code: 0
-  link-kind: none
   chat: 
     host: 127.0.0.1
     port: 9090

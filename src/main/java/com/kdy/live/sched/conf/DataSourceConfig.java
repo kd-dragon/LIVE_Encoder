@@ -40,7 +40,7 @@ public class DataSourceConfig {
 		SqlSessionFactoryBean sqlSessionFactoryBean = new SqlSessionFactoryBean();
 		sqlSessionFactoryBean.setDataSource(dataSource);
 		sqlSessionFactoryBean.setConfigLocation(new PathMatchingResourcePatternResolver().getResource("classpath:mybatis/mybatis-config.xml"));
-		sqlSessionFactoryBean.setMapperLocations(new PathMatchingResourcePatternResolver().getResources("classpath:mybatis/sqlMap/"+dbKind+"/"+linkKind+"/**/*.xml"));
+		sqlSessionFactoryBean.setMapperLocations(new PathMatchingResourcePatternResolver().getResources("classpath:mybatis/sqlMap/"+dbKind+"/**/*.xml"));
 		sqlSessionFactoryBean.setTypeAliasesPackage("com.kdy.*.dto");
 
 		return sqlSessionFactoryBean.getObject();
