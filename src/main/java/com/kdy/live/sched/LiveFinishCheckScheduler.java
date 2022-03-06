@@ -27,7 +27,7 @@ public class LiveFinishCheckScheduler {
 	 * 2021.12.01~
 	 * 녹화는 녹화 모듈에서 별도로 처리합니다.
 	 * 
-	 * @author KDY
+	 * 
 	 * @throws Exception
 	 */
 	

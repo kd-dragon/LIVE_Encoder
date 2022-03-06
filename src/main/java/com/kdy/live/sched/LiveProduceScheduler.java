@@ -32,7 +32,7 @@ public class LiveProduceScheduler {
 	 * 대기중엔 라이브 방송을 조회하여 시작하는 스케줄러입니다. (즉시 시작도 해당 스케쥴러에서 조회합니다)
 	 * -> 라이브 모듈의 첫번째 프로세스에 해당됩니다.
 	 * 
-	 * @author KDY
+	 * 
 	 * @throws Exception
 	 */
 	

@@ -34,7 +34,7 @@ public class LiveMonitorScheduler {
 	 * 스트리밍 모니터링 (CPU, Memory 등) 스케쥴러
 	 * 시스템 설정 업데이트
 	 * 
-	 * @author KDY
+	 * 
 	 * @throws Exception
 	 */
 //	@Scheduled(cron = "0 0/10 * * * ?")

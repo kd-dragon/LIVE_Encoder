@@ -32,7 +32,7 @@ public class LiveInterruptedOthersScheduler {
 	 * 나의 MacAddress로 생성되지 않은 방송 중에 20초간 Duration이 업데이트되지 않는 방송을 조회합니다.
 	 * 조회된 방송은 MacAddress, Duration, ffmpeg Pid 등이 초기화 업데이트 됩니다.
 	 * 
-	 * @author KDY 
+	 *  
 	 * @throws Exception
 	 */
 	

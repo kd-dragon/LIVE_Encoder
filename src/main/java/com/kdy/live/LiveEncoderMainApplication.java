@@ -15,7 +15,7 @@ public class LiveEncoderMainApplication {
 	/**
 	 * [스케쥴러 작업 방식]
 	 * @since 2.0
-	 * @author KDY
+	 * 
 	 * 
 	 * - 패키지경로: com.kdy.live.sched
 	 * - 설정파일경로: com.kdy.live.sched.conf

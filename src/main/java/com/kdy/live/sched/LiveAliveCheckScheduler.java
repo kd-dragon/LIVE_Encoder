@@ -29,7 +29,7 @@ public class LiveAliveCheckScheduler {
 	 * 실시간 라이브 장애 여부를 체크하여 자동 재시작하는 스케줄러입니다.
 	 * 또한 타 모듈에서 장애발생한 방송이 내 모듈로 배정되었을 때 이 서비스에서 해당 라이브를 자동 재시작합니다.
 	 * 
-	 * @author KDY
+	 * 
 	 * @throws exception
 	 */
 	
