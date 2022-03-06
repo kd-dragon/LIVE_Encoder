@@ -70,9 +70,6 @@ public class LiveController {
 		this.memoryVO = memoryVO;
 	}
 	
-	@Value("${server.link-kind}")
-	private String linkKind;
-	
 	@Value("${server.chat.host}")
 	private String chatHost;
 	
@@ -215,7 +212,6 @@ public class LiveController {
 		//model.addAttribute("categoryHtml", liveService.getCategoryTreeHtml(liveService.getCategoryList()));
 		model.addAttribute("categoryList", liveService.getCategoryList());
 		model.addAttribute("previousURL",  req.getHeader("REFERER"));
-		model.addAttribute("linkKind", linkKind);
 		
 		return "live/live-write";
 	}
@@ -239,15 +235,7 @@ public class LiveController {
 	public String callVodListPopup(LiveVodDTO dto, Model model) throws Exception{
 		model.addAttribute("categoryList", liveService.getCategoryList());
 		
-		if(linkKind.equals("mcms")) {
-			return "popup/callVodList-mcms-popup";
-			
-		}else if(linkKind.equals("movie")) {
-			return "popup/callVodList-movie-popup";
-			
-		} else {
-			return "popup/callVodList-popup";
-		}
+		return "popup/callVodList-popup";
 	}
 	
 	/**

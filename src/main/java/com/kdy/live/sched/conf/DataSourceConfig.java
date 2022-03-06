@@ -26,9 +26,6 @@ public class DataSourceConfig {
 	@Value("${spring.dbms}")
 	private String dbKind;
 	
-	@Value("${server.link-kind}")
-	private String linkKind;
-	
 	@Bean(destroyMethod = "close")
 	@ConfigurationProperties(prefix = "spring.datasource.hikari")
 	public DataSource dataSource() {

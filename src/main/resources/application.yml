@@ -35,9 +35,9 @@ spring:
     driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
     hikari:
       #jdbc-url: jdbc:log4jdbc:oracle:thin:@localhost:1521/xe
-      jdbc-url: jdbc:log4jdbc:mysql://localhost:3306/liveencoder?serverTimezone=Asia/Seoul&useSSL=false&autoReconnect=true
-      username: liveencoder
-      password: liveencoder
+      jdbc-url: jdbc:log4jdbc:mysql://localhost:3306/didimdol_live?serverTimezone=Asia/Seoul&useSSL=false&autoReconnect=true
+      username: root
+      password: softtigen
       maximum-pool-size: 5
       minimum-idle: 2
       auto-commit: true

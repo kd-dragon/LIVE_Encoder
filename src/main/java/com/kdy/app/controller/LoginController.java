@@ -27,21 +27,27 @@ public class LoginController extends ExceptionController{
 		return "redirect:/loginForm.do";
 	}
 	
+//	@RequestMapping("/loginForm.do")
+//	public String loginForm(HttpSession session) throws Exception {
+//		
+//		if(session.getAttribute("userId") != null) {
+//			return "redirect:/live/liveOnAirList.do";
+//		}
+//		
+//		HashMap<String, Object> rsaMap = new HashMap<String, Object>();
+//		rsaMap = loginService.keyGenerate();
+//		
+//		session.setAttribute("rsaPublicKeyModules",	rsaMap.get("rsaPublicKeyModules"));
+//		session.setAttribute("rsaPublicKeyExponent", rsaMap.get("rsaPublicKeyExponent"));
+//		session.setAttribute("__rsaPrivateKey__", rsaMap.get("rsaPrivateKey"));
+//		
+//		return "login/loginForm"; 
+//	}
+	
 	@RequestMapping("/loginForm.do")
 	public String loginForm(HttpSession session) throws Exception {
-		
-		if(session.getAttribute("userId") != null) {
-			return "redirect:/live/liveOnAirList.do";
-		}
-		
-		HashMap<String, Object> rsaMap = new HashMap<String, Object>();
-		rsaMap = loginService.keyGenerate();
-		
-		session.setAttribute("rsaPublicKeyModules",	rsaMap.get("rsaPublicKeyModules"));
-		session.setAttribute("rsaPublicKeyExponent", rsaMap.get("rsaPublicKeyExponent"));
-		session.setAttribute("__rsaPrivateKey__", rsaMap.get("rsaPrivateKey"));
-		
-		return "login/loginForm"; 
+
+		return "redirect:/swagger-ui.html"; 
 	}
 	
 	@RequestMapping("/loginSuccess.do")

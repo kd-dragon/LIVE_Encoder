@@ -101,7 +101,7 @@
 		<appender-ref ref="DBMS"/>
 	</logger> 
 	<!-- SQL문만을 로그로 남기며, PreparedStatement일 경우 관련된 argument 값으로 대체된 SQL문이 보여진다. --> 
-	<logger name="jdbc.sqlonly" level="WARN"/>
+	<logger name="jdbc.sqlonly" level="INFO"/>
 	<!-- SQL문과 해당 SQL을 실행시키는데 수행된 시간 정보(milliseconds)를 포함한다. --> 
 	<logger name="jdbc.sqltiming" level="INFO" additivity="false">
 		<appender-ref ref="DBMS"/>

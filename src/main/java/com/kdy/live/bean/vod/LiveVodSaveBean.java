@@ -2,7 +2,6 @@ package com.kdy.live.bean.vod;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.kdy.app.bean.util.FileCopyUploadBean;
@@ -29,8 +28,6 @@ public class LiveVodSaveBean { //라이브 VOD 저장시
 		this.memoryVO = memoryVO;
 	}
 	
-	@Value("${server.link-kind}")
-	private String linkKind;
 
 	//녹화영상 복사하기 (recording_file_path to encoding_file_path) (사용X)
 	public void recordingVodCopyToEncodingPath(LiveBroadcastVO lbvo) throws Exception {
@@ -56,37 +53,33 @@ public class LiveVodSaveBean { //라이브 VOD 저장시
 			mvo.setVodSavePath(savePath);
 			mvo.setVodSeq(vo.getVodSeq());
 			
-			//Movie는 Meta정보 따로 저장안함
-			if(!linkKind.equalsIgnoreCase("movie")) {
+			//Meta 정보 insert (고화질) 
+			vodManageDAOFactory.getDAO().insertVodMeta(mvo);
+			
+			if(memoryVO.getIsAdaptive()) {
+			
+				mvo = vodMetaInfoBean.getParsedMetaInfo(savePath , vo.getRecordCopyName() + "low.mp4");
+				vo.setVodSize(mvo.getMetaFileSize()); //영상 사이즈
+				vo.setVodDuration(mvo.getMetaDuration()); //영상 시간
+				mvo.setQuality("low"); //영상 화질
+				mvo.setEncodeFileName(vo.getRecordCopyName() + "low.mp4");
+				mvo.setVodSavePath(savePath);
+				mvo.setVodSeq(vo.getVodSeq());
 				
-				//Meta 정보 insert (고화질) 
+				//Meta 정보 insert (저화질)
 				vodManageDAOFactory.getDAO().insertVodMeta(mvo);
 				
-				if(memoryVO.getIsAdaptive()) {
-				
-					mvo = vodMetaInfoBean.getParsedMetaInfo(savePath , vo.getRecordCopyName() + "low.mp4");
+				if(memoryVO.getEncodingType().equalsIgnoreCase("advance")) {
+					mvo = vodMetaInfoBean.getParsedMetaInfo(savePath , vo.getRecordCopyName() + "mid.mp4");
 					vo.setVodSize(mvo.getMetaFileSize()); //영상 사이즈
 					vo.setVodDuration(mvo.getMetaDuration()); //영상 시간
-					mvo.setQuality("low"); //영상 화질
-					mvo.setEncodeFileName(vo.getRecordCopyName() + "low.mp4");
+					mvo.setQuality("mid"); //영상 화질
+					mvo.setEncodeFileName(vo.getRecordCopyName() + "mid.mp4");
 					mvo.setVodSavePath(savePath);
 					mvo.setVodSeq(vo.getVodSeq());
 					
-					//Meta 정보 insert (저화질)
+					//Meta 정보 insert (중화질)
 					vodManageDAOFactory.getDAO().insertVodMeta(mvo);
-					
-					if(memoryVO.getEncodingType().equalsIgnoreCase("advance")) {
-						mvo = vodMetaInfoBean.getParsedMetaInfo(savePath , vo.getRecordCopyName() + "mid.mp4");
-						vo.setVodSize(mvo.getMetaFileSize()); //영상 사이즈
-						vo.setVodDuration(mvo.getMetaDuration()); //영상 시간
-						mvo.setQuality("mid"); //영상 화질
-						mvo.setEncodeFileName(vo.getRecordCopyName() + "mid.mp4");
-						mvo.setVodSavePath(savePath);
-						mvo.setVodSeq(vo.getVodSeq());
-						
-						//Meta 정보 insert (중화질)
-						vodManageDAOFactory.getDAO().insertVodMeta(mvo);
-					}
 				}
 			}
 		} catch (Exception e) {
