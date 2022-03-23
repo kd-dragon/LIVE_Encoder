@@ -10,7 +10,7 @@ Input: RTMP/RTSP 스트림.
 
 Output: HLS (M3U8, TS).
 
-> WatchService 를 통해 생성/갱신되는 M3U8, TS파일을 바이너리 형태로 Redis 에 담아 스트리밍 서버로 전송
+> Apache Commons IO Monitor 를 통해 생성/갱신되는 M3U8, TS파일을 바이너리 형태로 Redis 에 담아 스트리밍 서버로 전송
 
 
 Live Record
