@@ -2,28 +2,22 @@ package com.kdy.live.sched;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.kdy.live.dto.LiveSchedMemoryVO;
 import com.kdy.live.service.live.LiveInterruptedOthersService;
 
+import lombok.RequiredArgsConstructor;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 
 @Component
+@RequiredArgsConstructor
 public class LiveInterruptedOthersScheduler {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	
 	private final LiveInterruptedOthersService liveInterruptedOthersService;
 	private final LiveSchedMemoryVO memoryVO;
-	
-	@Autowired
-	public LiveInterruptedOthersScheduler(LiveInterruptedOthersService liveInterruptedOthersService
-										, LiveSchedMemoryVO memoryVO) {
-		this.liveInterruptedOthersService = liveInterruptedOthersService;
-		this.memoryVO = memoryVO;
-	}
 	
 	/**
 	 * 

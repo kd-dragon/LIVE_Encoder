@@ -9,7 +9,6 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
@@ -35,7 +34,10 @@ import com.kdy.app.service.api.IF.ApiLiveServiceIF;
 import com.kdy.live.bean.util.code.LiveBroadcastStatus;
 import com.kdy.live.dto.LiveSchedMemoryVO;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class ApiLiveService implements ApiLiveServiceIF {
 	
 	private final Logger logger = LoggerFactory.getLogger(ApiLiveService.class);
@@ -44,19 +46,6 @@ public class ApiLiveService implements ApiLiveServiceIF {
 	private final PagingHtmlBean pagingHtmlBean;
 	private final DataSourceTransactionManager transactionManager; //트랜잭션
 	private final LiveSchedMemoryVO memoryVO;
-	
-	
-	@Autowired
-	public ApiLiveService(ApiLiveBroadcastBean apiLiveBean
-						  , PagingHtmlBean pagingHtmlBean
-					 	  , DataSourceTransactionManager transactionManager
-					 	  , LiveSchedMemoryVO memoryVO) {
-		
-		this.apiLiveBean = apiLiveBean;
-		this.pagingHtmlBean = pagingHtmlBean;
-		this.transactionManager = transactionManager;
-		this.memoryVO = memoryVO;
-	}
 	
 	@Value("${server.block-count}")
 	private int blockCount;

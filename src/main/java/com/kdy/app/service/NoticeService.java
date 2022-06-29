@@ -10,7 +10,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
@@ -34,31 +33,19 @@ import com.kdy.app.dto.util.FileVO;
 import com.kdy.app.service.IF.NoticeServiceIF;
 import com.kdy.live.dto.LiveSchedMemoryVO;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class NoticeService implements NoticeServiceIF {
 
 	Logger logger = LoggerFactory.getLogger(NoticeService.class);
 	
 	private final NoticeBean 			noticeBean;
+	private final DataSourceTransactionManager transactionManager; //트랜잭션
 	private final PagingHtmlBean 		pagingHtmlBean;
 	private final MultiFileUploadBean 	multiFileUploadBean;
 	private final LiveSchedMemoryVO 	memoryVO;
-	
-	DataSourceTransactionManager transactionManager; //트랜잭션
-	
-	@Autowired
-	public NoticeService( NoticeBean 					noticeBean
-						, DataSourceTransactionManager 	transactionManager
-						, PagingHtmlBean 				pagingHtmlBean
-						, MultiFileUploadBean 			multiFileUploadBean
-						, LiveSchedMemoryVO 			memoryVO) {
-		
-		this.noticeBean 			= noticeBean;
-		this.transactionManager 	= transactionManager;
-		this.pagingHtmlBean 		= pagingHtmlBean;
-		this.multiFileUploadBean	= multiFileUploadBean;
-		this.memoryVO				= memoryVO;
-	}
 	
 	@Value("${server.block-count}")
 	private int blockCount;

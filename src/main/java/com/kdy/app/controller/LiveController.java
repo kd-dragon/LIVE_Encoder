@@ -15,7 +15,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -31,8 +30,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.kdy.app.bean.util.ExcelDownBean;
-import com.kdy.app.dto.channel.ChannelDTO;
 import com.kdy.app.bean.util.MultiSlashChk;
+import com.kdy.app.dto.channel.ChannelDTO;
 import com.kdy.app.dto.live.AppBroadcastListDTO;
 import com.kdy.app.dto.live.AppBroadcastVO;
 import com.kdy.app.dto.live.ResultVO;
@@ -47,28 +46,19 @@ import com.kdy.live.bean.util.code.LiveBroadcastStatus;
 import com.kdy.live.dto.LiveSchedMemoryVO;
 import com.kdy.live.dto.live.ChatDTO;
 
+import lombok.RequiredArgsConstructor;
+
 
 @Controller
 @RequestMapping("/live")
+@RequiredArgsConstructor
 public class LiveController {
-	
-	private final Logger logger = LoggerFactory.getLogger(LiveController.class);
 	
 	private final LiveServiceIF liveService;
 	private final VodServiceIF vodService;
 	private final ChannelServiceIF channelService;
 	private final ExcelDownBean excelDownBean;
 	private final LiveSchedMemoryVO memoryVO;
-	
-	
-	@Autowired
-	public LiveController(LiveServiceIF liveService, ChannelServiceIF channelService, ExcelDownBean excelDownBean, VodServiceIF vodService, LiveSchedMemoryVO memoryVO) {
-		this.liveService = liveService;
-		this.vodService = vodService;
-		this.channelService = channelService;
-		this.excelDownBean = excelDownBean;
-		this.memoryVO = memoryVO;
-	}
 	
 	@Value("${server.chat.host}")
 	private String chatHost;

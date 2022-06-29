@@ -9,7 +9,6 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -33,27 +32,18 @@ import com.kdy.app.service.IF.VodServiceIF;
 import com.kdy.live.bean.vod.ThumbnailBean;
 import com.kdy.live.dto.LiveSchedMemoryVO;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class VodService implements VodServiceIF {
 
 	private final PagingHtmlBean pagingHtmlBean;
 	private final VodBean vodBean;
-	private final ExcelDownBean excelDownBean;
 	private final LiveSchedMemoryVO memoryVO;
+	private final ExcelDownBean excelDownBean;
 	private final FileCopyUploadBean fileCopyBean;
 	private final ThumbnailBean thumbBean;
-	
-	@Autowired
-	public VodService(PagingHtmlBean pagingHtmlBean, VodBean vodBean
-			, LiveSchedMemoryVO memoryVO, ExcelDownBean excelDownBean
-			, FileCopyUploadBean fileCopyBean, ThumbnailBean thumbBean) {
-		this.pagingHtmlBean = pagingHtmlBean;
-		this.vodBean = vodBean;
-		this.memoryVO = memoryVO;
-		this.excelDownBean = excelDownBean;
-		this.fileCopyBean = fileCopyBean;
-		this.thumbBean = thumbBean;
-	}
 
 	@Value("${server.block-count}")
 	private int blockCount;

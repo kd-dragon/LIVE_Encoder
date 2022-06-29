@@ -30,8 +30,6 @@ public class DefaultRtmpToHLS implements EncodeCommandFactoryIF {
 								.addOutput(liveVO.getHlsFilePath() + "/index.m3u8")
 								.addExtraArgs("-timeout", "2000")
 									.setPreset("veryfast")
-									//.setVideoFrameRate(30)
-									//.addExtraArgs("-g", "30")
 									.setVideoCodec(videoCodec)
 									.setAudioCodec(audioCodec)
 									.addExtraArgs("-f", "hls")

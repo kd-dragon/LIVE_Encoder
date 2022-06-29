@@ -2,9 +2,6 @@ package com.kdy.app.service.api;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.kdy.app.bean.api.ApiChannelBean;
@@ -15,17 +12,13 @@ import com.kdy.app.dto.channel.ChannelVO;
 import com.kdy.app.dto.live.ResultVO;
 import com.kdy.app.service.api.IF.ApiChannelServiceIF;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class ApiChannelService implements ApiChannelServiceIF{
 	
-	private final Logger logger = LoggerFactory.getLogger(ApiChannelService.class);
-	
-	private ApiChannelBean channelBean; 
-	
-	@Autowired
-	public ApiChannelService(ApiChannelBean channelBean) {
-		this.channelBean = channelBean;
-	}
+	private final ApiChannelBean channelBean; 
 
 	//채널 리스트
 	@Override

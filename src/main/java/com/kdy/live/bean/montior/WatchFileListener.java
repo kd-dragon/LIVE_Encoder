@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
-import com.kdy.live.dto.LiveSchedMemoryVO;
 import com.kdy.live.dto.live.LiveBroadcastVO;
 
 public class WatchFileListener implements FileAlterationListener {
@@ -20,51 +19,68 @@ public class WatchFileListener implements FileAlterationListener {
 	private Logger logger = LoggerFactory.getLogger("ffmpeg");
 	
 	private final LiveBroadcastVO lbvo;
-	private final LiveSchedMemoryVO mvo;
 	private final RedisTemplate<String, Object> template;
 	
-	public WatchFileListener(LiveSchedMemoryVO mvo, LiveBroadcastVO lbvo, RedisTemplate<String, Object> template) {
-		this.mvo = mvo;
+	public WatchFileListener(LiveBroadcastVO lbvo, RedisTemplate<String, Object> template) {
 		this.lbvo = lbvo;
 		this.template = template;
 	}
 	
+	/**
+	 * @author KDY
+	 * In-Memory Key/Value DB Redis 에 .m3u8, .ts파일 저장
+	 * @param file
+	 */
+	
+	// 파일 변화 감지시 .m3u8, .ts 파일에 대한 처리 구현
+	@Override
+	public void onFileChange(File file) {
+		// key 지정 ( 고유 시퀀스값 + 파일명 )
+		String key = lbvo.getLbSeq() + "_" + file.getName();
+		//logger.info("########### onFileChange >> key :" + key);
+		
+		// file 객체를 redis 에 할당
+		assignFileToMemoryReplication(key, file);
+	}
+	
+	private void assignFileToMemoryReplication(String key, File file) {
+		// Redis의 ValueOperation 사용하여 지정한 key에 byte array 로 변환된 file 저장 ( 60초 후에 만료되도록 설정 )
+		ValueOperations<String, Object> valueOperations = template.opsForValue();
+		valueOperations.set(key, convertFileToByteArray(file), 60, TimeUnit.SECONDS);
+	}
+	
+	// Apache Commons IO 의 FileUtils 활용하여 file -> byte[]로 변환
+	private byte[] convertFileToByteArray(File file) {
+		byte[] fileBytes = null;
+		
+		try {
+			fileBytes = FileUtils.readFileToByteArray(file);
+		} catch (IOException e) {
+			logger.error("error : {}", e);
+			e.printStackTrace();
+		}
+		return fileBytes;
+	}
+	
 	@Override
 	public void onDirectoryCreate(File directory) {
-		logger.info("########### onDirectoryCreate : " + directory.getName());
 	}
 
 	@Override
 	public void onDirectoryChange(File directory) {
-		logger.info("########### onDirectoryChange : " + directory.getName());
 	}
 
 	@Override
 	public void onDirectoryDelete(File directory) {
-		logger.info("########### onDirectoryDelete : " + directory.getName());
 	}
 
 	@Override
 	public void onFileCreate(File file) {
-		/*
-		String key = lbvo.getLbSeq() + "_" + file.getName();
-		logger.info("########### onFileCreate >> key :" + key);
-		
-		assignFileToMemoryReplication(key, file);
-		*/
 	}
 
-	@Override
-	public void onFileChange(File file) {
-		String key = lbvo.getLbSeq() + "_" + file.getName();
-		logger.info("########### onFileChange >> key :" + key);
-		
-		assignFileToMemoryReplication(key, file);
-	}
 
 	@Override
 	public void onFileDelete(File file) {
-		logger.info("########### onFileDelete : " + file.getName());
 	}
 	
 	/**
@@ -78,46 +94,4 @@ public class WatchFileListener implements FileAlterationListener {
 	public void onStop(FileAlterationObserver observer) {
 	}
 	
-	private byte[] convertFileToByteArray(File file) {
-		byte[] fileBytes = null;
-		
-		try {
-			fileBytes = FileUtils.readFileToByteArray(file);
-		} catch (IOException e) {
-			logger.error(e.getMessage());
-			e.printStackTrace();
-		}
-		return fileBytes;
-	}
-	
-	/**
-	 * Master 1 Slave N 구성 -> Replication 방식
-	 * @param key
-	 * @param file
-	 */
-	private void assignFileToMemoryReplication(String key, File file) {
-		ValueOperations<String, Object> valueOperations = template.opsForValue();
-//		logger.info("check monitor : " + key + "/" + file);
-		valueOperations.set(key, convertFileToByteArray(file), 60, TimeUnit.SECONDS);
-	}
-	
-	/**
-	 * Master N 개 구성 -> Pub-Sub 방식
-	 * @param key
-	 * @param file
-	 */
-	/*
-	private void assignFileToMemoryPubsub(String key, File file) {
-		
-		
-		StreamPushVO pushVo = new StreamPushVO();
-		pushVo.setKey(key);
-		pushVo.setStreamData(convertFileToByteArray(file));
-		
-		pubSubTemplate.convertAndSend(lbvo.getTopic().getTopic(), pushVo);
-		
-		// topic listener 등록 전에 요청 대비
-		assignFileToMemoryReplication(key, file);
-	}
-	*/
 }

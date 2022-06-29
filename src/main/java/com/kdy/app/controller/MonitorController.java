@@ -1,6 +1,5 @@
 package com.kdy.app.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -8,21 +7,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.kdy.app.dto.login.LoginVO;
-import com.kdy.app.service.MonitorService;
 import com.kdy.app.service.IF.MonitorServiceIF;
 import com.kdy.live.dto.monitor.LiveMonitorDTO;
 
+import lombok.RequiredArgsConstructor;
+
 @Controller
 @RequestMapping("/monitor")
+@RequiredArgsConstructor
 public class MonitorController extends ExceptionController{
 	
 	private final MonitorServiceIF monitorService;
 	
-	@Autowired
-	public MonitorController(MonitorService monitorService) {
-		this.monitorService = monitorService;
-	}
-
 	@RequestMapping("/monitorMain.do")
 	public String monitorMain(Model model) throws Exception{
 		model.addAttribute("streamingList", monitorService.getStreamingList());

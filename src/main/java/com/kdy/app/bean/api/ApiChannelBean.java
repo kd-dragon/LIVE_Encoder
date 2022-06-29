@@ -2,7 +2,6 @@ package com.kdy.app.bean.api;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.kdy.app.bean.dao.api.ApiChannelDAO;
@@ -11,15 +10,13 @@ import com.kdy.app.dto.api.request.RequestChannelInsertDTO;
 import com.kdy.app.dto.api.request.RequestChannelUpdateDTO;
 import com.kdy.app.dto.channel.ChannelVO;
 
+import lombok.RequiredArgsConstructor;
+
 @Component
+@RequiredArgsConstructor
 public class ApiChannelBean {
 	
-	private ApiChannelDAO dao;
-	
-	@Autowired
-	public ApiChannelBean(ApiChannelDAO dao) {
-		this.dao = dao;
-	}
+	private final ApiChannelDAO dao;
 	
 	//채널 리스트
 	public List<ChannelVO> channelList() throws Exception{

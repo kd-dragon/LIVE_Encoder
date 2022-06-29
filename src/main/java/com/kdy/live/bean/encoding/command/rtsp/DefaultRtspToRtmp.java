@@ -21,7 +21,6 @@ public class DefaultRtspToRtmp implements EncodeCommandFactoryIF {
 								.addExtraArgs("-rtsp_transport", "tcp")
 								.setInput(liveVO.getLcUrl())
 								.addOutput(liveVO.getHlsFilePath() + "/index.m3u8")
-									//.setVideoFilter("scale="+liveVO.getPresetData())
 									.setVideoCodec("libx264")
 									.addExtraArgs("-vsync", "1")
 									.setVideoFrameRate(30)

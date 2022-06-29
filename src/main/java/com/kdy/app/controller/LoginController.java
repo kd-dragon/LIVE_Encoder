@@ -2,7 +2,6 @@ package com.kdy.app.controller;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.HashMap;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -20,29 +19,12 @@ import com.kdy.app.service.IF.LoginServiceIF;
 public class LoginController extends ExceptionController{
 	
 	@Autowired
-	LoginServiceIF loginService;
+	private LoginServiceIF loginService;
 	
 	@RequestMapping("/")
 	public String home() throws Exception{
 		return "redirect:/loginForm.do";
 	}
-	
-//	@RequestMapping("/loginForm.do")
-//	public String loginForm(HttpSession session) throws Exception {
-//		
-//		if(session.getAttribute("userId") != null) {
-//			return "redirect:/live/liveOnAirList.do";
-//		}
-//		
-//		HashMap<String, Object> rsaMap = new HashMap<String, Object>();
-//		rsaMap = loginService.keyGenerate();
-//		
-//		session.setAttribute("rsaPublicKeyModules",	rsaMap.get("rsaPublicKeyModules"));
-//		session.setAttribute("rsaPublicKeyExponent", rsaMap.get("rsaPublicKeyExponent"));
-//		session.setAttribute("__rsaPrivateKey__", rsaMap.get("rsaPrivateKey"));
-//		
-//		return "login/loginForm"; 
-//	}
 	
 	@RequestMapping("/loginForm.do")
 	public String loginForm(HttpSession session) throws Exception {

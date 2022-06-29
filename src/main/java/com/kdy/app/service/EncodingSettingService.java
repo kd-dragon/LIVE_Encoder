@@ -14,19 +14,17 @@ import com.kdy.app.bean.util.RandomGUID;
 import com.kdy.app.dto.watermark.WatermarkVO;
 import com.kdy.app.service.IF.EncodingSettingServiceIF;
 import com.kdy.live.dto.LiveSchedMemoryVO;
+import com.kdy.live.dto.netty.NettyVO;
 import com.kdy.live.dto.system.SystemConfigVO;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class EncodingSettingService implements EncodingSettingServiceIF {
 
 	private final EncodingSettingBean encodingSettingBean;
 	private final LiveSchedMemoryVO systemVO;
-	
-	@Autowired
-	public EncodingSettingService(EncodingSettingBean encodingSettingBean, LiveSchedMemoryVO systemVO) {
-		this.encodingSettingBean = encodingSettingBean;
-		this.systemVO = systemVO;
-	}
 	
 	//워터마크 불러오기
 	@Override

@@ -2,7 +2,6 @@ package com.kdy.live.sched;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -10,7 +9,10 @@ import org.springframework.stereotype.Component;
 import com.kdy.live.service.monitor.LiveMonitorService;
 import com.kdy.live.service.system.SystemConfigUpdateService;
 
+import lombok.RequiredArgsConstructor;
+
 @Component
+@RequiredArgsConstructor
 public class LiveMonitorScheduler {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	
@@ -20,15 +22,6 @@ public class LiveMonitorScheduler {
 	private final LiveMonitorService liveMonitorService;
 	
 	private final SystemConfigUpdateService systemConfigUpdateService;
-	
-	@Autowired
-	public LiveMonitorScheduler(LiveMonitorService liveMonitorService,
-								SystemConfigUpdateService systemConfigUpdateService) {
-		
-		this.liveMonitorService 		= liveMonitorService;
-		this.systemConfigUpdateService  = systemConfigUpdateService;
-	}
-	
 	
 	/**
 	 * 스트리밍 모니터링 (CPU, Memory 등) 스케쥴러
@@ -44,9 +37,9 @@ public class LiveMonitorScheduler {
 		if(monitorUseYn.equals("Y")) {
 			liveMonitorService.liveStreamingMonitor(); //스트리밍 모듈별 상태
 			liveMonitorService.liveViewCountMonitor(); //방송별 접속자 수 
-		} else {
-			logger.warn("Live Monitor Sched [OFF]");
 		}
+		
+		logger.warn("Live Monitor Sched [OFF]");
 		
 		//필수
 		systemConfigUpdateService.updateSystemConfig(); // 시스템 설정 업데이트

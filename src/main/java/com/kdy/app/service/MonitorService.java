@@ -3,7 +3,6 @@ package com.kdy.app.service;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.kdy.app.bean.MonitorBean;
@@ -12,17 +11,14 @@ import com.kdy.app.service.IF.MonitorServiceIF;
 import com.kdy.live.dto.monitor.LiveMonitorDTO;
 import com.kdy.live.dto.monitor.LiveMonitorVO;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class MonitorService implements MonitorServiceIF{
 	
 	private final MonitorBean monitorBean;
 
-	@Autowired
-	public MonitorService(MonitorBean monitorBean) {
-		this.monitorBean = monitorBean;
-	}
-
-	
 	@Override
 	public List<StreamingVO> getStreamingList() throws Exception {
 		return monitorBean.getStreamingList();

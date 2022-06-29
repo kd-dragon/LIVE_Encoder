@@ -8,8 +8,6 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.kdy.app.bean.dao.LoginDAO;
@@ -19,16 +17,13 @@ import com.kdy.app.dto.login.MenuVO;
 import com.kdy.app.dto.system.ConnectIpVO;
 import com.kdy.app.dto.system.LoginIpLogVO;
 
+import lombok.RequiredArgsConstructor;
+
 @Component
+@RequiredArgsConstructor
 public class LoginBean {
 
-	private Logger logger = LoggerFactory.getLogger(getClass());
-
-	private LoginDAO loginDao;
-
-	public LoginBean(LoginDAO loginDao) {
-		this.loginDao = loginDao;
-	}
+	private final LoginDAO loginDao;
 
 	public LoginVO loginChk(String userId) throws Exception {
 		return loginDao.loginChk(userId);

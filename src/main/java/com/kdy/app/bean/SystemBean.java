@@ -20,22 +20,21 @@ import com.kdy.app.dto.system.UserListDTO;
 import com.kdy.app.dto.system.UserVO;
 import com.kdy.live.bean.util.OkHttpClientPool;
 
+import lombok.RequiredArgsConstructor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
 @Component
+@RequiredArgsConstructor
 public class SystemBean {
 
 	private final Logger logger = LoggerFactory.getLogger(SystemBean.class);
 	
 	private final SystemDAO dao;
+	
 	private final OkHttpClientPool pool;
 	
-	public SystemBean(SystemDAO dao, OkHttpClientPool pool) {
-		this.dao = dao;
-		this.pool = pool;
-	}
 	
 	//관리자 리스트
 	public List<UserVO> getUserList(UserListDTO dto) throws Exception {

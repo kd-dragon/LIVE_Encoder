@@ -55,6 +55,87 @@ public class EncodeManagerBean {
 	}
 	
 	@StopWatch
+	public boolean encode(LiveBroadcastVO lbvo) {
+		boolean rslt = true;
+		
+		FFmpegBuilder builder = null;
+		List<String> cmdList = null;
+		
+		try {
+		
+			//ffmpeg command 빌드 
+			builder = commandFactory.getCommand(lbvo);
+			
+			//ffmpeg command List에 담기
+			if(builder != null) {
+				cmdList = ImmutableList.<String>builder().add(memoryVO.getFfmpegPath()).addAll(builder.build()).build();
+				
+				//ffmpeg 실행
+				RunConsoleRunnable runConsole = new RunConsoleRunnable(cmdList, "liveStreaming");
+				
+				//ffmpeg Pid 호출
+				long pid = runConsole.getProcessID();
+				lbvo.setLbjProcessId(pid + "");
+				
+				//ffmpeg processId Update
+				updateBean.updateLiveBroadcastJob(lbvo);
+				
+				//blocking until ffmpeg job is finished
+				int retval = runConsole.waitFor();
+				
+				/*
+				 * ffmpeg waitFor() return code 
+				 * - 0: 정상
+				 * - else: 비정상
+				 * --
+				 * ffmpeg 강제종료시에도 ffmpeg 입장에서는 오류. 
+				 * 따라서 Live 상태값을 조건으로 하여 구분
+				 * --
+				 */
+				if(retval == 0) {
+					lbvo.setLbjLogMsg("WARNING");
+					lbvo.setLbjLogDesc("Broadcast Suddenly has been Finished");
+					logger.info(lbvo.getLbjLogDesc());
+					rslt = false;
+				} else if(lbvo.getLbStatus().equals(LiveBroadcastStatus.Finished.getTitle())) {
+					lbvo.setLbjLogMsg("SUCCESS");
+					lbvo.setLbjLogDesc("Broadcast Successfully has been Finished");
+					logger.info(lbvo.getLbjLogDesc());
+				} else if(lbvo.getLbStatus().equals(LiveBroadcastStatus.Pause.getTitle())) {
+					lbvo.setLbjLogMsg("SUCCESS");
+					lbvo.setLbjLogDesc("Broadcast Successfully has been Paused");
+					logger.info(lbvo.getLbjLogDesc());
+				} else {
+					lbvo.setLbjLogMsg("WARNING");
+					lbvo.setLbjLogDesc("Broadcast Encoder has caused an Error");
+					logger.info(lbvo.getLbjLogDesc());
+					rslt = false;
+				}
+				
+				logger.debug("============================== RunConsole Finished =================================");
+				
+			} else {
+				lbvo.setLbjLogMsg("ERROR");
+				lbvo.setLbjLogDesc("ffmpeg Command Build Error");
+				logger.error("[ERROR] ffmpeg Command Build Error :: " + lbvo.getLcUrl());
+				rslt = false;
+			}
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+			logger.error("error : {}", e);
+			
+			lbvo.setLbjLogMsg("ERROR");
+			lbvo.setLbjLogDesc(e.getMessage());
+			
+			rslt = false;
+		}
+		
+		return rslt;
+	}
+	
+	
+	@StopWatch
 	public boolean executeLiveEncodeTCP(LiveBroadcastVO lbvo) {
 		boolean rslt = true;
 		
@@ -70,12 +151,13 @@ public class EncodeManagerBean {
 			//ffmpeg command List에 담기
 			if(builder != null) {
 				cmdList = ImmutableList.<String>builder().add(memoryVO.getFfmpegPath()).addAll(builder.build()).build();
+				
 				StringBuilder strbuild = new StringBuilder();
 				for(String str: cmdList) {
 					strbuild.append(str);
 					strbuild.append(" ");
 				}
-				logger.info(strbuild.toString());
+				logger.debug(strbuild.toString());
 				
 				//ffmpeg 실행
 				RunConsoleRunnable runConsole = new RunConsoleRunnable(cmdList, "liveStreaming");
@@ -84,53 +166,50 @@ public class EncodeManagerBean {
 				long pid = runConsole.getProcessID();
 				logger.info(String.format("liveBroadcastSeq [%s] - ffmpeg Process ID [%d]", lbvo.getLbSeq(), pid));
 				
+				lbvo.setLbjProcessId(pid + "");
 				
-				if(runConsole != null) {
-					
-					lbvo.setLbjProcessId(pid + "");
-					
-					// 라이브 상태 변경 ( 진행중 : 1)
-					updateBean.statusOnAir(lbvo);
-					
-					//ffmpeg processId Update
-					updateBean.updateLiveBroadcastJob(lbvo);
-					
-					//ffmpeg log 파일 생성
-					recordHandler.recordFfmpegLog(runConsole, lbvo.getLbSeq());
-					
-					//blocking until ffmpeg job is finished
-					int retval = runConsole.waitFor();
-					
-					/*
-					 * # ffmpeg waitFor() return code 
-					 * 0: 정상
-					 * else: 비정상
-					 * --
-					 * ffmpeg 강제종료시에도 ffmpeg 입장에서는 오류. 
-					 * 따라서 Live 상태값을 조건으로 하여 구분
-					 * --
-					 */
-					if(retval == 0) {
-						lbvo.setLbjLogMsg("WARNING");
-						lbvo.setLbjLogDesc("Broadcast Suddenly has been Finished");
-						logger.info(lbvo.getLbjLogDesc());
-						rslt = false;
-					} else if(lbvo.getLbStatus().equals(LiveBroadcastStatus.Finished.getTitle())) {
-						lbvo.setLbjLogMsg("SUCCESS");
-						lbvo.setLbjLogDesc("Broadcast Successfully has been Finished");
-						logger.info(lbvo.getLbjLogDesc());
-					} else if(lbvo.getLbStatus().equals(LiveBroadcastStatus.Pause.getTitle())) {
-						lbvo.setLbjLogMsg("SUCCESS");
-						lbvo.setLbjLogDesc("Broadcast Successfully has been Paused");
-						logger.info(lbvo.getLbjLogDesc());
-					} else {
-						lbvo.setLbjLogMsg("WARNING");
-						lbvo.setLbjLogDesc("Broadcast Encoder has caused an Error");
-						logger.info(lbvo.getLbjLogDesc());
-						rslt = false;
-					}
+				// 라이브 상태 변경 ( 진행중 : 1)
+				updateBean.statusOnAir(lbvo);
+				
+				//ffmpeg processId Update
+				updateBean.updateLiveBroadcastJob(lbvo);
+				
+				//ffmpeg log 파일 생성
+				recordHandler.recordFfmpegLog(runConsole, lbvo.getLbSeq());
+				
+				//blocking until ffmpeg job is finished
+				int retval = runConsole.waitFor();
+				
+				/*
+				 * # ffmpeg waitFor() return code 
+				 * 0: 정상
+				 * else: 비정상
+				 * --
+				 * ffmpeg 강제종료시에도 ffmpeg 입장에서는 오류. 
+				 * 따라서 Live 상태값을 조건으로 하여 구분
+				 * --
+				 */
+				if(retval == 0) {
+					lbvo.setLbjLogMsg("WARNING");
+					lbvo.setLbjLogDesc("Broadcast Suddenly has been Finished");
+					logger.info(lbvo.getLbjLogDesc());
+					rslt = false;
+				} else if(lbvo.getLbStatus().equals(LiveBroadcastStatus.Finished.getTitle())) {
+					lbvo.setLbjLogMsg("SUCCESS");
+					lbvo.setLbjLogDesc("Broadcast Successfully has been Finished");
+					logger.info(lbvo.getLbjLogDesc());
+				} else if(lbvo.getLbStatus().equals(LiveBroadcastStatus.Pause.getTitle())) {
+					lbvo.setLbjLogMsg("SUCCESS");
+					lbvo.setLbjLogDesc("Broadcast Successfully has been Paused");
+					logger.info(lbvo.getLbjLogDesc());
+				} else {
+					lbvo.setLbjLogMsg("WARNING");
+					lbvo.setLbjLogDesc("Broadcast Encoder has caused an Error");
+					logger.info(lbvo.getLbjLogDesc());
+					rslt = false;
 				}
-				logger.info("============================== RunConsole Finished =================================");
+				
+				logger.debug("============================== RunConsole Finished =================================");
 				
 			} else {
 				lbvo.setLbjLogMsg("ERROR");

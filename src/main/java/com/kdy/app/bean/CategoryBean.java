@@ -2,24 +2,19 @@ package com.kdy.app.bean;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.kdy.app.bean.dao.CategoryDAO;
 import com.kdy.app.dto.live.CategoryDTO;
 import com.kdy.app.dto.live.CategoryVO;
 
+import lombok.RequiredArgsConstructor;
+
 @Component
+@RequiredArgsConstructor
 public class CategoryBean {
 
-	private final Logger logger = LoggerFactory.getLogger(getClass());
-	
-	private CategoryDAO dao;
-	
-	public CategoryBean(CategoryDAO dao) {
-		this.dao = dao;
-	}
+	private final CategoryDAO dao;
 	
 	public List<CategoryVO> getCategoryList(int rootUpCategoryCode) throws Exception {
 		return dao.selectCategoryList(rootUpCategoryCode);

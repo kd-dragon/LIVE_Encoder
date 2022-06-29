@@ -5,7 +5,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.kdy.live.bean.util.ProgressParseBean;
@@ -22,11 +21,13 @@ import io.netty.channel.ChannelId;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
+import lombok.RequiredArgsConstructor;
 import net.bramp.ffmpeg.FFmpegUtils;
 import net.bramp.ffmpeg.progress.Progress;
 
 @Sharable // 여러 client의 경우 사용
 @Component
+@RequiredArgsConstructor
 public class NettyFfmpegHandler extends SimpleChannelInboundHandler<String> {
 	
 	private Logger logger = LoggerFactory.getLogger("ffmpeg");
@@ -36,13 +37,6 @@ public class NettyFfmpegHandler extends SimpleChannelInboundHandler<String> {
 	private final LiveSchedMemoryVO memoryVO;
 	
 	private final ProgressParseBean parserBean;
-	
-	@Autowired
-	public NettyFfmpegHandler(NettyVO nettyVO, LiveSchedMemoryVO memoryVO, ProgressParseBean parserBean) {
-		this.nettyVO = nettyVO;
-		this.memoryVO = memoryVO;
-		this.parserBean = parserBean;
-	}
 	
 	//연결 되었을때
 	@Override

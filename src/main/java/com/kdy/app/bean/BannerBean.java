@@ -2,9 +2,6 @@ package com.kdy.app.bean;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.TransactionStatus;
@@ -14,21 +11,15 @@ import com.kdy.app.bean.dao.BannerDAO;
 import com.kdy.app.dto.userHome.BannerDTO;
 import com.kdy.app.dto.userHome.BannerVO;
 
+import lombok.RequiredArgsConstructor;
+
 @Component
+@RequiredArgsConstructor
 public class BannerBean {
 
-	private final Logger logger = LoggerFactory.getLogger(BannerBean.class);
-	
 	private final BannerDAO dao;
 	
 	private final DataSourceTransactionManager transactionManager;
-	
-	@Autowired
-	public BannerBean(BannerDAO dao
-					, DataSourceTransactionManager transactionManager) {
-		this.dao = dao;
-		this.transactionManager = transactionManager;
-	}
 	
 	public List<BannerVO> getBannerList() throws Exception {
 		return dao.getBannerList();

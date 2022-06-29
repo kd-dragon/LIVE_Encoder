@@ -10,7 +10,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.google.gson.Gson;
@@ -30,23 +29,19 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpUtil;
 import io.netty.util.CharsetUtil;
+import lombok.RequiredArgsConstructor;
 
 @Component
+@RequiredArgsConstructor
 public class MontiorCommandHandler {
 	
 	private Logger logger = LoggerFactory.getLogger(MontiorCommandHandler.class);
 	
 	private final LiveBroadcastSelectBean liveSelectBean;
-	private final LiveSchedMemoryVO memoryVO;
-	private final ProcessManageFactory processManager;
 	
-	@Autowired
-	public MontiorCommandHandler(LiveBroadcastSelectBean liveSelectBean, LiveSchedMemoryVO memoryVO,
-					ProcessManageFactory processManager) {
-		this.liveSelectBean = liveSelectBean;
-		this.memoryVO = memoryVO;
-		this.processManager = processManager;
-	}
+	private final LiveSchedMemoryVO memoryVO;
+	
+	private final ProcessManageFactory processManager;
 	
 
 	public FullHttpResponse service(ChannelHandlerContext ctx, HttpObject obj) throws Exception {

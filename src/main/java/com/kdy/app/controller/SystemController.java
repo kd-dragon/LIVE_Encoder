@@ -5,7 +5,6 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,17 +21,14 @@ import com.kdy.app.dto.system.UserVO;
 import com.kdy.app.service.IF.SystemServiceIF;
 import com.kdy.live.dto.system.SystemConfigVO;
 
+import lombok.RequiredArgsConstructor;
+
 @Controller
 @RequestMapping("/system")
+@RequiredArgsConstructor
 public class SystemController extends ExceptionController{
 	
-	
 	private final SystemServiceIF systemService;
-	
-	@Autowired
-	public SystemController(SystemServiceIF systemService) {
-		this.systemService = systemService;
-	}
 	
 	//시스템 관리 > 권한 관리 
 	@RequestMapping("/authList.do")

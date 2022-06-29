@@ -8,7 +8,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -28,23 +27,19 @@ import com.kdy.app.dto.userHome.NoticeWriteDTO;
 import com.kdy.app.service.IF.BannerServiceIF;
 import com.kdy.app.service.IF.NoticeServiceIF;
 
+import lombok.RequiredArgsConstructor;
+
 
 @Controller
 @RequestMapping("/userHome")
+@RequiredArgsConstructor
 public class UserHomeController {
 	
 	private final Logger logger = LoggerFactory.getLogger(UserHomeController.class);
 	
-	private BannerServiceIF bannerService;
+	private final BannerServiceIF bannerService;
 	
-	private NoticeServiceIF noticeService;
-	
-	@Autowired
-	public UserHomeController(BannerServiceIF bannerService
-							, NoticeServiceIF noticeService) {
-		this.bannerService = bannerService;
-		this.noticeService = noticeService;
-	}
+	private final NoticeServiceIF noticeService;
 	
 	@RequestMapping(value="/mainBanner.do")
 	public String mainBanner(Model model) throws Exception {

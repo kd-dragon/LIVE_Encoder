@@ -21,17 +21,15 @@ import com.kdy.app.dto.watermark.WatermarkVO;
 import com.kdy.app.service.IF.LiveServiceIF;
 import com.kdy.app.service.IF.VodServiceIF;
 
+import lombok.RequiredArgsConstructor;
+
 @Controller
 @RequestMapping("/vod")
+@RequiredArgsConstructor
 public class VodController extends ExceptionController{
 	
 	private final VodServiceIF vodService;
 	private final LiveServiceIF liveService;
-	
-	public VodController(VodServiceIF vodService, LiveServiceIF liveService) {
-		this.vodService = vodService;
-		this.liveService = liveService;
-	}
 	
 	@RequestMapping("/vodList.do")
 	public String vodList(VodListDTO dto, Model model, Authentication auth) throws Exception{

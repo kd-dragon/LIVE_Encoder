@@ -2,28 +2,23 @@ package com.kdy.live.sched;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.kdy.live.dto.LiveSchedMemoryVO;
 import com.kdy.live.service.live.LiveAliveCheckService;
 
+import lombok.RequiredArgsConstructor;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 
 @Component
+@RequiredArgsConstructor
 public class LiveAliveCheckScheduler {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	
 	private final LiveAliveCheckService liveAliveCheckService;
-	private final LiveSchedMemoryVO memoryVO;
 	
-	@Autowired
-	public LiveAliveCheckScheduler(LiveAliveCheckService liveAliveCheckService
-								, LiveSchedMemoryVO memoryVO) {
-		this.liveAliveCheckService = liveAliveCheckService;
-		this.memoryVO = memoryVO;
-	}
+	private final LiveSchedMemoryVO memoryVO;
 	
 	/**
 	 * 실시간 라이브 장애 여부를 체크하여 자동 재시작하는 스케줄러입니다.
@@ -42,8 +37,8 @@ public class LiveAliveCheckScheduler {
 			
 			//LiveAliveCheckService 호출
 			liveAliveCheckService.service();
-		} else {
-			logger.warn("System [OFF]");
-		}
+		} 
+		
+		logger.warn("System [OFF]");
 	}
 }

@@ -2,8 +2,6 @@ package com.kdy.app.service;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -12,20 +10,17 @@ import com.kdy.app.dto.live.CategoryDTO;
 import com.kdy.app.dto.live.CategoryVO;
 import com.kdy.app.service.IF.CategoryServiceIF;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class CategoryService implements CategoryServiceIF{
 	
-	private Logger logger = LoggerFactory.getLogger(getClass());
-	
-	private CategoryBean bean;
+	private final CategoryBean bean;
 	
 	@Value("${server.root-up-category-code}")
 	private int rootUpCategoryCode;
 
-	public CategoryService(CategoryBean bean) {
-		this.bean = bean;
-	}
-	
 	@Override
 	public List<CategoryVO> getCategoryList() throws Exception {
 		return bean.getCategoryList(rootUpCategoryCode);

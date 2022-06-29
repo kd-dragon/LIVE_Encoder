@@ -2,9 +2,6 @@ package com.kdy.app.bean;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Component;
 
@@ -17,21 +14,15 @@ import com.kdy.app.dto.userHome.NoticeVO;
 import com.kdy.app.dto.userHome.NoticeWriteDTO;
 import com.kdy.app.dto.util.FileVO;
 
+import lombok.RequiredArgsConstructor;
+
 @Component
+@RequiredArgsConstructor
 public class NoticeBean {
 
-	private final Logger logger = LoggerFactory.getLogger(NoticeBean.class);
-	
 	private final NoticeDAO dao;
 	
 	private final DataSourceTransactionManager transactionManager;
-	
-	@Autowired
-	public NoticeBean(NoticeDAO dao
-					, DataSourceTransactionManager transactionManager) {
-		this.dao = dao;
-		this.transactionManager = transactionManager;
-	}
 	
 	//공지사항 목록
 	public List<NoticeVO> noticeList(NoticeListDTO dto) throws Exception {

@@ -1,6 +1,5 @@
 package com.kdy.app.service.api;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -13,19 +12,15 @@ import com.kdy.app.dto.watermark.WatermarkVO;
 import com.kdy.app.service.api.IF.ApiVodServiceIF;
 import com.kdy.live.dto.LiveSchedMemoryVO;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class ApiVodService implements ApiVodServiceIF {
 	
 	private final ApiVodBean vodBean;
 	private final LiveSchedMemoryVO memoryVO;
 	
-	@Autowired
-	public ApiVodService(ApiVodBean vodBean
-					, LiveSchedMemoryVO memoryVO) {
-		this.vodBean = vodBean;
-		this.memoryVO = memoryVO;
-	}
-
 	@Value("${encoding.isAdaptive}")
 	private boolean isAdaptive;
 	

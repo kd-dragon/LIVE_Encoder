@@ -7,7 +7,6 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -29,29 +28,20 @@ import com.kdy.app.dto.live.AppBroadcastVO;
 import com.kdy.live.bean.util.TimeExpressUtil;
 import com.kdy.live.dto.LiveSchedMemoryVO;
 
+import lombok.RequiredArgsConstructor;
+
 @Component
+@RequiredArgsConstructor
 public class ApiLiveBroadcastBean {
 	
 	private final Logger logger = LoggerFactory.getLogger(ApiLiveBroadcastBean.class);
 
 	private final ApiLiveBroadcastDAO dao;
 	private final LiveBroadcastFileDAO fileDao;
-	private final GetSequenceDAO seqDao;
 	private final HashTagDAO tagDao;
+	private final GetSequenceDAO seqDao;
 	private final LiveSchedMemoryVO memoryVO;
 	
-	@Autowired
-	public ApiLiveBroadcastBean(ApiLiveBroadcastDAO dao
-							  , LiveBroadcastFileDAO fileDao
-							  , HashTagDAO tagDao
-							  , GetSequenceDAO seqDao
-							  , LiveSchedMemoryVO memoryVO) {
-		this.dao = dao;
-		this.fileDao = fileDao;
-		this.tagDao = tagDao;
-		this.seqDao = seqDao;
-		this.memoryVO = memoryVO;
-	}
 	
 	//API 방송 목록
 	public List<AppBroadcastVO> getBroadcastList(RequestBroadcastListDTO dto) throws Exception{

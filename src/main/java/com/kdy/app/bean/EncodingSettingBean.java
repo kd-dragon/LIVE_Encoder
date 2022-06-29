@@ -1,21 +1,18 @@
 package com.kdy.app.bean;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.kdy.app.bean.dao.EncodingSettingDAO;
 import com.kdy.app.dto.watermark.WatermarkVO;
 import com.kdy.live.dto.system.SystemConfigVO;
 
+import lombok.RequiredArgsConstructor;
+
 @Component
+@RequiredArgsConstructor
 public class EncodingSettingBean {
 
 	private final EncodingSettingDAO dao;
-	
-	@Autowired
-	public EncodingSettingBean(EncodingSettingDAO dao) {
-		this.dao = dao;
-	}
 	
 	//워터마크 불러오기
 	public WatermarkVO getWatermark(WatermarkVO vo) throws Exception {

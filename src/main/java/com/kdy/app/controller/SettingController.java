@@ -2,7 +2,6 @@ package com.kdy.app.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,8 +17,11 @@ import com.kdy.app.service.IF.CategoryServiceIF;
 import com.kdy.app.service.IF.EncodingSettingServiceIF;
 import com.kdy.live.dto.system.SystemConfigVO;
 
+import lombok.RequiredArgsConstructor;
+
 @Controller
 @RequestMapping("/setting")
+@RequiredArgsConstructor
 public class SettingController extends ExceptionController{
 	
 	private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -27,12 +29,6 @@ public class SettingController extends ExceptionController{
 	private final EncodingSettingServiceIF encodingSettingService;
 	private final CategoryServiceIF categoryService;
 	
-	@Autowired
-	public SettingController(EncodingSettingServiceIF encodingSettingService, CategoryServiceIF categoryService) {
-		this.encodingSettingService = encodingSettingService;
-		this.categoryService = categoryService;
-	}
-		
 	@RequestMapping("/transcordingSet.do")
 	public String transcodingSet() throws Exception{
 		

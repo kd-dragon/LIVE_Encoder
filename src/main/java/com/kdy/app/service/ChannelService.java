@@ -2,7 +2,6 @@ package com.kdy.app.service;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -14,22 +13,16 @@ import com.kdy.app.dto.channel.ChannelVO;
 import com.kdy.app.dto.live.CategoryVO;
 import com.kdy.app.service.IF.ChannelServiceIF;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class ChannelService implements ChannelServiceIF{
 	
-	private ChannelBean channelBean;
-	private CategoryBean categoryBean;
+	private final ChannelBean channelBean;
+	private final CategoryBean categoryBean;
 	private final PagingHtmlBean pagingHtmlBean;
 	
-	@Autowired
-	public ChannelService(ChannelBean channelBean
-						, CategoryBean categoryBean
-						, PagingHtmlBean pagingHtmlBean) {
-		this.channelBean = channelBean;
-		this.categoryBean = categoryBean;
-		this.pagingHtmlBean = pagingHtmlBean;
-	}
-
 	@Value("${server.root-up-category-code}")
 	private int rootUpCategoryCode;
 	

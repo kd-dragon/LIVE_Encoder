@@ -11,7 +11,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
@@ -34,7 +33,10 @@ import com.kdy.live.bean.util.code.LiveBroadcastStatus;
 import com.kdy.live.dto.LiveSchedMemoryVO;
 import com.kdy.live.dto.live.ChatDTO;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class LiveService implements LiveServiceIF{
 	
 	private final Logger logger = LoggerFactory.getLogger(LiveService.class);
@@ -45,20 +47,6 @@ public class LiveService implements LiveServiceIF{
 	private final LiveSchedMemoryVO memoryVO;
 	private final LiveChatSaveBean chatBean;
 	
-	@Autowired
-	public LiveService(   LiveBroadcastBean 			liveBean
-						, PagingHtmlBean 				pagingHtmlBean
-						, DataSourceTransactionManager 	transactionManager
-						, LiveSchedMemoryVO 			memoryVO
-						, LiveChatSaveBean 				chatBean
-	) {
-		
-		this.liveBean 				= liveBean;
-		this.pagingHtmlBean 		= pagingHtmlBean;
-		this.transactionManager 	= transactionManager;
-		this.memoryVO 				= memoryVO;
-		this.chatBean				= chatBean;
-	}
 	
 	@Value("${server.block-count}")
 	private int blockCount;

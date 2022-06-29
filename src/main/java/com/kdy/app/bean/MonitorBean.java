@@ -2,7 +2,6 @@ package com.kdy.app.bean;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.kdy.app.bean.dao.MonitorDAO;
@@ -10,17 +9,14 @@ import com.kdy.app.dto.system.StreamingVO;
 import com.kdy.live.dto.monitor.LiveMonitorDTO;
 import com.kdy.live.dto.monitor.LiveMonitorVO;
 
+import lombok.RequiredArgsConstructor;
+
 @Component
+@RequiredArgsConstructor
 public class MonitorBean {
 	
 	private final MonitorDAO dao;
 
-	@Autowired
-	public MonitorBean(MonitorDAO dao) {
-		super();
-		this.dao = dao;
-	}
-	
 	public List<StreamingVO> getStreamingList() throws Exception{
 		return dao.getStreamingList();
 	}

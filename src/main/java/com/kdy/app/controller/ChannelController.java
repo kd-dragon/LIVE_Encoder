@@ -1,6 +1,5 @@
 package com.kdy.app.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -12,17 +11,15 @@ import com.kdy.app.dto.channel.ChannelVO;
 import com.kdy.app.dto.login.LoginVO;
 import com.kdy.app.service.IF.ChannelServiceIF;
 
+import lombok.RequiredArgsConstructor;
+
 @Controller
 @RequestMapping("/channel")
+@RequiredArgsConstructor
 public class ChannelController extends ExceptionController{
 	
-	private ChannelServiceIF channelService;
+	private final ChannelServiceIF channelService;
 	
-	@Autowired
-	public ChannelController(ChannelServiceIF channelService) {
-		this.channelService = channelService;
-	}
-
 	//채널 리스트
 	@RequestMapping("/channelList.do")
 	public String channelList(ChannelDTO dto, Model model, Authentication auth) throws Exception{

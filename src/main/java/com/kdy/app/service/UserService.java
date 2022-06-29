@@ -18,16 +18,15 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import com.kdy.app.bean.LoginBean;
 import com.kdy.app.dto.login.LoginVO;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class UserService implements UserDetailsService{
 	
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	
-	private LoginBean loginBean;
-	
-	public UserService(LoginBean loginBean) {
-		this.loginBean = loginBean;
-	}
+	private final LoginBean loginBean;
 	
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

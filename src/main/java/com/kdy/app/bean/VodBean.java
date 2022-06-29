@@ -2,7 +2,6 @@ package com.kdy.app.bean;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.kdy.app.bean.dao.VodDAO;
@@ -14,16 +13,13 @@ import com.kdy.app.dto.vod.VodModifyDTO;
 import com.kdy.app.dto.vod.VodVO;
 import com.kdy.app.dto.vod.VodWriteDTO;
 
+import lombok.RequiredArgsConstructor;
+
 @Component
+@RequiredArgsConstructor
 public class VodBean {
 
-	private VodDAO vodDao;
-	
-	@Autowired
-	public VodBean(VodDAO vodDao) {
-		this.vodDao = vodDao;
-	}
-
+	private final VodDAO vodDao;
 	
 	public List<LiveVodVO> getLiveVodList(LiveVodDTO dto) throws Exception {
 		return vodDao.getLiveVodList(dto);

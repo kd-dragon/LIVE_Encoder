@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -14,7 +13,10 @@ import com.kdy.live.dao.live.LiveManageDAOFactory;
 import com.kdy.live.dto.live.LiveBroadcastJobVO;
 import com.kdy.live.dto.live.LiveBroadcastVO;
 
+import lombok.RequiredArgsConstructor;
+
 @Component
+@RequiredArgsConstructor
 public class LiveBroadcastSelectBean {
 	
 	private Logger logger = LoggerFactory.getLogger(LiveBroadcastSelectBean.class);
@@ -23,11 +25,6 @@ public class LiveBroadcastSelectBean {
 	private String serialNo;
 	
 	private final LiveManageDAOFactory liveManageDAOFactory;
-	
-	@Autowired
-	public LiveBroadcastSelectBean(LiveManageDAOFactory liveManageDAOFactory) {
-		this.liveManageDAOFactory = liveManageDAOFactory;
-	}
 	
 	public Boolean selectBroadcastEnable(String mySerialNo) throws Exception {
 		return liveManageDAOFactory.getDAO().selectBroadcastEnable(mySerialNo);

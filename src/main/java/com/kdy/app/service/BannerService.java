@@ -8,7 +8,6 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.kdy.app.bean.BannerBean;
@@ -18,7 +17,10 @@ import com.kdy.app.dto.userHome.BannerVO;
 import com.kdy.app.dto.util.FileVO;
 import com.kdy.app.service.IF.BannerServiceIF;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class BannerService implements BannerServiceIF {
 
 	Logger logger = LoggerFactory.getLogger(BannerService.class);
@@ -26,14 +28,6 @@ public class BannerService implements BannerServiceIF {
 	private final BannerBean bannerBean;
 
 	private final MultiFileUploadBean multiFileUploadBean;
-	
-	@Autowired
-	public BannerService(BannerBean bannerBean
-					, MultiFileUploadBean multiFileUploadBean) {
-		this.bannerBean = bannerBean;
-		this.multiFileUploadBean = multiFileUploadBean;
-	}
-	
 	
 	@Override
 	public List<BannerVO> getBannerList() throws Exception {

@@ -5,8 +5,6 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -17,7 +15,10 @@ import com.kdy.app.dto.live.AppBroadcastListDTO;
 import com.kdy.live.dto.LiveSchedMemoryVO.RedisHashKeyword;
 import com.kdy.live.dto.live.ChatDTO;
 
+import lombok.RequiredArgsConstructor;
+
 @Component
+@RequiredArgsConstructor
 public class LiveChatSaveBean {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -25,15 +26,6 @@ public class LiveChatSaveBean {
 	private final RedisTemplate<String, Object> redisTemplate;
 	private final ObjectMapper objectMapper;
 	
-	@Autowired
-	public LiveChatSaveBean(  LiveBroadcastDAO 													dao
-							, @Qualifier("redisTemplateObject") RedisTemplate<String, Object> 	redisTemplate
-							, ObjectMapper 														objectMapper) {
-		
-		this.dao 			= dao;
-		this.redisTemplate 	= redisTemplate;
-		this.objectMapper   = objectMapper;
-	}
 	
 	public int save(List<ChatDTO> list) throws Exception {
 		return dao.insertLiveChatting(list);

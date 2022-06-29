@@ -7,7 +7,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -22,34 +21,21 @@ import com.kdy.live.dto.LiveSchedMemoryVO;
 import com.kdy.live.dto.LiveSchedMemoryVO.RedisHashKeyword;
 import com.kdy.live.dto.live.LiveBroadcastVO;
 
+import lombok.RequiredArgsConstructor;
+
 @Component
+@RequiredArgsConstructor
 public class LiveBroadcastFinishBean {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	
 	private final LiveSchedMemoryVO memoryVO;
 	private final LiveBroadcastUpdateBean updateBean;
 	private final ProcessManageFactory processManageFactory;
-	private final RedisTemplate<String, Object> redisTemplate;
 	private final ObjectMapper objectMapper;
 	private final FileCopyUploadBean fileCopyUploadBean;
 	
-	@Autowired
-	public LiveBroadcastFinishBean(LiveSchedMemoryVO 					memoryVO
-								, LiveBroadcastUpdateBean 				updateBean
-								, ProcessManageFactory 					processManageFactory
-								, @Qualifier("redisTemplateObject") 
-								  RedisTemplate<String, Object> 		redisTemplate
-								, ObjectMapper objectMapper
-								, FileCopyUploadBean fileCopyUploadBean
-
-	) {
-		this.memoryVO 				= memoryVO;
-		this.updateBean 			= updateBean;
-		this.processManageFactory 	= processManageFactory;
-		this.redisTemplate			= redisTemplate;
-		this.objectMapper   		= objectMapper;
-		this.fileCopyUploadBean 	= fileCopyUploadBean;
-	}
+	@Qualifier("redisTemplateObject")
+	private RedisTemplate<String, Object> redisTemplate;
 	
 	/*
 	 *  [Finished 상태 처리]

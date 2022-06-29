@@ -36,8 +36,6 @@ public class WatchManagerService {
 			LiveBroadcastVO lbvo = memoryVO.getLiveSeqToVO().get(broadcastKey);
 			if(lbvo != null) {
 				
-//				logger.info("live status {}, monitor {}, adaptive {}", lbvo.getLbStatus(), lbvo.getWatchMonitor(), memoryVO.getIsAdaptive());
-				
 				// 라이브 중 Watch Monitoring 시작 (Status: 1 또는 4)
 				if(lbvo.getLbStatus().equals(LiveBroadcastStatus.OnAir.getTitle())
 						|| lbvo.getLbStatus().equals(LiveBroadcastStatus.Restart.getTitle())) {

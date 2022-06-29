@@ -8,7 +8,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -32,7 +31,10 @@ import com.kdy.live.dto.LiveSchedMemoryVO;
 import com.kdy.live.dto.LiveSchedMemoryVO.RedisHashKeyword;
 import com.kdy.live.dto.live.ChatDTO;
 
+import lombok.RequiredArgsConstructor;
+
 @Component
+@RequiredArgsConstructor
 public class LiveBroadcastBean {
 	
 	private final Logger logger = LoggerFactory.getLogger(LiveBroadcastBean.class);
@@ -42,23 +44,9 @@ public class LiveBroadcastBean {
 	private final GetSequenceDAO seqDao;
 	private final HashTagDAO tagDao;
 	private final LiveSchedMemoryVO memoryVO;
-	private final RedisTemplate<String, Object> redisTemplate;
 	
-	@Autowired
-	public LiveBroadcastBean( LiveBroadcastDAO 			dao
-							, LiveBroadcastFileDAO 		fileDao
-							, HashTagDAO 				tagDao
-							, GetSequenceDAO 			seqDao 
-							, LiveSchedMemoryVO 		memoryVO
-							, @Qualifier("redisTemplateObject") RedisTemplate<String, Object> redisTemplate) {
-		
-		this.dao 			= dao;
-		this.fileDao 		= fileDao;
-		this.tagDao 		= tagDao;
-		this.seqDao 		= seqDao;
-		this.memoryVO 		= memoryVO;
-		this.redisTemplate  = redisTemplate;
-	}
+	@Qualifier("redisTemplateObject")
+	private RedisTemplate<String, Object> redisTemplate;
 	
 	//방송중 목록
 	public List<AppBroadcastVO> getOnAirList(AppBroadcastListDTO dto) throws Exception{

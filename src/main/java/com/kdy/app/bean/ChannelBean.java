@@ -2,22 +2,19 @@ package com.kdy.app.bean;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.kdy.app.bean.dao.ChannelDAO;
 import com.kdy.app.dto.channel.ChannelDTO;
 import com.kdy.app.dto.channel.ChannelVO;
 
+import lombok.RequiredArgsConstructor;
+
 @Component
+@RequiredArgsConstructor
 public class ChannelBean {
 	
-	private ChannelDAO dao;
-	
-	@Autowired
-	public ChannelBean(ChannelDAO dao) {
-		this.dao = dao;
-	}
+	private final ChannelDAO dao;
 	
 	//채널 리스트
 	public List<ChannelVO> channelList(ChannelDTO dto) throws Exception{

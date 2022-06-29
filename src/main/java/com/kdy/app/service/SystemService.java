@@ -7,7 +7,6 @@ import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
@@ -24,7 +23,10 @@ import com.kdy.app.dto.system.UserVO;
 import com.kdy.app.service.IF.SystemServiceIF;
 import com.kdy.live.dto.system.SystemConfigVO;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class SystemService implements SystemServiceIF {
 
 	private final Logger logger = LoggerFactory.getLogger(SystemService.class);
@@ -32,23 +34,12 @@ public class SystemService implements SystemServiceIF {
 	private final SystemBean systemBean;
 	private final PagingHtmlBean pagingHtmlBean;
 	private final DataSourceTransactionManager transactionManager;
-	private PasswordEncoderService passwordEncoderService;
+	private final PasswordEncoderService passwordEncoderService;
 	
 	//시스템 상황을 리턴하기 위해 전역변수 선언
 	//private OperatingSystemMXBean osBean = (OperatingSystemMXBean)ManagementFactory.getOperatingSystemMXBean();		
 	
 	private File file = new File(System.getProperty("user.dir"));
-	
-	@Autowired
-	public SystemService(SystemBean systemBean, PagingHtmlBean pagingHtmlBean
-			, DataSourceTransactionManager transactionManager
-			, PasswordEncoderService passwordEncoderService
-			) {
-		this.systemBean = systemBean;
-		this.pagingHtmlBean = pagingHtmlBean;
-		this.transactionManager = transactionManager;
-		this.passwordEncoderService = passwordEncoderService;
-	}
 	
 	@Value("${server.block-count}")
 	private int blockCount;

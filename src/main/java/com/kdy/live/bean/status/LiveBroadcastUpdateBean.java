@@ -2,7 +2,6 @@ package com.kdy.live.bean.status;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -11,7 +10,10 @@ import com.kdy.live.bean.util.code.LiveBroadcastStatus;
 import com.kdy.live.dao.live.LiveManageDAOFactory;
 import com.kdy.live.dto.live.LiveBroadcastVO;
 
+import lombok.RequiredArgsConstructor;
+
 @Component
+@RequiredArgsConstructor
 public class LiveBroadcastUpdateBean {
 	
 	private Logger logger = LoggerFactory.getLogger(LiveBroadcastUpdateBean.class);
@@ -20,11 +22,6 @@ public class LiveBroadcastUpdateBean {
 	
 	@Value("${live.serialNo}")
 	private String serialNo;
-	
-	@Autowired
-	public LiveBroadcastUpdateBean(LiveManageDAOFactory liveManageDAOFactory) {
-		this.liveManageDAOFactory = liveManageDAOFactory;
-	}
 	
 	public void statusOnAir(LiveBroadcastVO lbvo) throws Exception {
 		lbvo.setLbStatus(LiveBroadcastStatus.OnAir.getTitle());

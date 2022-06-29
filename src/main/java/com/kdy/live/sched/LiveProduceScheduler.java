@@ -2,30 +2,22 @@ package com.kdy.live.sched;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.kdy.live.dto.LiveSchedMemoryVO;
 import com.kdy.live.service.live.LiveProduceService;
 
+import lombok.RequiredArgsConstructor;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 
 @Component
+@RequiredArgsConstructor
 public class LiveProduceScheduler {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	
 	private final LiveProduceService 			liveProduceService;
 	private final LiveSchedMemoryVO 			memoryVO;
-	
-	@Autowired
-	public LiveProduceScheduler(  LiveProduceService 		liveProduceService
-								, LiveSchedMemoryVO 		memoryVO
-
-	) {
-		this.liveProduceService 	= liveProduceService;
-		this.memoryVO 				= memoryVO;
-	}
 	
 	/**
 	 * 
@@ -45,9 +37,8 @@ public class LiveProduceScheduler {
 			
 			// live check 서비스 호출
 			liveProduceService.service(memoryVO);
-			
-		} else {
-			logger.warn("System [OFF]");
-		}
+		} 
+		
+		logger.warn("System [OFF]");
 	}
 }
