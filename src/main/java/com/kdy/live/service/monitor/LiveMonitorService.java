@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,20 +23,13 @@ import com.kdy.live.dto.monitor.LiveViewsDTO;
 import com.kdy.live.dto.monitor.LiveViewsVO;
 
 @Component
+@RequiredArgsConstructor
 public class LiveMonitorService {
 	
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	
 	private final LiveMonitorBean liveMonitorBean;
 	private final LiveStreamingMonitorBean liveStreamingMonitorBean;
-	
-	@Autowired
-	public LiveMonitorService(LiveMonitorBean liveMonitorBean
-							, LiveStreamingMonitorBean liveStreamingMonitorBean) {
-		
-		this.liveMonitorBean			= liveMonitorBean;
-		this.liveStreamingMonitorBean	= liveStreamingMonitorBean;
-	}
 	
 	@Value("${server.chat.host}")
 	private String chatIp;
@@ -50,7 +44,6 @@ public class LiveMonitorService {
 		
 		//등록된 Streaming module 정보 가져오기
 		List<StreamingVO> streamingList = liveMonitorBean.selectStreamingList();
-		
 		List<LiveMonitorVO> insertStreamingList = new ArrayList<LiveMonitorVO>();
 		
 		if(streamingList != null && streamingList.size() > 0) {
@@ -62,18 +55,17 @@ public class LiveMonitorService {
 				}
 			}
 		}
-		
-		try {
-			//streaming status insert
-			if(insertStreamingList.size() > 0) {
+
+		if(insertStreamingList.size() > 0) {
+			try {
+				//streaming status insert
 				liveMonitorBean.insertStreamingList(insertStreamingList);
+
+			} catch (Exception e) {
+				logger.error("LiveMonitorService . liveStreamingMonitor() insert error :: "+e.getMessage());
 			}
-		} catch (Exception e) {
-			logger.error("LiveMonitorService . liveStreamingMonitor() insert error :: "+e.getMessage());
 		}
-		
 		liveMonitorBean.deleteStreamingList();
-		
 	}
 	
 	
@@ -82,40 +74,31 @@ public class LiveMonitorService {
 		
 		/* 방송 접속자 수 */
 		List<String> onAirList = liveMonitorBean.onAirList(); //방송 list (채팅 o)
-		
-		if(onAirList != null && onAirList.size() != 0) {
-			
-			Map<String,Object> map = new HashMap<String, Object>();
-			map.put("broadcastList", onAirList);
-			
-			WebClient webClient = WebClient.builder()
-											.baseUrl("http://"+chatIp+":"+chatPort)
-											.build();
-			
-			try {
-				
-				List<LiveViewsVO> rtnList = (List<LiveViewsVO>) webClient.post()
-							           .uri("/api/getLiveViewsCount")
-							           .contentType(MediaType.APPLICATION_JSON)
-							           .bodyValue(new Gson().toJson(map))
-							           .retrieve() 
-								       .bodyToMono(LiveViewsDTO.class)
-								       .block()
-								       .getViewsList()
-								       ;
-				
-				if (rtnList.size() > 0) {
-					liveMonitorBean.insertLiveViewsList(rtnList);
-				}
-				
-			} catch (Exception e) {
-				logger.error("LiveMonitorService . liveViewCountMonitor() :: "+e.getMessage());
-			}
-			
-			
+		if(onAirList == null || onAirList.size() == 0) {
+			return;
 		}
-		
-		
+			
+		Map<String,Object> map = new HashMap<String, Object>();
+		map.put("broadcastList", onAirList);
+
+		WebClient webClient = WebClient.builder()
+										.baseUrl("http://"+chatIp+":"+chatPort)
+										.build();
+		List<LiveViewsVO> rtnList = (List<LiveViewsVO>) webClient.post()
+				.uri("/api/getLiveViewsCount")
+				.contentType(MediaType.APPLICATION_JSON)
+				.bodyValue(new Gson().toJson(map))
+				.retrieve()
+				.bodyToMono(LiveViewsDTO.class)
+				.block()
+				.getViewsList()
+				;
+		if (rtnList.size() <= 0) { return;}
+		try {
+			liveMonitorBean.insertLiveViewsList(rtnList);
+		} catch (Exception e) {
+			logger.error("LiveMonitorService . liveViewCountMonitor() :: "+e.getMessage());
+		}
 	}
 	
 }

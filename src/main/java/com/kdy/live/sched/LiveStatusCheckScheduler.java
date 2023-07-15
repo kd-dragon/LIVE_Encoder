@@ -20,16 +20,16 @@ public class LiveStatusCheckScheduler {
 	
 	/**
 	 * Live 상태별 처리 스케쥴러
-	 * @throws Exception
 	 */
 	@Scheduled(fixedDelay=5000, initialDelay=5000)
 	public void execute() throws Exception {
-		Thread.currentThread().setName("TG_"+getClass().getSimpleName());
+		Thread.currentThread().setName(getClass().getSimpleName());
 		
 		if(memoryVO.getSystemOnOff()) {
 			logger.debug("System [ON] >> execute()");
 			// live status check service call
 			liveStatusCheckService.service();
+			return;
 		} 
 		logger.warn("System [OFF]");
 	}

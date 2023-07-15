@@ -1,5 +1,6 @@
 package com.kdy.live.dao.vod;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
 import com.kdy.live.dto.LiveSchedMemoryVO;
 
 @Component
+@RequiredArgsConstructor
 public class VodManageDAOFactory {
 	
 private Logger logger = LoggerFactory.getLogger(getClass());
@@ -17,8 +19,7 @@ private Logger logger = LoggerFactory.getLogger(getClass());
 	@Value("${spring.daoMode}")
 	private String daoMode;
 	
-	@Autowired
-	private LiveSchedMemoryVO mvo;
+	private final LiveSchedMemoryVO mvo;
 	
 	public VodManageDAOFactoryIF getDAO() {
 		logger.debug(">> daoMode : " + daoMode);

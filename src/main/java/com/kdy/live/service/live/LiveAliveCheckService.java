@@ -2,6 +2,7 @@ package com.kdy.live.service.live;
 
 import java.util.List;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import com.kdy.live.dto.live.LiveBroadcastEvent;
 import com.kdy.live.dto.live.LiveBroadcastVO;
 
 @Component
+@RequiredArgsConstructor
 public class LiveAliveCheckService {
 	
 	private Logger logger = LoggerFactory.getLogger(getClass());
@@ -28,21 +30,7 @@ public class LiveAliveCheckService {
 	private final LiveBroadcastUpdateBean 	updateBean;
 	private final ApplicationEventPublisher applicationEventPublisher;
 	private final ProcessManageFactory processManageFactory;
-	
-	@Autowired
-	public LiveAliveCheckService( LiveBroadcastSelectBean 		selectBean
-								, LiveSchedMemoryVO 			memoryVO
-								, LiveBroadcastUpdateBean 		updateBean
-								, ApplicationEventPublisher     applicationEventPublisher 
-								, ProcessManageFactory 			processManageFactory) 
-	{
-		this.selectBean 				= selectBean;
-		this.memoryVO   				= memoryVO;
-		this.updateBean 				= updateBean;
-		this.applicationEventPublisher 	= applicationEventPublisher;
-		this.processManageFactory		= processManageFactory;
-	}
-	
+
 	public void service() throws Exception {
 		
 		/**
@@ -56,35 +44,32 @@ public class LiveAliveCheckService {
 		
 		List<LiveBroadcastVO> aliveList = selectBean.selectByInterruptedBroadcast
 				(MacAddressUtil.getMacAddress() == null? memoryVO.getSerialNo() : MacAddressUtil.getMacAddress());
-	
-		if(aliveList != null && aliveList.size() > 0) {
-			
-			logger.debug(">> execute() - aliveList Size : {}", aliveList.size());
-			
-			for(LiveBroadcastVO lbvo : aliveList) {
-				
-				//방송 잔여 시간이 1분 초과인 경우
-				if(lbvo.getEndYn().equalsIgnoreCase("N")) {
-					lbvo.setFfmpegRetval(null);
-					lbvo.setLbStatus(LiveBroadcastStatus.Restart.getTitle());
-					lbvo.setLiveDurationDate(lbvo.getLbjDuration());
-					
-					//라이브 시작전 VO 
-					LiveFileUtils.initializeLiveInfo(lbvo, memoryVO);
-					
-					// Live 객체 공유 해시맵에 put.
-					memoryVO.getLiveSeqToVO().put(lbvo.getLbSeq(), lbvo);
-					
-					// Live 인코딩 요청
-					LiveBroadcastEvent liveEvent = new LiveBroadcastEvent(applicationEventPublisher, lbvo);
-					applicationEventPublisher.publishEvent(liveEvent);
-					
+
+		if(aliveList == null || aliveList.size() == 0) {
+			logger.debug(">> execute() - aliveList is null or size is 0");
+			return;
+		}
+		logger.debug(">> execute() - aliveList Size : {}", aliveList.size());
+		for (LiveBroadcastVO lbvo : aliveList) {//방송 잔여 시간이 1분 초과인 경우
+			if (lbvo.getEndYn().equalsIgnoreCase("N")) {
+				lbvo.setFfmpegRetval(null);
+				lbvo.setLbStatus(LiveBroadcastStatus.Restart.getTitle());
+				lbvo.setLiveDurationDate(lbvo.getLbjDuration());
+
+				//라이브 시작전 VO
+				LiveFileUtils.initializeLiveInfo(lbvo, memoryVO);
+
+				// Live 객체 공유 해시맵에 put.
+				memoryVO.getLiveSeqToVO().put(lbvo.getLbSeq(), lbvo);
+
+				// Live 인코딩 요청
+				LiveBroadcastEvent liveEvent = new LiveBroadcastEvent(applicationEventPublisher, lbvo);
+				applicationEventPublisher.publishEvent(liveEvent);
+				continue;
 				//방송 잔여 시간이 1분 미만인 경우
-				} else {
-					//라이브 정상종료 -> 종료시간 업데이트
-					updateBean.updateLiveEndDate(lbvo.getLbSeq());
-				}
 			}
+			//라이브 정상종료 -> 종료시간 업데이트
+			updateBean.updateLiveEndDate(lbvo.getLbSeq());
 		}
 	}
 }

@@ -2,6 +2,7 @@ package com.kdy.live.service.live;
 
 import java.util.List;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import com.kdy.live.dto.LiveSchedMemoryVO;
 import com.kdy.live.dto.live.LiveBroadcastVO;
 
 @Component
+@RequiredArgsConstructor
 public class LiveFinishCheckService {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	
@@ -22,18 +24,7 @@ public class LiveFinishCheckService {
 	private final LiveBroadcastSelectBean selectBean;
 	private final LiveBroadcastFinishBean finishBean;
 	private final LiveChatSaveBean chatSaveBean;
-	
-	@Autowired
-	public LiveFinishCheckService(LiveSchedMemoryVO 				memoryVO
-								, LiveBroadcastSelectBean 			selectBean
-								, LiveBroadcastFinishBean 			finishBean
-								, LiveChatSaveBean 					chatSaveBean) 
-	{
-		this.memoryVO 				= memoryVO;
-		this.selectBean 			= selectBean;
-		this.finishBean 			= finishBean;
-		this.chatSaveBean			= chatSaveBean;
-	}
+
 	
 	/*
 	 * 라이브 종료 후 처리 
@@ -47,23 +38,19 @@ public class LiveFinishCheckService {
 		
 		List<LiveBroadcastVO> expiredList = selectBean.expiredChannel(serialNo);
 		// 만료된 라이브 종료 처리
-		if(expiredList != null && expiredList.size() > 0) {
-			for(LiveBroadcastVO lbvo : expiredList) {
-				lbvo.setLbSerialNo(serialNo);
-				finishBean.processFinish(lbvo);
-				
-				// 채팅 저장 처리
-				try {
-					if(lbvo.getLbChatYn() != null && lbvo.getLbChatYn().equalsIgnoreCase("Y")) {
-						chatSaveBean.checkChattingInRedis(lbvo.getLbSeq(), "SCHED");
-					}	
-				} catch(Exception e) {
-					logger.error("error : {}", e);
-				} 
-			}
+		if(expiredList == null || expiredList.size() == 0) {
+			return;
 		}
-		
-		
+		for(LiveBroadcastVO lbvo : expiredList) {
+			lbvo.setLbSerialNo(serialNo);
+			finishBean.processFinish(lbvo);
+
+			// 채팅 저장 처리
+			if(lbvo.getLbChatYn() == null || lbvo.getLbChatYn().equalsIgnoreCase("Y")) {
+				continue;
+			}
+			chatSaveBean.checkChattingInRedis(lbvo.getLbSeq(), "SCHED");
+		}
 	}
 	
 	

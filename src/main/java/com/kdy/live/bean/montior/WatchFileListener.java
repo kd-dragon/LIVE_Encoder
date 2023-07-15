@@ -27,9 +27,7 @@ public class WatchFileListener implements FileAlterationListener {
 	}
 	
 	/**
-	 * @author KDY
 	 * In-Memory Key/Value DB Redis 에 .m3u8, .ts파일 저장
-	 * @param file
 	 */
 	
 	// 파일 변화 감지시 .m3u8, .ts 파일에 대한 처리 구현

@@ -58,8 +58,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 			.antMatchers("/h2-console/**").permitAll()
 			.antMatchers("/login*.do").permitAll()
 			.antMatchers("/v2/api-docs", "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()
-			.antMatchers("/**").hasRole("ADMIN")
-			;
+			.antMatchers("/**").hasRole("ADMIN");
+
 		
 		//로그인설정
 		http.formLogin() 
@@ -68,8 +68,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 			.usernameParameter("encId")
 			.passwordParameter("encPw")
 			.successHandler(loginSuccessService)
-			.failureHandler(loginFailService)
-			;
+			.failureHandler(loginFailService);
+
 		
 		//로그아웃
 		http.logout() 
@@ -86,16 +86,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		
 		http.exceptionHandling()
 			.accessDeniedPage("/loginAccessDenied.do") //권한인증 X
-			.authenticationEntryPoint(authenticationEntryPoint) //인증 전 요청 처리
-		;
-		
-		//iframe 안되는걸 방지
+			.authenticationEntryPoint(authenticationEntryPoint); //인증 전 요청 처리
+
 		http.headers().frameOptions().sameOrigin();
 		
 		http.headers(headers -> headers .cacheControl(cache -> cache.disable()));
 	}
-	
-	// logout 후 login할 때 정상동작을 위함
+
     @Bean
     public SessionRegistry sessionRegistry() {
         return new SessionRegistryImpl();
@@ -106,6 +103,4 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 		auth.userDetailsService(userService).passwordEncoder(passwordEncoderService);
 	}
-	 
-
 }

@@ -12,7 +12,6 @@ sourceCompatibility = '1.8'
 repositories {
 	mavenCentral()
 	jcenter()
-	maven { url "http://maven.egovframe.kr:8080/maven/" } // maven 원격 저장소
 }
 
 

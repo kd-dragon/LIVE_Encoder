@@ -22,16 +22,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
 	 */
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {
-		
+		registry.addResourceHandler(resourcesUriPath + "/**").addResourceLocations("file:" + resourcesLocation);
 		if(osType.equalsIgnoreCase("window")) {
 			registry.addResourceHandler(resourcesUriPath + "/**")
 			.addResourceLocations("file:///" + resourcesLocation);
-			
-		} else {
-			registry.addResourceHandler(resourcesUriPath + "/**")
-			.addResourceLocations("file:" + resourcesLocation);
 		}
-		
 	}
 	
 }

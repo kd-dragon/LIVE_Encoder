@@ -1,5 +1,6 @@
 package com.kdy.live.service.live;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,30 +19,17 @@ import com.kdy.live.dto.live.LiveBroadcastEvent;
 import com.kdy.live.dto.live.LiveBroadcastVO;
 
 @Component
+@RequiredArgsConstructor
 public class LiveProduceService {
 	
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	
 	private final ApplicationEventPublisher applicationEventPublisher;
-	
 	private final LiveBroadcastSelectBean selectBean;
-	
 	private final LiveBroadcastUpdateBean updateBean;
-	
+
+	@Qualifier("redisTemplateObject")
 	private final RedisTemplate<String, Object> redisTemplate;
-	
-	@Autowired
-	public LiveProduceService (   ApplicationEventPublisher 										applicationEventPublisher
-								, LiveSchedMemoryVO 												memoryVO
-						 		, LiveBroadcastSelectBean 											selectBean
-							 	, LiveBroadcastUpdateBean 											updateBean
-							 	, @Qualifier("redisTemplateObject") RedisTemplate<String, Object> 	redisTemplate) 
-	{
-		this.applicationEventPublisher  = applicationEventPublisher;
-		this.selectBean 				= selectBean;
-		this.updateBean 				= updateBean;
-		this.redisTemplate				= redisTemplate;
-	}
 	
 	/**
 	 * # Live 방송 실행 서비스 
@@ -54,37 +42,36 @@ public class LiveProduceService {
 	public void service(LiveSchedMemoryVO memoryVO) throws Exception {
 		
 		LiveBroadcastVO lbvo = selectBean.onWaitingChannel();
-		
-		if(lbvo != null) {
-			if(memoryVO.getLiveSeqToVO().get(lbvo.getLbSeq()) == null) {
-				// 방송상태 변경 (status: 8)
-				if(lbvo.getLbStatus() != null && lbvo.getLbStatus().equals("0")) {
-					updateBean.statusStart(lbvo);
-				}
-				// live VO 초기화 (인코딩 경로 정보, 썸네일 등)
-				LiveFileUtils.initializeLiveInfo(lbvo, memoryVO);
-				
-				// Set Serial Number
-				updateBean.updateLiveSerialNo(lbvo);
-				
-				// vo to in-memory hashmap
-				memoryVO.getLiveSeqToVO().put(lbvo.getLbSeq(), lbvo);
-				
-				// Live 인코딩 요청
-				LiveBroadcastEvent liveEvent = new LiveBroadcastEvent(applicationEventPublisher, lbvo);
-				applicationEventPublisher.publishEvent(liveEvent);
-				
-				// Redis 방송상태 (시작/종료 구분값 SET)
-				ValueOperations<String, Object> valueOperation = redisTemplate.opsForValue();
-				String key = RedisHashKeyword.LIVESTATUS.toString() + lbvo.getLbSeq();
-				valueOperation.set(key, "1");
 
-			} else {
-				logger.warn("###### Already binded Live Channel [" + lbvo.getLbTitle() + "] #####");
-			}
-			
-		} else {
+		if(lbvo == null) {
 			logger.debug("Live on waiting is not exists");
+			return;
 		}
+		if(memoryVO.getLiveSeqToVO().get(lbvo.getLbSeq()) != null) {
+			logger.warn("###### Already binded Live Channel [" + lbvo.getLbTitle() + "] #####");
+			return;
+		}
+
+		// 방송상태 변경 (status: 8)
+		if(lbvo.getLbStatus() != null && lbvo.getLbStatus().equals("0")) {
+			updateBean.statusStart(lbvo);
+		}
+		// live VO 초기화 (인코딩 경로 정보, 썸네일 등)
+		LiveFileUtils.initializeLiveInfo(lbvo, memoryVO);
+
+		// Set Serial Number
+		updateBean.updateLiveSerialNo(lbvo);
+
+		// vo to in-memory hashmap
+		memoryVO.getLiveSeqToVO().put(lbvo.getLbSeq(), lbvo);
+
+		// Live 인코딩 요청
+		LiveBroadcastEvent liveEvent = new LiveBroadcastEvent(applicationEventPublisher, lbvo);
+		applicationEventPublisher.publishEvent(liveEvent);
+
+		// Redis 방송상태 (시작/종료 구분값 SET)
+		ValueOperations<String, Object> valueOperation = redisTemplate.opsForValue();
+		String key = RedisHashKeyword.LIVESTATUS.toString() + lbvo.getLbSeq();
+		valueOperation.set(key, "1");
 	}
 }

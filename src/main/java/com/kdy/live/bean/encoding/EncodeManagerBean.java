@@ -3,6 +3,7 @@ package com.kdy.live.bean.encoding;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,7 @@ import net.bramp.ffmpeg.progress.Progress;
 import net.bramp.ffmpeg.progress.ProgressListener;
 
 @Component
+@RequiredArgsConstructor
 public class EncodeManagerBean {
 	private Logger logger = LoggerFactory.getLogger("ffmpeg");
 	
@@ -39,20 +41,7 @@ public class EncodeManagerBean {
 	private final LiveSchedMemoryVO memoryVO;
 	
 	private final NettyVO nettyVO;
-	
-	@Autowired
-	public EncodeManagerBean( EncodeCommandFactory 		commandFactory
-							, LiveBroadcastUpdateBean 	updateBean
-							, RecordingFileHandler 		recordHandler
-							, LiveSchedMemoryVO 		memoryVO
-							, NettyVO 					nettyVO
-	) {
-		this.commandFactory = commandFactory;
-		this.updateBean 	= updateBean;
-		this.recordHandler 	= recordHandler;
-		this.memoryVO		= memoryVO;
-		this.nettyVO 		= nettyVO;
-	}
+
 	
 	@StopWatch
 	public boolean encode(LiveBroadcastVO lbvo) {

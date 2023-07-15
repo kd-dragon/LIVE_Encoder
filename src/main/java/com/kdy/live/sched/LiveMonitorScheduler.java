@@ -26,20 +26,17 @@ public class LiveMonitorScheduler {
 	/**
 	 * 스트리밍 모니터링 (CPU, Memory 등) 스케쥴러
 	 * 시스템 설정 업데이트
-	 * 
-	 * 
-	 * @throws Exception
 	 */
 //	@Scheduled(cron = "0 0/10 * * * ?")
 	@Scheduled(fixedDelay = 60000, initialDelay = 1000)
 	public void execute() throws Exception {
 		
-		if(monitorUseYn.equals("Y")) {
+		if(monitorUseYn.equalsIgnoreCase("Y")) {
 			liveMonitorService.liveStreamingMonitor(); //스트리밍 모듈별 상태
 			liveMonitorService.liveViewCountMonitor(); //방송별 접속자 수 
 		}
 		
-		logger.warn("Live Monitor Sched [OFF]");
+		logger.warn("Live Monitor Shed [OFF]");
 		
 		//필수
 		systemConfigUpdateService.updateSystemConfig(); // 시스템 설정 업데이트

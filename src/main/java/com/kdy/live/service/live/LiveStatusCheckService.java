@@ -3,6 +3,7 @@ package com.kdy.live.service.live;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,7 @@ import com.kdy.live.dto.live.LiveBroadcastEvent;
 import com.kdy.live.dto.live.LiveBroadcastVO;
 
 @Component
+@RequiredArgsConstructor
 public class LiveStatusCheckService {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	
@@ -34,26 +36,10 @@ public class LiveStatusCheckService {
 	private final LiveChatSaveBean 				chatSaveBean;
 	private final ProcessManageFactory 			processManageFactory;
 	private final ApplicationEventPublisher 	applicationEventPublisher;
+
+	@Qualifier("redisTemplateObject")
 	private final RedisTemplate<String, Object> redisTemplate;
-	
-	@Autowired
-	public LiveStatusCheckService(	  LiveSchedMemoryVO 			memoryVO
-									, LiveBroadcastSelectBean 		selectBean
-									, LiveBroadcastUpdateBean 		updateBean
-									, LiveChatSaveBean 				chatSaveBean
-									, ProcessManageFactory 			processManageFactory
-									, ApplicationEventPublisher 	applicationEventPublisher
-									, @Qualifier("redisTemplateObject") 
-	  								RedisTemplate<String, Object> 		redisTemplate) 
-	{
-		this.memoryVO 					= memoryVO;
-		this.selectBean 				= selectBean;
-		this.updateBean 				= updateBean;
-		this.chatSaveBean				= chatSaveBean;
-		this.processManageFactory 		= processManageFactory;
-		this.applicationEventPublisher  = applicationEventPublisher;
-		this.redisTemplate 				= redisTemplate;
-	}
+
 	
 	/*
 	 * 실행중인 Live 상태 체크 서비스 입니다.
@@ -73,43 +59,39 @@ public class LiveStatusCheckService {
 		while(keys.hasNext()) {
 			String liveBroadcastSeq = keys.next();
 			LiveBroadcastVO lbvo = memoryVO.getLiveSeqToVO().get(liveBroadcastSeq);
-			if(lbvo != null) {
-				
-				if(lbvo.getLcUrl().equals("VOD")) {//VOD
-					logger.info(String.format("######## LiveBroadcastVO [seq:%s] Status [%s], VOD live (seq:[%s])###### ",lbvo.getLbSeq(), lbvo.getLbStatus(), lbvo.getLbVodSeq()));
-					vodLiveStatus(lbvo);
-					
-				} else {//LIVE
-					logger.info(String.format("######## LiveBroadcastVO [seq:%s] Status [%s], LIVE retval [%s] ###### ",lbvo.getLbSeq(), lbvo.getLbStatus(), lbvo.getFfmpegRetval()));
-					
-					if(lbvo.getLbStatus().equals(LiveBroadcastStatus.OnAir.getTitle())
-							|| lbvo.getLbStatus().equals(LiveBroadcastStatus.Pause.getTitle())) {
-						switch(selectBean.getLiveStatus(lbvo)){
-						case OnAir:
-							processOnAir(lbvo); break;
-						case Pause:
-							processOnPause(lbvo); break;
-						case Restart:
-							processOnRestart(lbvo); break;
-						case Finished:
-							processFinished(lbvo); break;
-						default:
-							break;
-						}
-					} else if(lbvo.getLbStatus().equals(LiveBroadcastStatus.Error.getTitle())) {
-						switch(selectBean.getLiveStatus(lbvo)){
-						case Restart:
-							processOnRestart(lbvo); break;
-						default:
-							processError(lbvo);
-							break;
-						}
-					}
-				}
-				
-				
-			} else {
+			if (lbvo == null ) {
 				logger.info("###### LiveStatusCheckService LiveBroadcastVO is NULL ########");
+			}
+				
+			if(lbvo.getLcUrl().equals("VOD")) {//VOD
+				logger.info(String.format("######## LiveBroadcastVO [seq:%s] Status [%s], VOD live (seq:[%s])###### ",lbvo.getLbSeq(), lbvo.getLbStatus(), lbvo.getLbVodSeq()));
+				vodLiveStatus(lbvo);
+				return;
+			}
+			logger.info(String.format("######## LiveBroadcastVO [seq:%s] Status [%s], LIVE retval [%s] ###### ",lbvo.getLbSeq(), lbvo.getLbStatus(), lbvo.getFfmpegRetval()));
+
+			if(lbvo.getLbStatus().equals(LiveBroadcastStatus.OnAir.getTitle())
+					|| lbvo.getLbStatus().equals(LiveBroadcastStatus.Pause.getTitle())) {
+				switch(selectBean.getLiveStatus(lbvo)){
+				case OnAir:
+					processOnAir(lbvo); break;
+				case Pause:
+					processOnPause(lbvo); break;
+				case Restart:
+					processOnRestart(lbvo); break;
+				case Finished:
+					processFinished(lbvo); break;
+				default:
+					break;
+				}
+			} else if(lbvo.getLbStatus().equals(LiveBroadcastStatus.Error.getTitle())) {
+				switch(selectBean.getLiveStatus(lbvo)){
+				case Restart:
+					processOnRestart(lbvo); break;
+				default:
+					processError(lbvo);
+					break;
+				}
 			}
 		}
 		
@@ -130,35 +112,26 @@ public class LiveStatusCheckService {
 			// Duration DB Update
 			lbvo.setLbSerialNo(MacAddressUtil.getMacAddress() == null ? memoryVO.getSerialNo() : MacAddressUtil.getMacAddress());
 			updateBean.updateLiveBroadcastJob(lbvo);
+			return;
 			
 		} else if(lbvo.getFfmpegRetval()) {
 			logger.info("[Live STATUS] Live Successfully Finished >> " + lbvo.getLbTitle());
 			//라이브 정상종료 -> 종료시간 업데이트
-			updateBean.updateLiveEndDate(lbvo.getLbSeq()); 
+			updateBean.updateLiveEndDate(lbvo.getLbSeq());
+			return;
 			
-		} else {
-			logger.info("[Live STATUS] Live Error Cause >> " + lbvo.getLbTitle());
-			lbvo.setLbStatus(LiveBroadcastStatus.Error.getTitle());
-			lbvo.setLbjProcessId("0");
-			updateBean.statusOnError(lbvo); //status
-			updateBean.updateLiveBroadcastJob(lbvo); //job 로그 업데이트
-			
-			//라이브 총 방송 시간 세팅
-			lbvo.setLbjDuration(lbvo.getLiveDurationDate() + lbvo.getCurrentDuration()); //시간 세팅
-			lbvo.setLiveDurationDate(lbvo.getLbjDuration());
-			lbvo.setLbStatus(LiveBroadcastStatus.Error.getTitle());
-			lbvo.setCurrentDuration(0); //초기화
-			
-			/*
-			updateBean.updateLiveBroadcastJob(lbvo); //processId
-			updateBean.jobLogMove(lbvo); //종료된 방송 JOB 데이터 JOB_LOG로 이동시키기
-			updateBean.jobDataDelete(lbvo); //job 데이터 지우기
-			
-			//시퀀스:VO 관계 메모리 DB Remove
-			releaseLiveSeqToVO(lbvo);
-			memoryVO.getFinishedQueue().offer(lbvo);
-			*/
 		}
+		logger.info("[Live STATUS] Live Error Cause >> " + lbvo.getLbTitle());
+		lbvo.setLbStatus(LiveBroadcastStatus.Error.getTitle());
+		lbvo.setLbjProcessId("0");
+		updateBean.statusOnError(lbvo); //status
+		updateBean.updateLiveBroadcastJob(lbvo); //job 로그 업데이트
+
+		//라이브 총 방송 시간 세팅
+		lbvo.setLbjDuration(lbvo.getLiveDurationDate() + lbvo.getCurrentDuration()); //시간 세팅
+		lbvo.setLiveDurationDate(lbvo.getLbjDuration());
+		lbvo.setLbStatus(LiveBroadcastStatus.Error.getTitle());
+		lbvo.setCurrentDuration(0); //초기화
 	}
 	
 	/*
@@ -188,11 +161,11 @@ public class LiveStatusCheckService {
 			ValueOperations<String, Object> valueOperation = redisTemplate.opsForValue();
 			String key = RedisHashKeyword.LIVESTATUS.toString() + lbvo.getLbSeq();
 			valueOperation.set(key, "3");
-			
+			lbvo.setCurrentDuration(0); //초기화
+			return;
 		// 이미 일시정지 상태 일시 
-		} else {
-			logger.info("[Paused] This Channel is Waiting For Resume [" + lbvo.getLbTitle() + "]");
 		}
+		logger.info("[Paused] This Channel is Waiting For Resume [" + lbvo.getLbTitle() + "]");
 		lbvo.setCurrentDuration(0); //초기화
 	}
 	
@@ -230,11 +203,11 @@ public class LiveStatusCheckService {
 		String pid = lbvo.getLbjProcessId();
 		if(processManageFactory.template().checkPID(pid)) {
 			processManageFactory.template().killProcess(pid);
-		} else {
-			logger.error("Expired LiveBroadcast FFMPEG Kill 처리 중 해당하는 PID[{}]가 존재하지 않습니다", pid);
+			releaseLiveSeqToVO(lbvo);
+			return;
 		}
-		
 		releaseLiveSeqToVO(lbvo);
+		logger.error("Expired LiveBroadcast FFMPEG Kill 처리 중 해당하는 PID[{}]가 존재하지 않습니다", pid);
 	}
 	
 	/**
@@ -265,13 +238,12 @@ public class LiveStatusCheckService {
 		//LIVE 종료시
 		if(lbvo.getLbStatus().equals(LiveBroadcastStatus.Finished.getTitle())) {
 			//라이브 총 방송 시간 세팅
+			lbvo.setCurrentDuration(0);
 			if(lbvo.getVodStartDate() != 0) {
 				lbvo.setCurrentDuration((System.currentTimeMillis()-lbvo.getVodStartDate())/1000); //시작부터 현재까지 시간(초단위)
-			} else {
-				lbvo.setCurrentDuration(0);
 			}
+
 			lbvo.setLbjDuration(lbvo.getCurrentDuration() + lbvo.getVodDuration());
-			
 			lbvo.setLbStatus(LiveBroadcastStatus.Finished.getTitle());
 			lbvo.setLbjProcessId(null);
 			updateBean.statusFinished(lbvo); //status 
@@ -287,48 +259,47 @@ public class LiveStatusCheckService {
 					logger.error("error : {}", e);
 				}
 			}
-			
 			logger.info("[VOD Live FINISH] OFF >>> " + lbvo.getLbTitle());
-			
-		} else {
-			
-			switch(selectBean.getLiveStatus(lbvo)){
-			case OnAir:
-				lbvo.setCurrentDuration((System.currentTimeMillis()-lbvo.getVodStartDate())/1000); //시작/재시작부터 현재까지 시간(초단위)
-				lbvo.setLbjDuration(lbvo.getCurrentDuration() + lbvo.getVodDuration());
-				
-				// current Duration DB Update
-				updateBean.updateLiveBroadcastJob(lbvo);
-				logger.info("[VOD Live STATUS] Keep On Air >> " + lbvo.getLbTitle());
-				break;
-				
-			case Pause:
-				
-				if(lbvo.getVodStartDate() != 0 ) {
-					String duration = selectBean.selectNowDuration(lbvo.getLbSeq()); //현재 영상 시간 가져오기
-					lbvo.setVodDuration(Double.parseDouble(duration));
-					//vod 시작시간 초기화
-					lbvo.setVodStartDate(0);
-				}
-				
-				logger.info("[VOD Live Paused] This Channel is Waiting For Resume [" + lbvo.getLbTitle() + "]");
-				
-				break;
-				
-			case Restart:
-				// 라이브 상태 변경 ( 진행중 : 1)
-				updateBean.statusOnAir(lbvo);
-				
-				//시작시간 세팅
-				lbvo.setVodStartDate(System.currentTimeMillis());
-				
-				logger.info("[VOD Live Restart] RE-START ON AIR >> " + lbvo.getLbTitle());
-				break;
-				
-			default:
-				break;
-			}
-			
+			return;
 		}
+			
+		switch(selectBean.getLiveStatus(lbvo)){
+		case OnAir:
+			lbvo.setCurrentDuration((System.currentTimeMillis()-lbvo.getVodStartDate())/1000); //시작/재시작부터 현재까지 시간(초단위)
+			lbvo.setLbjDuration(lbvo.getCurrentDuration() + lbvo.getVodDuration());
+
+			// current Duration DB Update
+			updateBean.updateLiveBroadcastJob(lbvo);
+			logger.info("[VOD Live STATUS] Keep On Air >> " + lbvo.getLbTitle());
+			break;
+
+		case Pause:
+
+			if(lbvo.getVodStartDate() != 0 ) {
+				String duration = selectBean.selectNowDuration(lbvo.getLbSeq()); //현재 영상 시간 가져오기
+				lbvo.setVodDuration(Double.parseDouble(duration));
+				//vod 시작시간 초기화
+				lbvo.setVodStartDate(0);
+			}
+
+			logger.info("[VOD Live Paused] This Channel is Waiting For Resume [" + lbvo.getLbTitle() + "]");
+
+			break;
+
+		case Restart:
+			// 라이브 상태 변경 ( 진행중 : 1)
+			updateBean.statusOnAir(lbvo);
+
+			//시작시간 세팅
+			lbvo.setVodStartDate(System.currentTimeMillis());
+
+			logger.info("[VOD Live Restart] RE-START ON AIR >> " + lbvo.getLbTitle());
+			break;
+
+		default:
+			break;
+		}
+			
+
 	}
 }

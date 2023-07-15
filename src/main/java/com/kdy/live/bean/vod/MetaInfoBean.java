@@ -3,6 +3,7 @@ package com.kdy.live.bean.vod;
 import java.io.File;
 import java.util.List;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,11 +17,11 @@ import net.bramp.ffmpeg.probe.FFmpegProbeResult;
 import net.bramp.ffmpeg.probe.FFmpegStream;
 
 @Component
+@RequiredArgsConstructor
 public class MetaInfoBean {
 	private Logger logger = LoggerFactory.getLogger(getClass());
-	
-	@Autowired
-	private LiveSchedMemoryVO mvo;
+
+	private final LiveSchedMemoryVO mvo;
 	
 	public FFmpegProbeResult getMetaInfo(String path, String name) throws Exception {
 		logger.info("VodMetaInfoBean getMetaInfo() - Started");

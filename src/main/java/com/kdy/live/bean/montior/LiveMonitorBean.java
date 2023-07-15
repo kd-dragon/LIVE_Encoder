@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -14,11 +15,10 @@ import com.kdy.live.dto.monitor.LiveViewsDTO;
 import com.kdy.live.dto.monitor.LiveViewsVO;
 
 @Component
+@RequiredArgsConstructor
 public class LiveMonitorBean {
-	
-	@Autowired
-	private MoinitorManageDAOFactory monitorManageDAOFactory;
-	
+
+	private final MoinitorManageDAOFactory monitorManageDAOFactory;
 	
 	//스트리밍 모듈 리스트 가져오기
 	public List<StreamingVO> selectStreamingList() throws Exception {

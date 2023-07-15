@@ -2,6 +2,7 @@ package com.kdy.live.service.system;
 
 import java.text.NumberFormat;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,18 +13,13 @@ import com.kdy.live.dto.LiveSchedMemoryVO;
 import com.kdy.live.dto.system.SystemConfigVO;
 
 @Component
+@RequiredArgsConstructor
 public class SystemConfigUpdateService {
 	
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	
 	private final SystemConfigSelectBean systemConfigSelectBean;
 	private final LiveSchedMemoryVO memoryVO;
-	
-	@Autowired
-	public SystemConfigUpdateService(SystemConfigSelectBean systemConfigSelectBean, LiveSchedMemoryVO memoryVO) {
-		this.systemConfigSelectBean = systemConfigSelectBean;
-		this.memoryVO = memoryVO;
-	}
 	
 	public Boolean updateSystemConfig() {
 		

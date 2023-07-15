@@ -1,5 +1,6 @@
 package com.kdy.live.bean.vod;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -11,6 +12,7 @@ import com.kdy.live.dto.live.LiveBroadcastVO;
 import com.kdy.live.dto.vod.VodMetaVO;
 
 @Component
+@RequiredArgsConstructor
 public class LiveVodSaveBean { //라이브 VOD 저장시
 	
 	private Logger logger = LoggerFactory.getLogger(getClass());
@@ -19,15 +21,6 @@ public class LiveVodSaveBean { //라이브 VOD 저장시
 	private final MetaInfoBean vodMetaInfoBean; //메타정보 가져오기
 	private final FileCopyUploadBean fileCopyBean;
 	private final LiveSchedMemoryVO memoryVO;
-	
-	public LiveVodSaveBean(VodManageDAOFactory vodManageDAOFactory, FileCopyUploadBean fileCopyBean
-				,MetaInfoBean vodMetaInfoBean, LiveSchedMemoryVO memoryVO) {
-		this.vodManageDAOFactory = vodManageDAOFactory;
-		this.vodMetaInfoBean = vodMetaInfoBean;
-		this.fileCopyBean = fileCopyBean;
-		this.memoryVO = memoryVO;
-	}
-	
 
 	//녹화영상 복사하기 (recording_file_path to encoding_file_path) (사용X)
 	public void recordingVodCopyToEncodingPath(LiveBroadcastVO lbvo) throws Exception {

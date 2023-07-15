@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,20 +26,17 @@ import com.kdy.live.dto.live.LiveBroadcastVO;
 import com.kdy.live.dto.vod.ThumbnailVO;
 
 @Component
+@RequiredArgsConstructor
 public class ThumbnailBean {
 	private Logger logger = LoggerFactory.getLogger(getClass());
-	
-	@Autowired
-	private EncodeManagerBean encodingMngBean;
 
-	@Autowired
-	private VttParserBean vttParserBean;
-	
-	@Autowired
-	private VodManageDAOFactory vodManageDAOFactory;
-	
-	@Autowired
-	private LiveSchedMemoryVO memoryVO;
+	private final EncodeManagerBean encodingMngBean;
+
+	private final VttParserBean vttParserBean;
+
+	private final VodManageDAOFactory vodManageDAOFactory;
+
+	private final LiveSchedMemoryVO memoryVO;
 	
 	public void service(LiveBroadcastVO vo) throws Exception {
 		logger.info("service() - Thumbnail work started");

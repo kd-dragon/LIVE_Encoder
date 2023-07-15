@@ -33,14 +33,14 @@ public class LiveInterruptedOthersScheduler {
 	@Scheduled(fixedDelay = 5000, initialDelay = 1000)
 	@SchedulerLock(name="InterruptedCheck", lockAtLeastFor="1s", lockAtMostFor="4s")
 	public void execute() throws Exception {
-		Thread.currentThread().setName("TG_" + getClass().getSimpleName());
+		Thread.currentThread().setName(getClass().getSimpleName());
 		if(memoryVO.getSystemOnOff()) {
 			logger.debug("System [ON] >> execute()");
 			
 			//LiveInterruptedService 호출
 			liveInterruptedOthersService.service();
-		} else {
-			logger.warn("System [OFF]");
+			return;
 		}
+		logger.error("System [OFF]");
 	}
 }

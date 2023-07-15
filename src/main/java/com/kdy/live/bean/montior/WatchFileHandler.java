@@ -3,6 +3,7 @@ package com.kdy.live.bean.montior;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.io.filefilter.IOFileFilter;
@@ -22,24 +23,19 @@ import com.kdy.live.dto.LiveSchedMemoryVO.RedisHashKeyword;
 import com.kdy.live.dto.live.LiveBroadcastVO;
 
 @Component
+@RequiredArgsConstructor
 public class WatchFileHandler {
 	
 	private Logger logger = LoggerFactory.getLogger("ffmpeg");
-	
+
+	@Qualifier("redisTemplate")
 	private final RedisTemplate<String, Object> template;
-	
+
+	@Qualifier("redisTemplateObject")
 	private final RedisTemplate<String, Object> recordTemplate;
 	
 	private final LiveSchedMemoryVO memoryVO;
-	
-	@Autowired
-	public WatchFileHandler(LiveSchedMemoryVO memoryVO
-			, @Qualifier("redisTemplate") RedisTemplate<String, Object> template
-			, @Qualifier("redisTemplateObject") RedisTemplate<String, Object> recordTemplate) {
-		this.memoryVO = memoryVO;
-		this.template = template;
-		this.recordTemplate = recordTemplate;
-	}
+
 	
 	/**
 	 * @author KDY
@@ -50,9 +46,7 @@ public class WatchFileHandler {
 	 * 1) 감시할 디렉토리 경로 지정 및 감시 필터 설정
 	 * 2) 파일 관찰자 객체 지정 및 리스너 추가 
 	 * 3) 설정한 관찰자로 모니터링 시작 및 종료
-	 * 
-	 * @param LiveBroadcastVO
-	 * @throws Exception 
+	 *
 	 */
 	public void monitorHLS(LiveBroadcastVO lbvo) throws Exception {
 		logger.info("Start Monitoring >> " + lbvo.getLbTitle());

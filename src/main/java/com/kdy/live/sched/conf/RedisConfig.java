@@ -38,15 +38,15 @@ public class RedisConfig {
 					.sentinel(host, port);
 			redisSentinelConfiguration.setPassword(password);
 			return new LettuceConnectionFactory(redisSentinelConfiguration);
-		} else {
-			if(password != null && !password.isEmpty()) {
-				RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration(host,port);
-		        redisStandaloneConfiguration.setPassword(RedisPassword.of(password));
-		        return new LettuceConnectionFactory(redisStandaloneConfiguration);
-			} else {
-				return new LettuceConnectionFactory(host, port);
-			}
 		}
+
+		if(password != null && !password.isEmpty()) {
+			RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration(host,port);
+			redisStandaloneConfiguration.setPassword(RedisPassword.of(password));
+			return new LettuceConnectionFactory(redisStandaloneConfiguration);
+		}
+
+		return new LettuceConnectionFactory(host, port);
 	}
 	
 	@Bean

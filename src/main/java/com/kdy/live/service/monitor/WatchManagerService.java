@@ -34,37 +34,33 @@ public class WatchManagerService {
 		while(keys.hasNext()) {
 			String broadcastKey = keys.next();
 			LiveBroadcastVO lbvo = memoryVO.getLiveSeqToVO().get(broadcastKey);
-			if(lbvo != null) {
+			if(lbvo == null) { continue; }
 				
-				// 라이브 중 Watch Monitoring 시작 (Status: 1 또는 4)
-				if(lbvo.getLbStatus().equals(LiveBroadcastStatus.OnAir.getTitle())
-						|| lbvo.getLbStatus().equals(LiveBroadcastStatus.Restart.getTitle())) {
-					
-					// WatchMontior가 Null이면 WatchFileHandler 호출, 리스너 생성
-					if(lbvo.getWatchMonitor() == null) {
-						
-						if(memoryVO.getIsAdaptive()) {
-							// 라이브 TS, M3U8 파일 모니터링 (적응형 스트리밍 O)
-							watchFileHandler.adaptiveMonitoring(lbvo);
-						} else {
-							// 라이브 TS, M3U8 파일 모니터링 (적응형 스트리밍 X)
-							watchFileHandler.monitoring(lbvo);
-						}
-					}
-					
-				// 라이브 종료 이후 Watch Monitoring 종료
-				} else {
-					if(lbvo.getWatchMonitor() != null) {
-						try {
-							lbvo.getWatchMonitor().stop();
-						} catch (Exception e) {
-							e.printStackTrace();
-							logger.info(e.getMessage());
-						} finally {
-							lbvo.setWatchMonitor(null);
-							logger.info("Finish Monitoring >> " + lbvo.getLbTitle());
-						}
-					}
+			// 라이브 중 Watch Monitoring 시작 (Status: 1 또는 4)
+			if(lbvo.getLbStatus().equals(LiveBroadcastStatus.OnAir.getTitle())
+					|| lbvo.getLbStatus().equals(LiveBroadcastStatus.Restart.getTitle())) {
+
+				// WatchMontior가 Null이면 WatchFileHandler 호출, 리스너 생성
+				if(lbvo.getWatchMonitor() != null) { continue; }
+				if(memoryVO.getIsAdaptive()) {
+					// 라이브 TS, M3U8 파일 모니터링 (적응형 스트리밍 O)
+					watchFileHandler.adaptiveMonitoring(lbvo);
+					continue;
+				}
+				// 라이브 TS, M3U8 파일 모니터링 (적응형 스트리밍 X)
+				watchFileHandler.monitoring(lbvo);
+				continue;
+			}
+			// 라이브 종료 이후 Watch Monitoring 종료
+			if(lbvo.getWatchMonitor() != null) {
+				try {
+					lbvo.getWatchMonitor().stop();
+				} catch (Exception e) {
+					e.printStackTrace();
+					logger.info(e.getMessage());
+				} finally {
+					lbvo.setWatchMonitor(null);
+					logger.info("Finish Monitoring >> " + lbvo.getLbTitle());
 				}
 			}
 		}

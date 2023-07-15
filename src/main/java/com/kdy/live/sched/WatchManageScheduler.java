@@ -21,12 +21,11 @@ public class WatchManageScheduler {
 	private final LiveSchedMemoryVO memoryVO;
 	
 	/**
-	 * live hls 파일 감지하여 Redis에 PUT 하는 서비스 
-	 * @throws Exception
+	 * live hls 파일 감지하여 Redis에 PUT 하는 서비스
 	 */
 	@Scheduled(fixedDelay=5000, initialDelay=5000)
 	public void execute() throws Exception {
-		Thread.currentThread().setName("TG_"+getClass().getSimpleName());
+		Thread.currentThread().setName(getClass().getSimpleName());
 		logger.debug(">> execute()");
 		
 		// Redis 사용시에만 동작
@@ -34,7 +33,10 @@ public class WatchManageScheduler {
 			if(memoryVO.getSystemOnOff()) {
 				// live watch thread check service
 				watchMainService.service(memoryVO);
-			} 
+				return;
+			}
+			logger.error("System [OFF]");
 		}
+		logger.warn("Redis [OFF]");
 	}	
 }
