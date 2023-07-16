@@ -45,82 +45,73 @@ public class EncodeManagerBean {
 	
 	@StopWatch
 	public boolean encode(LiveBroadcastVO lbvo) {
-		boolean rslt = true;
 		
-		FFmpegBuilder builder = null;
-		List<String> cmdList = null;
+		FFmpegBuilder builder;
+		List<String> cmdList;
 		
 		try {
-		
-			//ffmpeg command 빌드 
 			builder = commandFactory.getCommand(lbvo);
-			
-			//ffmpeg command List에 담기
-			if(builder != null) {
-				cmdList = ImmutableList.<String>builder().add(memoryVO.getFfmpegPath()).addAll(builder.build()).build();
-				
-				//ffmpeg 실행
-				RunConsoleRunnable runConsole = new RunConsoleRunnable(cmdList, "liveStreaming");
-				
-				//ffmpeg Pid 호출
-				long pid = runConsole.getProcessID();
-				lbvo.setLbjProcessId(pid + "");
-				
-				//ffmpeg processId Update
-				updateBean.updateLiveBroadcastJob(lbvo);
-				
-				//blocking until ffmpeg job is finished
-				int retval = runConsole.waitFor();
-				
-				/*
-				 * ffmpeg waitFor() return code 
-				 * - 0: 정상
-				 * - else: 비정상
-				 * --
-				 * ffmpeg 강제종료시에도 ffmpeg 입장에서는 오류. 
-				 * 따라서 Live 상태값을 조건으로 하여 구분
-				 * --
-				 */
-				if(retval == 0) {
-					lbvo.setLbjLogMsg("WARNING");
-					lbvo.setLbjLogDesc("Broadcast Suddenly has been Finished");
-					logger.info(lbvo.getLbjLogDesc());
-					rslt = false;
-				} else if(lbvo.getLbStatus().equals(LiveBroadcastStatus.Finished.getTitle())) {
-					lbvo.setLbjLogMsg("SUCCESS");
-					lbvo.setLbjLogDesc("Broadcast Successfully has been Finished");
-					logger.info(lbvo.getLbjLogDesc());
-				} else if(lbvo.getLbStatus().equals(LiveBroadcastStatus.Pause.getTitle())) {
-					lbvo.setLbjLogMsg("SUCCESS");
-					lbvo.setLbjLogDesc("Broadcast Successfully has been Paused");
-					logger.info(lbvo.getLbjLogDesc());
-				} else {
-					lbvo.setLbjLogMsg("WARNING");
-					lbvo.setLbjLogDesc("Broadcast Encoder has caused an Error");
-					logger.info(lbvo.getLbjLogDesc());
-					rslt = false;
-				}
-				
-				logger.debug("============================== RunConsole Finished =================================");
-				
-			} else {
+			if(builder == null) {
 				lbvo.setLbjLogMsg("ERROR");
-				lbvo.setLbjLogDesc("ffmpeg Command Build Error");
-				logger.error("[ERROR] ffmpeg Command Build Error :: " + lbvo.getLcUrl());
-				rslt = false;
+				lbvo.setLbjLogDesc("Command Build Error");
+				logger.error(lbvo.getLbjLogDesc());
+				return false;
 			}
-			
+
+			cmdList = ImmutableList.<String>builder().add(memoryVO.getFfmpegPath()).addAll(builder.build()).build();
+
+			//ffmpeg 실행
+			RunConsoleRunnable runConsole = new RunConsoleRunnable(cmdList, "liveStreaming");
+
+			//ffmpeg Pid 호출
+			long pid = runConsole.getProcessID();
+			lbvo.setLbjProcessId(pid + "");
+
+			//ffmpeg processId Update
+			updateBean.updateLiveBroadcastJob(lbvo);
+
+			//blocking until ffmpeg job is finished
+			int retval = runConsole.waitFor();
+
+			/*
+			 * ffmpeg waitFor() return code
+			 * - 0: 정상
+			 * - else: 비정상
+			 * --
+			 * ffmpeg 강제종료시에도 ffmpeg 입장에서는 오류.
+			 * 따라서 Live 상태값을 조건으로 하여 구분
+			 * --
+			 */
+			if(retval == 0) {
+				lbvo.setLbjLogMsg("WARNING");
+				lbvo.setLbjLogDesc("Broadcast Suddenly has been Finished");
+				logger.info(lbvo.getLbjLogDesc());
+				return false;
+			}
 		} catch(Exception e) {
-			e.printStackTrace();
-			logger.error("error : {}", e);
+			logger.error("error : {}", e.getMessage());
 			
 			lbvo.setLbjLogMsg("ERROR");
 			lbvo.setLbjLogDesc(e.getMessage());
-			
-			rslt = false;
+			return false;
 		}
-		
-		return rslt;
+		if(!lbvo.getLbStatus().equals(LiveBroadcastStatus.Finished.getTitle()) && !lbvo.getLbStatus().equals(LiveBroadcastStatus.Pause.getTitle())) {
+			lbvo.setLbjLogMsg("WARNING");
+			lbvo.setLbjLogDesc("Broadcast Encoder has caused an Error");
+			logger.info(lbvo.getLbjLogDesc());
+			return false;
+		}
+		if(lbvo.getLbStatus().equals(LiveBroadcastStatus.Finished.getTitle())) {
+			lbvo.setLbjLogMsg("SUCCESS");
+			lbvo.setLbjLogDesc("Broadcast Successfully has been Finished");
+			logger.info(lbvo.getLbjLogDesc());
+		}
+		if(lbvo.getLbStatus().equals(LiveBroadcastStatus.Pause.getTitle())) {
+			lbvo.setLbjLogMsg("SUCCESS");
+			lbvo.setLbjLogDesc("Broadcast Successfully has been Paused");
+			logger.info(lbvo.getLbjLogDesc());
+		}
+		return true;
 	}
 	
 	

@@ -35,9 +35,7 @@ public class EncodeCommandFactory {
 		FFmpegBuilder ffmpegBuilder = null;
 		
 		try {
-			// Live Stream URL 정보 가져오기
 			String liveChannelUrl = liveVO.getLcUrl();
-			// ffmpeg 과 tcp 통신할 내부netty Server 포트 가져오기
 			int port = nettyVO.getFfmpegPort();
 			
 			//rtsp 요청
@@ -51,8 +49,9 @@ public class EncodeCommandFactory {
 				logger.debug("getCommand : DefaultRtspToHLS Command");
 				ffmpegBuilder = new DefaultRtspToHLS().getCommandBuilder(port, liveVO, memoryVO); 
 				
+			}
 			//rtmp 요청
-			} else if(liveChannelUrl.contains("rtmp://")) {
+			if(liveChannelUrl.contains("rtmp://")) {
 				//적응형 스트리밍 사용 유무 검사
 				if(memoryVO.getIsAdaptive()) {
 					logger.debug("getCommand : AdaptiveRtmpToHLS Command");
@@ -61,8 +60,7 @@ public class EncodeCommandFactory {
 				
 				logger.debug("getCommand : DefaultRtmpToHLS Command");
 				ffmpegBuilder = new DefaultRtmpToHLS().getCommandBuilder(port, liveVO, memoryVO);
-			} 
-			
+			}
 			logger.error("[Fail To Get Command] Non Exists Preset Type");
 			
 		} catch (Exception e) {
@@ -74,7 +72,7 @@ public class EncodeCommandFactory {
 	
 	public FFmpegBuilder getCommand(LiveBroadcastVO liveVO) {
 		
-		FFmpegBuilder ffmpegBuilder = null;
+		FFmpegBuilder ffmpegBuilder;
 		
 		try {
 			
@@ -98,7 +96,8 @@ public class EncodeCommandFactory {
 					return new RecordDefaultRtspToHLS().getCommandBuilder(port, liveVO, memoryVO);
 					
 				//rtmp 요청
-				} else if(liveChannelUrl.contains("rtmp://")) {
+				}
+				if(liveChannelUrl.contains("rtmp://")) {
 					//적응형 스트리밍
 					if(memoryVO.getIsAdaptive()) {
 						//advance : high, low + mid
@@ -115,8 +114,7 @@ public class EncodeCommandFactory {
 				} 
 				
 				logger.error("[Fail To Get Command] Non Exist Preset Type");
-				return ffmpegBuilder;
-			
+				return null;
 			} 
 			
 			// vod 저장 없이 live 송출시 처리
@@ -131,8 +129,9 @@ public class EncodeCommandFactory {
 				logger.info("getCommand : DefaultRtspToHLS Command");
 				return new DefaultRtspToHLS().getCommandBuilder(port, liveVO, memoryVO);
 				
+			}
 			//rtmp 요청
-			} else if(liveChannelUrl.contains("rtmp://")) {
+			if(liveChannelUrl.contains("rtmp://")) {
 				//적응형 스트리밍 O
 				if(memoryVO.getIsAdaptive()) {
 					//advance : high, low + mid
@@ -142,7 +141,6 @@ public class EncodeCommandFactory {
 				
 				logger.info("getCommand : DefaultRtmpToHLS Command");
 				return new DefaultRtmpToHLS().getCommandBuilder(port, liveVO, memoryVO);
-				
 			}
 			
 			logger.error("[Fail To Get Command] Non Exist Preset Type");
@@ -152,7 +150,7 @@ public class EncodeCommandFactory {
 			e.printStackTrace();
 		}
 		
-		return ffmpegBuilder;
+		return null;
 	}
 	
 	public FFmpegBuilder getCommandThumbnail(LiveBroadcastVO liveVO) {
